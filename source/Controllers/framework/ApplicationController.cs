@@ -32,8 +32,11 @@ namespace Jde.Controllers
 			if( string.IsNullOrEmpty(location) )
 				throw new Exception( $"Could not find location for application '{name}'." );
 			
-			//var p = new Process(){  };
-			//p.Start();
+			//Change Exception to MyException.
+			//Catch all exceptions and log.
+			//return is different for MyException vs. generic.
+			//Implement snack bar.
+			//
 			var startInfo = new ProcessStartInfo(location){CreateNoWindow=true};
 			using( var process = System.Diagnostics.Process.Start(startInfo) )
 			{

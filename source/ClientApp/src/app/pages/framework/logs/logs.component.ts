@@ -32,7 +32,10 @@ export class LogsComponent implements OnInit, OnDestroy
 	ngOnInit() 
 	{
 		this._componentPageTitle.title = "Logs";
-		var start = new Date( new Date().setDate(DateUtilities.beginningOfDay(new Date()).getDate()-1) );
+		var beginningOfDay = DateUtilities.beginningOfDay( new Date() );
+		beginningOfDay.setDate( beginningOfDay.getDate()-1 );
+		//var yesterday = ;
+		var start = beginningOfDay;
 		this._start.setValue( start );
 		this.data.onPageChange.subscribe( pageIndex=>this.pageIndex = pageIndex );
 		this.profileService.get<Settings>( LogsComponent.profileKey ).subscribe( 
@@ -188,6 +191,14 @@ export class LogsComponent implements OnInit, OnDestroy
 		if( this.selectedRow )
 			this.selectedRow.classList.remove( 'highlight' );
 		this.selectedRow = row==this.selectedRow ? null : row;
+	}
+	hideSelectedMessage()
+	{
+		//some maybe hidden, need to put it in html
+		// errorService.assert(  this.selectedRow );
+		// var i = this.pageIndex*this.pageSize;
+		// while( (child = this.selectedRow.previousSibling) != null ) 
+  		// 	i++;
 	}
 	get sort(){return this.settings.sort;} set sort(value){this.settings.sort=value;}
 	settings:Settings = new Settings();

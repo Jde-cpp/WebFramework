@@ -1,13 +1,14 @@
 import {Component, NgModule, OnDestroy, OnInit, Inject} from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
-import {ActivatedRoute, Params, RouterModule} from '@angular/router';
+import { DomSanitizer } from "@angular/platform-browser";
+import {ActivatedRoute, Params} from '@angular/router';
+import { MatIconRegistry } from "@angular/material/icon";
 import {ComponentPageTitle} from '../../material-site/page-title/page-title';
 import {AppService} from '../../../services/app/app.service';
 import {ApplicationService} from '../../../services/webApi/application.service';
-import {Observable, combineLatest, Subscription} from 'rxjs';
+import {Observable, Subscription} from 'rxjs';
 import {Application} from '../../../services/app/application'
-import { MatIconRegistry } from "@angular/material/icon";
-import { DomSanitizer } from "@angular/platform-browser";
+import {IErrorService} from '../../../services/error/IErrorService'
 
 import * as AppFromServer from '../../../proto/appFromServer';
 import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
@@ -27,7 +28,7 @@ export class ApplicationsHomeComponent implements OnInit, OnDestroy
 	routeParamSubscription: Subscription;
 	_categoryListSummary: string;
 
-	constructor( public _componentPageTitle: ComponentPageTitle, private _route: ActivatedRoute, private appService:AppService, private applicationService:ApplicationService, private dialog:MatDialog, private matIconRegistry: MatIconRegistry, private domSanitizer: DomSanitizer ) 
+	constructor( public _componentPageTitle: ComponentPageTitle, private _route: ActivatedRoute, private appService:AppService, private applicationService:ApplicationService, private dialog:MatDialog, private matIconRegistry: MatIconRegistry, private domSanitizer: DomSanitizer, @Inject('IErrorService') private cnsl: IErrorService ) 
 	{
 		const url = this.domSanitizer.bypassSecurityTrustResourceUrl("../assets/download.svg");
 		this.matIconRegistry.addSvgIcon( "ib", "download.svg" );
@@ -45,7 +46,7 @@ export class ApplicationsHomeComponent implements OnInit, OnDestroy
 				this.subscription = this.appService.statuses();
 				this.subscription.subscribe( apps => {this.onStatus(apps);} );
 			},
-			error:  e=>{console.error(e);}
+			error: e=>{ this.cnsl.observableError("Could not load applications", e); }
 		});
 	}
 
@@ -58,7 +59,7 @@ export class ApplicationsHomeComponent implements OnInit, OnDestroy
 			if( existing )
 				existing.status = status;
 			else
-				console.log( `could not find app ${status.ApplicationId}` );
+			this.cnsl.warn( `could not find app ${status.ApplicationId}` );
 		}
 	}
 
@@ -71,7 +72,13 @@ export class ApplicationsHomeComponent implements OnInit, OnDestroy
 		if( app.on )
 			this.appService.request( app.instanceId, -2 );//FromClient.ERequest.Power | FromClient.ERequest.Negate
 		else
-			this.applicationService.start( app.name );
+		{
+			this.applicationService.start( app.name ).subscribe(
+			{
+				next:  response=>{this.cnsl.log(`applicationService.start returned '${response}'`);},
+				error:  e=>{ this.cnsl.observableError("applicationService.start failed", e); }
+			});
+		}
 	}
 	edit( app:Application )
 	{

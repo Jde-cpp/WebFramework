@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-
+import { Subject,Observable,of } from 'rxjs';
 
 @Injectable()
 export class ApplicationService
@@ -9,27 +9,36 @@ export class ApplicationService
 	{
 		this.url = baseUrl + 'api/Application';
 	}
-	get() : Promise<Map<number,string>>
+	get(): Observable<Map<number,string>>
 	{
-		return this.http.get(this.url).toPromise().then( response => 
+		var callback = new Subject<Map<number,string>>();
+		this.http.get(this.url).subscribe(
 		{
-			let values = new Map<number,string>();
-			Object.keys(response).forEach( (id)=>
+			next: response => 
 			{
-				let name = response[id] as string;
-				let pk = id as unknown as number;
-				values.set( pk, name );
-			});
-			return values;
+				let values = new Map<number,string>();
+				Object.keys(response).forEach( (id)=>
+				{
+					let name = response[id] as string;
+					let pk = id as unknown as number;
+					values.set( pk, name );
+				});
+				return values;
+			},
+			error:  e=>{callback.error(e);}
 		});
+		return callback;
 	}
 
-	start( name:string ): Promise<boolean>
+	start( name:string ): Observable<boolean>
 	{
-		return this.http.post( `${this.url}/${name}`, 0 ).toPromise().then( response =>
+		var callback = new Subject<boolean>();
+		this.http.post( `${this.url}/${name}`, 0 ).subscribe(
 		{
-			return response as boolean;
+			next:  response=>{callback.next(response as boolean);},
+			error:  e=>{callback.error(e);}
 		});//.catch( e=>{console.error(e);} )
+		return callback;
 	}
 
 	private url:string;
