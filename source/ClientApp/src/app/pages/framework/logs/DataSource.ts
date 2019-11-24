@@ -53,7 +53,7 @@ export class DataSource
 
 		const values = this.data.slice();
 		const multiplier = options.direction === 'asc' ? 1 : -1;
-		this.data = values.sort((a, b) => 
+		let data = values.sort((a, b) => 
 		{
 			let lessThan = false;
 			if( options.active=='date' )
@@ -70,6 +70,11 @@ export class DataSource
 				console.error( `unknown sort'${options.active}'` );
 			return (lessThan ? -1 : 1)*multiplier;
 		});
+		let i=-1;
+		for( let row of data )
+			row.index = ++i;
+
+		this.data = data;
 		this.setPage();
 	}
 	autoScroll:boolean=true;

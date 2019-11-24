@@ -58,7 +58,7 @@ export class AppService
 		{
 			var request = new FromClient.RequestLogs(); request.Value = value; request.ApplicationId = applicationId; request.Start = start.getTime()/1000;
 			var msg = new FromClient.MessageUnion(); msg.RequestLogs=request;
-			console.log( `AppService::RequestLogs applicationId='${applicationId}', level='${value}'` );
+			console.log( `AppService::RequestLogs applicationId='${applicationId}', level='${value}', date='${start.toISOString()}` );
 			this.send( msg );//todo set new structure to ApplicationId, fix server.
 		}
 		return callback;
@@ -90,7 +90,7 @@ export class AppService
 		if( subscriptions.length==0 )
 		{
 			this.logsSubscriptions.delete( instanceId );
-			console.log( `Unsubscribe from logs for instance ${instanceId}` );
+			console.log( `Unsubscribe from logs for application ${instanceId}` );
 			this.request( instanceId, -3 ); //FromClient.ERequest.Logs | FromClient.ERequest.Negate
 		}
 		else if( minLevel>removedLevel )

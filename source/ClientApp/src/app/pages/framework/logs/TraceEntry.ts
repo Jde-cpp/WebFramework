@@ -54,4 +54,5 @@ export class TraceEntry
 	userId:number;
 	threadId:number;
 	variables:string[] = [];
+	index:number;
 }

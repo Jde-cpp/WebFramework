@@ -1,5 +1,6 @@
 import { HostListener, Component, OnDestroy, OnInit, ViewChild, Inject } from '@angular/core';
 import { Sort, MatTable, MatOptionSelectionChange } from '@angular/material';
+import {MatDatepickerInputEvent} from '@angular/material/datepicker';
 import { Observable } from 'rxjs';
 import { TraceEntry } from './TraceEntry';
 import { DataSource } from './DataSource';
@@ -22,7 +23,6 @@ import { FormControl } from '@angular/forms';
 // Add dates.
 // Fix pause button.
 // Comment out statuses
-
 @Component({selector: 'logs',templateUrl: './logs.component.html',styleUrls: ['./logs.component.css']})
 export class LogsComponent implements OnInit, OnDestroy
 {
@@ -144,23 +144,30 @@ export class LogsComponent implements OnInit, OnDestroy
 	}
 	subscribe( applicationId:number, level:FromServer.ELogLevel )
 	{
-		if( this.currentSubscription[0]!=applicationId || this.currentSubscription[1]!=level )
+		var subscription = { applicationId: applicationId, level: level, start:this.start };
+		if( JSON.stringify(this.currentSubscription)!=JSON.stringify(subscription) )
 		{
 			this.data.clear();
 			this.unsubscribe();
 			this.level = level;
-			this.currentSubscription = [applicationId, level];
-			this.subscription = this.appService.logs( applicationId, level, this.start );
+			this.currentSubscription = subscription;
+			this.subscription = this.appService.logs( subscription.applicationId, subscription.level, subscription.start );
 			this.subscription.subscribe( traces => {this.onTraces(traces);} );
 		}
+	}
+	stringify(row)
+	{
+		//console.log( JSON.stringify(row) );
+//{"applicationStrings":{"id":9,"files":{},"functions":{},"messages":{},"users":{}},"_message":"Price below minimum:  CRR - 0.42<1.50","variables":["CRR","0.42","1.50"],"instanceId":1398,"time":"2019-11-22T15:42:16.000Z","level":3,"messageId":1217948776,"fileId":1340806314,"functionId":2692579098,"lineNumber":178,"userId":0,"threadId":3934680832,"_file":"./DecisionTreeManager.cpp","_function":"Calculate"}
+		return row.lineNumber;
 	}
 	unsubscribe()
 	{
 		if( this.subscription )
 		{
-			this.appService.logsUnsubscribe( this.currentSubscription[0], this.subscription );
+			this.appService.logsUnsubscribe( this.currentSubscription.applicationId, this.subscription );
 			this.subscription = null;
-			this.currentSubscription = [0, FromServer.ELogLevel.None];
+			this.currentSubscription = LogsComponent.DefaultSubscription;
 		}
 	}
 	@HostListener('window:scroll', ['$event']) 
@@ -215,15 +222,12 @@ export class LogsComponent implements OnInit, OnDestroy
 	toLevel( level:FromServer.ELogLevel ):string{ return FromServer.ELogLevel[level]; }
 
 	get applicationId(){ return this.settings.applicationId; } set applicationId(value){ this.settings.applicationId=value; }
-	get start():Date
-	{ 
-		return this._start.value;
-	} set start(value:Date)
-	{
-		this._start.setValue(value); this.settings.start = value;
-	} private _start = new FormControl();
+	get start():Date{ return this._start.value; } set start(value:Date){ this._start.setValue(value); 
+	this.settings.start = value; } private _start = new FormControl();
+	startChange( event: MatDatepickerInputEvent<Date> ){ this.subscribe( this.applicationId, this.level ); }
 	private buffer:TraceEntry[] = [];
-	private currentSubscription:[number, FromServer.ELogLevel]=[0,FromServer.ELogLevel.None];//actual subscribtion
+	static DefaultSubscription:ISubscription={ applicationId: 0, level:  FromServer.ELogLevel.None, start:null };
+	private currentSubscription:ISubscription=LogsComponent.DefaultSubscription;//actual subscribtion
 	private instanceId:number; //instance in dropdown
 	private get level():FromServer.ELogLevel{ return this.settings.level; } private set level( value:FromServer.ELogLevel ){ this.settings.level=value; }
 	private get application():Application|null{ return this.applications.find( (existing)=>{return existing.id==this.applicationId;} ); }
@@ -234,3 +238,5 @@ export class LogsComponent implements OnInit, OnDestroy
 	private static profileKey="logs";
 	private selectedRow:Element;
 }
+
+interface ISubscription{ applicationId:number, level:FromServer.ELogLevel, start:Date|null }
