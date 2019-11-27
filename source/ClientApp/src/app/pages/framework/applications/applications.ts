@@ -46,7 +46,7 @@ export class ApplicationsHomeComponent implements OnInit, OnDestroy
 				this.subscription = this.appService.statuses();
 				this.subscription.subscribe( apps => {this.onStatus(apps);} );
 			},
-			error: e=>{ this.cnsl.observableError("Could not load applications", e); }
+			error: e=>{ this.cnsl.error("Could not load applications", e); }
 		});
 	}
 
@@ -59,7 +59,7 @@ export class ApplicationsHomeComponent implements OnInit, OnDestroy
 			if( existing )
 				existing.status = status;
 			else
-			this.cnsl.warn( `could not find app ${status.ApplicationId}` );
+			console.warn( `could not find app ${status.ApplicationId}` );
 		}
 	}
 
@@ -75,8 +75,8 @@ export class ApplicationsHomeComponent implements OnInit, OnDestroy
 		{
 			this.applicationService.start( app.name ).subscribe(
 			{
-				next:  response=>{this.cnsl.log(`applicationService.start returned '${response}'`);},
-				error:  e=>{ this.cnsl.observableError("applicationService.start failed", e); }
+				next:  response=>{console.log(`applicationService.start returned '${response}'`);},
+				error:  e=>{ this.cnsl.error("applicationService.start failed", e); }
 			});
 		}
 	}

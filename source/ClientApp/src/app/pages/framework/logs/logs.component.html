@@ -18,8 +18,12 @@
 		<mat-datepicker #dateId></mat-datepicker>
 	</mat-form-field>
 	<mat-paginator (page)="pageChangeEvent($event)" [pageIndex]="pageIndex" [length]="data.length" [pageSize]="pageSize" [pageSizeOptions]="[14, 100, 500, 1000]" showFirstLastButtons></mat-paginator>
-	<button mat-icon-button [disabled]="selectedRow==null"><mat-icon class="iconButton" (click)="hideSelectedMessage()">clear</mat-icon></button> <!-- -->
-	<button mat-icon-button [disabled]="selectedRow==null"><mat-icon class="iconButton" (click)="paused=!paused">navigate_next</mat-icon></button> <!-- -->
+	<mat-form-field>
+		<input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+	 </mat-form-field>
+	<button mat-icon-button [disabled]="settings.hiddenMessages.length==0"><mat-icon class="iconButton" (click)="clearHiddenMessages()">layers_clear</mat-icon></button>
+	<button mat-icon-button [disabled]="selectedIndex==null"><mat-icon class="iconButton" (click)="hideSelectedMessage()">clear</mat-icon></button>
+	<button mat-icon-button [disabled]="selectedIndex==null"><mat-icon class="iconButton" (click)="navigateNext()">navigate_next</mat-icon></button>
 </mat-toolbar>
 <mat-table #mainTable [dataSource]="data" class="mat-elevation-z8"  matSort (matSortChange)="sortData($event)" [matSortActive]="sort.active" [matSortDirection]="sort.direction">
 	<ng-container matColumnDef="date">
@@ -50,5 +54,5 @@
 		<mat-cell mat-cell *matCellDef="let element" class="number"> {{element.index}} </mat-cell>
 	</ng-container>
 	<mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-	<mat-row mat-row class="table-row" *matRowDef="let row; columns: displayedColumns" [attr.indx]="stringify(row)" (click)="cellClick($event)"></mat-row>
+	<mat-row mat-row class="table-row" [class.highlight]="selectedIndex==row.index" *matRowDef="let row; columns: displayedColumns" [attr.indx]="row.index" (click)="cellClick($event)"></mat-row>
 </mat-table>

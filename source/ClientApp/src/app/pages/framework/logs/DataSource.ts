@@ -28,16 +28,22 @@ export class DataSource
 			this.pageSize=pageSize;
 		if( start==-1 )
 			start = Math.max( this.data.length-this.pageSize, 0 );
-		this.page = start/this.pageSize;
+		this.page = Math.floor( start/this.pageSize );
+		if( start!=-1 )
+			start = this.page*this.pageSize;
 		let values = new Array<TraceEntry>();
-		for( let i=start; i<this.data.length; ++i )
+		var end = Math.min( start+this.pageSize, this.data.length );
+		for( let i=start; i<end; ++i )
 			values.push( this.data[i] );
 		if( this.observable )
 			this.observable.next( values );
 	}
 	push( entry:TraceEntry )
 	{
-		this.data.push( entry );
+		entry.index = this.allData.length;
+		this.allData.push( entry );
+		if( !entry.hidden )
+			this.data.push( entry );
 		if( this.autoScroll )
 			this.setPage();
 	}
@@ -77,10 +83,66 @@ export class DataSource
 		this.data = data;
 		this.setPage();
 	}
+	select( dataIndex:number )
+	{
+		var visibleIndex = 0;
+		for( ;visibleIndex<this.data.length; ++visibleIndex )
+		{
+			if( this.data[visibleIndex].index==dataIndex )
+				break;
+		}
+		let page = this.page = Math.floor( visibleIndex/this.pageSize );
+		let start = page*this.pageSize;
+		let values = new Array<TraceEntry>();
+		const end = Math.min( start+this.pageSize, this.data.length );
+		for( let i=start; i<end; ++i )
+			values.push( this.data[i] );
+		if( this.observable )
+			this.observable.next( values );
+	}
+	filterData( messageIds:number[], filter2:string, index:number )
+	{
+		const filter = filter2 ? filter2.trim().toLowerCase() : null;
+		let visibleData:TraceEntry[] = [];
+		let haveIndex = index==-1;
+		let pastIndex = false;
+		let selectedIndex = -1;
+		for( let entry of this.allData )
+		{
+			if( !haveIndex && !pastIndex )
+				pastIndex = entry.index==index;
+			entry.hidden = messageIds.indexOf(entry.messageId)!=-1;
+			if( !entry.hidden && (filter==null || entry.message.toLowerCase().indexOf(filter)!=-1) )
+			{
+				if( !haveIndex && pastIndex )
+				{
+					selectedIndex = entry.index;
+					haveIndex = true;
+				}
+				visibleData.push( entry );
+			}
+		}
+		this.data = visibleData;
+		this.setPage( index );
+	}
+	applyFilter( filter:string, hiddenIds:number[] )
+	{
+		let visibleData:TraceEntry[] = [];
+		for( let entry of this.allData )
+		{
+			entry.hidden = hiddenIds.indexOf(entry.messageId)!=-1;
+			if( !entry.hidden && entry.message.toLowerCase().indexOf(filter)!=-1 )
+				visibleData.push( entry );
+		}
+		this.data = visibleData;
+		this.setPage();
+	}
 	autoScroll:boolean=true;
 	get paused(){return this._paused;} set paused(value){this._paused=value;}_paused=false;
 	get length():number{return this.data.length;}
 	get page(){return this._page;} set page(value){this._page=value;this.onPageChange.emit(value);} _page:number; onPageChange= new EventEmitter<number>();
+	//get filter(){return _filter;} set filter( value){_filter=value; applyFilter(value);} string _filter;
 	observable:Subject<object>;
 	data:TraceEntry[] = [];
+	allData:TraceEntry[] = [];
 }

@@ -10,6 +10,7 @@ import {ApplicationStrings} from './Application';
 import {Settings} from './Settings';
 import {ComponentPageTitle} from '../../material-site/page-title/page-title';
 import { IProfile } from '../../../services/profile/IProfile';
+import {IErrorService} from '../../../services/error/IErrorService'
 import { DateUtilities } from '../../../utilities/dateUtilities';
 
 import * as AppFromServer from '../../../proto/appFromServer';
@@ -18,6 +19,7 @@ import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
 import * as AppFromClient from '../../../proto/appFromClient';
 import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
 import { FormControl } from '@angular/forms';
+import { stringify } from 'querystring';
 
 // Move levels to combo.
 // Add dates.
@@ -26,10 +28,10 @@ import { FormControl } from '@angular/forms';
 @Component({selector: 'logs',templateUrl: './logs.component.html',styleUrls: ['./logs.component.css']})
 export class LogsComponent implements OnInit, OnDestroy
 {
-	constructor( public _componentPageTitle: ComponentPageTitle, private appService:AppService, @Inject('IProfile') private profileService: IProfile )
+	constructor( public _componentPageTitle: ComponentPageTitle, private appService:AppService, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private errorService: IErrorService )
 	{}
 	
-	ngOnInit() 
+	ngOnInit()
 	{
 		this._componentPageTitle.title = "Logs";
 		var beginningOfDay = DateUtilities.beginningOfDay( new Date() );
@@ -58,7 +60,7 @@ export class LogsComponent implements OnInit, OnDestroy
 			error: e =>{console.log(e);}
 		});
 	}
-	ngOnDestroy() 
+	ngOnDestroy()
 	{
 		this.appService.statusUnsubscribe( this.statusSubscription );
 		this.unsubscribe();
@@ -107,6 +109,7 @@ export class LogsComponent implements OnInit, OnDestroy
 		}
 
 		let data = stringRequests.Values.length>0 || this.buffer.length ? this.buffer : this.data;
+		entry.hidden = this.settings.hiddenMessages.indexOf(entry.messageId)!=-1;
 		data.push( entry );
 	}
 	onStrings = ( applicationId:number, value:FromServer.IApplicationString ):void =>
@@ -155,12 +158,7 @@ export class LogsComponent implements OnInit, OnDestroy
 			this.subscription.subscribe( traces => {this.onTraces(traces);} );
 		}
 	}
-	stringify(row)
-	{
-		//console.log( JSON.stringify(row) );
-//{"applicationStrings":{"id":9,"files":{},"functions":{},"messages":{},"users":{}},"_message":"Price below minimum:  CRR - 0.42<1.50","variables":["CRR","0.42","1.50"],"instanceId":1398,"time":"2019-11-22T15:42:16.000Z","level":3,"messageId":1217948776,"fileId":1340806314,"functionId":2692579098,"lineNumber":178,"userId":0,"threadId":3934680832,"_file":"./DecisionTreeManager.cpp","_function":"Calculate"}
-		return row.lineNumber;
-	}
+
 	unsubscribe()
 	{
 		if( this.subscription )
@@ -170,12 +168,12 @@ export class LogsComponent implements OnInit, OnDestroy
 			this.currentSubscription = LogsComponent.DefaultSubscription;
 		}
 	}
-	@HostListener('window:scroll', ['$event']) 
-	doSomething(event) 
-	{
-		console.debug("Scroll Event", document.body.scrollTop );
-		console.debug("Scroll Event", window.pageYOffset );
-	}
+	// @HostListener('window:scroll', ['$event']) 
+	// doSomething(event) 
+	// {
+	// 	console.debug("Scroll Event", document.body.scrollTop );
+	// 	console.debug("Scroll Event", window.pageYOffset );
+	// }
 	onLevelChange( logLevel:FromServer.ELogLevel )
 	{
 		this.subscribe( this.applicationId, logLevel );
@@ -189,23 +187,58 @@ export class LogsComponent implements OnInit, OnDestroy
 	pageChangeEvent( event ) 
 	{
 		const offset = event.pageIndex * event.pageSize;
+		this.selectedIndex = null;
 		this.data.setPage( offset, event.pageSize );
 	}
 	cellClick( event, i )
 	{
 		const row = event.target.parentElement as Element;
-		row.classList.add( 'highlight' );
-		if( this.selectedRow )
-			this.selectedRow.classList.remove( 'highlight' );
-		this.selectedRow = row==this.selectedRow ? null : row;
+		var index = +row.attributes["indx"].nodeValue;
+		this.selectedIndex = index==this.selectedIndex ? null : index;
 	}
+	get selectedEntry():TraceEntry{return this.selectedIndex==null ? null : this.data.allData[this.selectedIndex]; }
 	hideSelectedMessage()
 	{
-		//some maybe hidden, need to put it in html
-		// errorService.assert(  this.selectedRow );
-		// var i = this.pageIndex*this.pageSize;
-		// while( (child = this.selectedRow.previousSibling) != null ) 
-  		// 	i++;
+		this.settings.hiddenMessages.push( this.selectedEntry.messageId );
+		this.filterData();
+	}
+	clearHiddenMessages()
+	{
+		this.settings.hiddenMessages.length=0;
+		this.filterData();
+	}
+	filterData()
+	{
+		this.data.filterData( this.settings.hiddenMessages, this.filter, this.selectedEntry ? this.selectedEntry.index : -1 );
+	}
+	navigateNext()
+	{
+		const messageId = this.selectedEntry.messageId;
+		const index = this.selectedIndex;
+		const size = this.data.allData.length;
+		const stop = size+index;
+		let foundIndex = index;
+		for( let i=index+1; i!=stop; ++i )
+		{
+			const i2 = i<size ? i : i-size;
+			if( this.data.allData[i2].messageId==messageId )
+			{
+				foundIndex = i2;
+				break;
+			}
+		}
+		if( foundIndex!=index )
+		{
+			this.selectedIndex = foundIndex;
+			this.data.select( foundIndex );
+		}
+		else
+			this.errorService.warn( "No other instances found." );
+	}
+	applyFilter( value:string )
+	{
+		this.filter = value;
+		this.filterData();
 	}
 	get sort(){return this.settings.sort;} set sort(value){this.settings.sort=value;}
 	settings:Settings = new Settings();
@@ -222,8 +255,8 @@ export class LogsComponent implements OnInit, OnDestroy
 	toLevel( level:FromServer.ELogLevel ):string{ return FromServer.ELogLevel[level]; }
 
 	get applicationId(){ return this.settings.applicationId; } set applicationId(value){ this.settings.applicationId=value; }
-	get start():Date{ return this._start.value; } set start(value:Date){ this._start.setValue(value); 
-	this.settings.start = value; } private _start = new FormControl();
+	get start():Date{ return this._start.value; } set start(value:Date){ this._start.setValue(value); this.settings.start = value; } private _start = new FormControl();
+	private filter:string; 	//get filter(){return _filter;} set filter(value){ this._filter = value.trim().toLowerCase(); }	
 	startChange( event: MatDatepickerInputEvent<Date> ){ this.subscribe( this.applicationId, this.level ); }
 	private buffer:TraceEntry[] = [];
 	static DefaultSubscription:ISubscription={ applicationId: 0, level:  FromServer.ELogLevel.None, start:null };
@@ -236,7 +269,7 @@ export class LogsComponent implements OnInit, OnDestroy
 	private applicationStrings:Map<number,ApplicationStrings> = new Map<number,ApplicationStrings>();
 	private statusSubscription:Observable<FromServer.IStatuses>;
 	private static profileKey="logs";
-	private selectedRow:Element;
+	private selectedIndex:number|null=null;
 }
 
 interface ISubscription{ applicationId:number, level:FromServer.ELogLevel, start:Date|null }

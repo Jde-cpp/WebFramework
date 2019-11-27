@@ -8,22 +8,30 @@ export class DefaultErrorService implements IErrorService
 	constructor( private snackbar:MatSnackBar )
 	{}
 
-	private showUserError( message:string )
+	private showUser( message:string, panelClass:string )
 	{
-		this.snackbar.open( message, null, {panelClass: ['red-snackbar']} );
+		this.snackbar.open( message, null, {panelClass: [panelClass]} );
 	}
-	error( message:string ):void
+	private showUserError( message:string ){ this.showUser( message, 'red-snackbar' ); }
+
+	assert( condition ):void
 	{
-		console.error( message );
-		this.showUserError( message );
+		this.showUserError( "assert failed" );
+		if( !condition )
+			throw "assert failed";
 	}
 
-	observableError( message:string, error: any )
+	error( message:string, error: any )
 	{
 		console.error( `${message} error:  ${error.toString}` );
 		this.showUserError( message );
 	}
-	warn( message: string ):void
+	warn( message:string )
+	{
+		this.showUser( message, 'yellow-snackbar' );
+	}
+
+/*	warn( message: string ):void
 	{
 		console.warn( message );
 	}
@@ -32,5 +40,5 @@ export class DefaultErrorService implements IErrorService
 	{
 		console.log( message );
 	}
-
+*/
 }

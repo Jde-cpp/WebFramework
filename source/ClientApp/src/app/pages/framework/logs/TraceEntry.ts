@@ -5,7 +5,7 @@ import {ApplicationStrings} from './Application';
 
 export class TraceEntry
 {
-	constructor( trace:FromServer.ITraceMessage, public applicationStrings:ApplicationStrings )
+	constructor( trace:FromServer.ITraceMessage, private applicationStrings:ApplicationStrings )
 	{
 		this.instanceId = ProtoUtilities.toNumber( trace.InstanceId );
 		this.time = new Date( ProtoUtilities.toNumber(trace.Time) );
@@ -19,6 +19,8 @@ export class TraceEntry
 		for( let variable of trace.Variables )
 			this.variables.push( variable );
 	}
+	time:Date;
+
 	get message():string
 	{
 		if( this._message )
@@ -45,7 +47,6 @@ export class TraceEntry
 	}; _function:string;
 
 	instanceId:number;
-	time:Date;
 	level:FromServer.ELogLevel;
 	messageId:number;
 	fileId:number;
@@ -55,4 +56,5 @@ export class TraceEntry
 	threadId:number;
 	variables:string[] = [];
 	index:number;
+	hidden:boolean;
 }
