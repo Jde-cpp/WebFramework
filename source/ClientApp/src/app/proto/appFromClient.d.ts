@@ -221,6 +221,9 @@ export namespace Jde {
 
                     /** RequestLogs Start */
                     Start?: (number|null);
+
+                    /** RequestLogs Limit */
+                    Limit?: (number|null);
                 }
 
                 /** Represents a RequestLogs. */
@@ -243,6 +246,9 @@ export namespace Jde {
 
                     /** RequestLogs Start. */
                     public Start: number;
+
+                    /** RequestLogs Limit. */
+                    public Limit: number;
 
                     /**
                      * Creates a new RequestLogs instance using the specified properties.
@@ -531,6 +537,9 @@ export namespace Jde {
                 /** Properties of a RequestStrings. */
                 interface IRequestStrings {
 
+                    /** RequestStrings RequestId */
+                    RequestId?: (number|null);
+
                     /** RequestStrings Values */
                     Values?: (Jde.ApplicationServer.Web.FromClient.IRequestString[]|null);
                 }
@@ -543,6 +552,9 @@ export namespace Jde {
                      * @param [properties] Properties to set
                      */
                     constructor(properties?: Jde.ApplicationServer.Web.FromClient.IRequestStrings);
+
+                    /** RequestStrings RequestId. */
+                    public RequestId: number;
 
                     /** RequestStrings Values. */
                     public Values: Jde.ApplicationServer.Web.FromClient.IRequestString[];
@@ -621,11 +633,11 @@ export namespace Jde {
                 /** Properties of a Custom. */
                 interface ICustom {
 
-                    /** Custom ApplicationId */
-                    ApplicationId?: (number|null);
-
                     /** Custom RequestId */
                     RequestId?: (number|null);
+
+                    /** Custom ApplicationId */
+                    ApplicationId?: (number|null);
 
                     /** Custom Message */
                     Message?: (Uint8Array|null);
@@ -640,11 +652,11 @@ export namespace Jde {
                      */
                     constructor(properties?: Jde.ApplicationServer.Web.FromClient.ICustom);
 
-                    /** Custom ApplicationId. */
-                    public ApplicationId: number;
-
                     /** Custom RequestId. */
                     public RequestId: number;
+
+                    /** Custom ApplicationId. */
+                    public ApplicationId: number;
 
                     /** Custom Message. */
                     public Message: Uint8Array;

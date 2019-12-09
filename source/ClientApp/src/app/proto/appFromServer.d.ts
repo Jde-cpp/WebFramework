@@ -889,6 +889,9 @@ export namespace Jde {
                 /** Properties of an ApplicationStrings. */
                 interface IApplicationStrings {
 
+                    /** ApplicationStrings RequestId */
+                    RequestId?: (number|null);
+
                     /** ApplicationStrings ApplicationId */
                     ApplicationId?: (number|null);
 
@@ -904,6 +907,9 @@ export namespace Jde {
                      * @param [properties] Properties to set
                      */
                     constructor(properties?: Jde.ApplicationServer.Web.FromServer.IApplicationStrings);
+
+                    /** ApplicationStrings RequestId. */
+                    public RequestId: number;
 
                     /** ApplicationStrings ApplicationId. */
                     public ApplicationId: number;

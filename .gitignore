@@ -1,0 +1,3 @@
+source/.vscode/settings.json
+source/ClientApp/node_modules
+*.proto

@@ -3,6 +3,9 @@ import { TraceEntry } from './TraceEntry';
 import { Subject } from 'rxjs';
 import {EventEmitter} from '@angular/core';
 
+import * as AppFromServer from '../../../proto/appFromServer';
+import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+
 export class DataSource
 {
 	constructor( private pageSize:number=10 )
@@ -100,7 +103,7 @@ export class DataSource
 		if( this.observable )
 			this.observable.next( values );
 	}
-	filterData( messageIds:number[], filter2:string, index:number )
+	filterData( messageIds:number[], filter2:string, index:number, level:FromServer.ELogLevel )
 	{
 		const filter = filter2 ? filter2.trim().toLowerCase() : null;
 		let visibleData:TraceEntry[] = [];
@@ -112,7 +115,7 @@ export class DataSource
 			if( !haveIndex && !pastIndex )
 				pastIndex = entry.index==index;
 			entry.hidden = messageIds.indexOf(entry.messageId)!=-1;
-			if( !entry.hidden && (filter==null || entry.message.toLowerCase().indexOf(filter)!=-1) )
+			if( !entry.hidden && entry.level>=level && (filter==null || entry.message.toLowerCase().indexOf(filter)!=-1) )
 			{
 				if( !haveIndex && pastIndex )
 				{

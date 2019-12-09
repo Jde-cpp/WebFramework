@@ -136,8 +136,8 @@ export class LogsComponent implements OnInit, OnDestroy
 		}
 		if( i>0 )
 			this.buffer.splice( 0, i );
-		if( !this.buffer.length )
-			console.log( 'no buffer length' );
+	//	if( !this.buffer.length )
+	//		console.log( 'no buffer length' );
 	}
 
 	onChangeApplication( event:MatOptionSelectionChange ) 
@@ -147,14 +147,14 @@ export class LogsComponent implements OnInit, OnDestroy
 	}
 	subscribe( applicationId:number, level:FromServer.ELogLevel )
 	{
-		var subscription = { applicationId: applicationId, level: level, start:this.start };
+		var subscription = { applicationId: applicationId, level: level, start:this.start, limit:this.limit };
 		if( JSON.stringify(this.currentSubscription)!=JSON.stringify(subscription) )
 		{
 			this.data.clear();
 			this.unsubscribe();
 			this.level = level;
 			this.currentSubscription = subscription;
-			this.subscription = this.appService.logs( subscription.applicationId, subscription.level, subscription.start );
+			this.subscription = this.appService.logs( subscription.applicationId, subscription.level, subscription.start, subscription.limit );
 			this.subscription.subscribe( traces => {this.onTraces(traces);} );
 		}
 	}
@@ -209,7 +209,7 @@ export class LogsComponent implements OnInit, OnDestroy
 	}
 	filterData()
 	{
-		this.data.filterData( this.settings.hiddenMessages, this.filter, this.selectedEntry ? this.selectedEntry.index : -1 );
+		this.data.filterData( this.settings.hiddenMessages, this.filter, this.selectedEntry ? this.selectedEntry.index : -1, this.level );
 	}
 	navigateNext()
 	{
@@ -263,6 +263,7 @@ export class LogsComponent implements OnInit, OnDestroy
 	private currentSubscription:ISubscription=LogsComponent.DefaultSubscription;//actual subscribtion
 	private instanceId:number; //instance in dropdown
 	private get level():FromServer.ELogLevel{ return this.settings.level; } private set level( value:FromServer.ELogLevel ){ this.settings.level=value; }
+	private get limit():number{return this.settings.limit;} private set limit(value:number){ this.settings.limit = value; }
 	private get application():Application|null{ return this.applications.find( (existing)=>{return existing.id==this.applicationId;} ); }
 	private applications:Application[]=[];
 	private subscription:Observable<[number,FromServer.ITraceMessage]>

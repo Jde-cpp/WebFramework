@@ -2445,6 +2445,7 @@ export const Jde = $root.Jde = (() => {
                      * Properties of an ApplicationStrings.
                      * @memberof Jde.ApplicationServer.Web.FromServer
                      * @interface IApplicationStrings
+                     * @property {number|null} [RequestId] ApplicationStrings RequestId
                      * @property {number|null} [ApplicationId] ApplicationStrings ApplicationId
                      * @property {Array.<Jde.ApplicationServer.Web.FromServer.IApplicationString>|null} [Values] ApplicationStrings Values
                      */
@@ -2464,6 +2465,14 @@ export const Jde = $root.Jde = (() => {
                                 if (properties[keys[i]] != null)
                                     this[keys[i]] = properties[keys[i]];
                     }
+
+                    /**
+                     * ApplicationStrings RequestId.
+                     * @member {number} RequestId
+                     * @memberof Jde.ApplicationServer.Web.FromServer.ApplicationStrings
+                     * @instance
+                     */
+                    ApplicationStrings.prototype.RequestId = 0;
 
                     /**
                      * ApplicationStrings ApplicationId.
@@ -2505,11 +2514,13 @@ export const Jde = $root.Jde = (() => {
                     ApplicationStrings.encode = function encode(message, writer) {
                         if (!writer)
                             writer = $Writer.create();
+                        if (message.RequestId != null && message.hasOwnProperty("RequestId"))
+                            writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.RequestId);
                         if (message.ApplicationId != null && message.hasOwnProperty("ApplicationId"))
-                            writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.ApplicationId);
+                            writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.ApplicationId);
                         if (message.Values != null && message.Values.length)
                             for (let i = 0; i < message.Values.length; ++i)
-                                $root.Jde.ApplicationServer.Web.FromServer.ApplicationString.encode(message.Values[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                                $root.Jde.ApplicationServer.Web.FromServer.ApplicationString.encode(message.Values[i], writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
                         return writer;
                     };
 
@@ -2545,9 +2556,12 @@ export const Jde = $root.Jde = (() => {
                             let tag = reader.uint32();
                             switch (tag >>> 3) {
                             case 1:
-                                message.ApplicationId = reader.uint32();
+                                message.RequestId = reader.uint32();
                                 break;
                             case 2:
+                                message.ApplicationId = reader.uint32();
+                                break;
+                            case 3:
                                 if (!(message.Values && message.Values.length))
                                     message.Values = [];
                                 message.Values.push($root.Jde.ApplicationServer.Web.FromServer.ApplicationString.decode(reader, reader.uint32()));
@@ -2587,6 +2601,9 @@ export const Jde = $root.Jde = (() => {
                     ApplicationStrings.verify = function verify(message) {
                         if (typeof message !== "object" || message === null)
                             return "object expected";
+                        if (message.RequestId != null && message.hasOwnProperty("RequestId"))
+                            if (!$util.isInteger(message.RequestId))
+                                return "RequestId: integer expected";
                         if (message.ApplicationId != null && message.hasOwnProperty("ApplicationId"))
                             if (!$util.isInteger(message.ApplicationId))
                                 return "ApplicationId: integer expected";
@@ -2614,6 +2631,8 @@ export const Jde = $root.Jde = (() => {
                         if (object instanceof $root.Jde.ApplicationServer.Web.FromServer.ApplicationStrings)
                             return object;
                         let message = new $root.Jde.ApplicationServer.Web.FromServer.ApplicationStrings();
+                        if (object.RequestId != null)
+                            message.RequestId = object.RequestId >>> 0;
                         if (object.ApplicationId != null)
                             message.ApplicationId = object.ApplicationId >>> 0;
                         if (object.Values) {
@@ -2644,8 +2663,12 @@ export const Jde = $root.Jde = (() => {
                         let object = {};
                         if (options.arrays || options.defaults)
                             object.Values = [];
-                        if (options.defaults)
+                        if (options.defaults) {
+                            object.RequestId = 0;
                             object.ApplicationId = 0;
+                        }
+                        if (message.RequestId != null && message.hasOwnProperty("RequestId"))
+                            object.RequestId = message.RequestId;
                         if (message.ApplicationId != null && message.hasOwnProperty("ApplicationId"))
                             object.ApplicationId = message.ApplicationId;
                         if (message.Values && message.Values.length) {

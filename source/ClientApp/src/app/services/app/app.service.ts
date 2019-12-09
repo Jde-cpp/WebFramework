@@ -43,7 +43,7 @@ export class AppService
 			this.sendRequest( FromClient.ERequest.Statuses | FromClient.ERequest.Negate );
 	};
 
-	logs( applicationId:number, value:FromServer.ELogLevel, start:Date ):Observable<[number,FromServer.ITraceMessage]>
+	logs( applicationId:number, value:FromServer.ELogLevel, start:Date, limit:number ):Observable<[number,FromServer.ITraceMessage]>
 	{
 		let subscriptions = this.logsSubscriptions.get( applicationId );
 		if( !subscriptions )
@@ -56,9 +56,9 @@ export class AppService
 		subscriptions.push( [value, callback] );
 		if( value<minLevel )
 		{
-			var request = new FromClient.RequestLogs(); request.Value = value; request.ApplicationId = applicationId; request.Start = start.getTime()/1000;
+			var request = new FromClient.RequestLogs(); request.Value = value; request.ApplicationId = applicationId; request.Start = start ? start.getTime()/1000 : 0; request.Limit = limit;
 			var msg = new FromClient.MessageUnion(); msg.RequestLogs=request;
-			console.log( `AppService::RequestLogs applicationId='${applicationId}', level='${value}', date='${start.toISOString()}` );
+			console.log( `AppService::RequestLogs applicationId='${applicationId}', level='${value}', date='${start ? start.toISOString() : "null"}'` );
 			this.send( msg );//todo set new structure to ApplicationId, fix server.
 		}
 		return callback;

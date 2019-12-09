@@ -552,6 +552,7 @@ export const Jde = $root.Jde = (() => {
                      * @property {number|Long|null} [InstanceId] RequestLogs InstanceId
                      * @property {number|null} [Value] RequestLogs Value
                      * @property {number|null} [Start] RequestLogs Start
+                     * @property {number|null} [Limit] RequestLogs Limit
                      */
 
                     /**
@@ -602,6 +603,14 @@ export const Jde = $root.Jde = (() => {
                     RequestLogs.prototype.Start = 0;
 
                     /**
+                     * RequestLogs Limit.
+                     * @member {number} Limit
+                     * @memberof Jde.ApplicationServer.Web.FromClient.RequestLogs
+                     * @instance
+                     */
+                    RequestLogs.prototype.Limit = 0;
+
+                    /**
                      * Creates a new RequestLogs instance using the specified properties.
                      * @function create
                      * @memberof Jde.ApplicationServer.Web.FromClient.RequestLogs
@@ -633,6 +642,8 @@ export const Jde = $root.Jde = (() => {
                             writer.uint32(/* id 3, wireType 0 =*/24).uint32(message.Value);
                         if (message.Start != null && message.hasOwnProperty("Start"))
                             writer.uint32(/* id 4, wireType 0 =*/32).uint32(message.Start);
+                        if (message.Limit != null && message.hasOwnProperty("Limit"))
+                            writer.uint32(/* id 5, wireType 0 =*/40).uint32(message.Limit);
                         return writer;
                     };
 
@@ -678,6 +689,9 @@ export const Jde = $root.Jde = (() => {
                                 break;
                             case 4:
                                 message.Start = reader.uint32();
+                                break;
+                            case 5:
+                                message.Limit = reader.uint32();
                                 break;
                             default:
                                 reader.skipType(tag & 7);
@@ -726,6 +740,9 @@ export const Jde = $root.Jde = (() => {
                         if (message.Start != null && message.hasOwnProperty("Start"))
                             if (!$util.isInteger(message.Start))
                                 return "Start: integer expected";
+                        if (message.Limit != null && message.hasOwnProperty("Limit"))
+                            if (!$util.isInteger(message.Limit))
+                                return "Limit: integer expected";
                         return null;
                     };
 
@@ -763,6 +780,8 @@ export const Jde = $root.Jde = (() => {
                             message.Value = object.Value >>> 0;
                         if (object.Start != null)
                             message.Start = object.Start >>> 0;
+                        if (object.Limit != null)
+                            message.Limit = object.Limit >>> 0;
                         return message;
                     };
 
@@ -792,6 +811,7 @@ export const Jde = $root.Jde = (() => {
                                 object.InstanceId = options.longs === String ? "0" : 0;
                             object.Value = 0;
                             object.Start = 0;
+                            object.Limit = 0;
                         }
                         if (message.ApplicationId != null && message.hasOwnProperty("ApplicationId"))
                             if (typeof message.ApplicationId === "number")
@@ -807,6 +827,8 @@ export const Jde = $root.Jde = (() => {
                             object.Value = message.Value;
                         if (message.Start != null && message.hasOwnProperty("Start"))
                             object.Start = message.Start;
+                        if (message.Limit != null && message.hasOwnProperty("Limit"))
+                            object.Limit = message.Limit;
                         return object;
                     };
 
@@ -1356,6 +1378,7 @@ export const Jde = $root.Jde = (() => {
                      * Properties of a RequestStrings.
                      * @memberof Jde.ApplicationServer.Web.FromClient
                      * @interface IRequestStrings
+                     * @property {number|null} [RequestId] RequestStrings RequestId
                      * @property {Array.<Jde.ApplicationServer.Web.FromClient.IRequestString>|null} [Values] RequestStrings Values
                      */
 
@@ -1374,6 +1397,14 @@ export const Jde = $root.Jde = (() => {
                                 if (properties[keys[i]] != null)
                                     this[keys[i]] = properties[keys[i]];
                     }
+
+                    /**
+                     * RequestStrings RequestId.
+                     * @member {number} RequestId
+                     * @memberof Jde.ApplicationServer.Web.FromClient.RequestStrings
+                     * @instance
+                     */
+                    RequestStrings.prototype.RequestId = 0;
 
                     /**
                      * RequestStrings Values.
@@ -1407,9 +1438,11 @@ export const Jde = $root.Jde = (() => {
                     RequestStrings.encode = function encode(message, writer) {
                         if (!writer)
                             writer = $Writer.create();
+                        if (message.RequestId != null && message.hasOwnProperty("RequestId"))
+                            writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.RequestId);
                         if (message.Values != null && message.Values.length)
                             for (let i = 0; i < message.Values.length; ++i)
-                                $root.Jde.ApplicationServer.Web.FromClient.RequestString.encode(message.Values[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                                $root.Jde.ApplicationServer.Web.FromClient.RequestString.encode(message.Values[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
                         return writer;
                     };
 
@@ -1445,6 +1478,9 @@ export const Jde = $root.Jde = (() => {
                             let tag = reader.uint32();
                             switch (tag >>> 3) {
                             case 1:
+                                message.RequestId = reader.uint32();
+                                break;
+                            case 2:
                                 if (!(message.Values && message.Values.length))
                                     message.Values = [];
                                 message.Values.push($root.Jde.ApplicationServer.Web.FromClient.RequestString.decode(reader, reader.uint32()));
@@ -1484,6 +1520,9 @@ export const Jde = $root.Jde = (() => {
                     RequestStrings.verify = function verify(message) {
                         if (typeof message !== "object" || message === null)
                             return "object expected";
+                        if (message.RequestId != null && message.hasOwnProperty("RequestId"))
+                            if (!$util.isInteger(message.RequestId))
+                                return "RequestId: integer expected";
                         if (message.Values != null && message.hasOwnProperty("Values")) {
                             if (!Array.isArray(message.Values))
                                 return "Values: array expected";
@@ -1508,6 +1547,8 @@ export const Jde = $root.Jde = (() => {
                         if (object instanceof $root.Jde.ApplicationServer.Web.FromClient.RequestStrings)
                             return object;
                         let message = new $root.Jde.ApplicationServer.Web.FromClient.RequestStrings();
+                        if (object.RequestId != null)
+                            message.RequestId = object.RequestId >>> 0;
                         if (object.Values) {
                             if (!Array.isArray(object.Values))
                                 throw TypeError(".Jde.ApplicationServer.Web.FromClient.RequestStrings.Values: array expected");
@@ -1536,6 +1577,10 @@ export const Jde = $root.Jde = (() => {
                         let object = {};
                         if (options.arrays || options.defaults)
                             object.Values = [];
+                        if (options.defaults)
+                            object.RequestId = 0;
+                        if (message.RequestId != null && message.hasOwnProperty("RequestId"))
+                            object.RequestId = message.RequestId;
                         if (message.Values && message.Values.length) {
                             object.Values = [];
                             for (let j = 0; j < message.Values.length; ++j)
@@ -1564,8 +1609,8 @@ export const Jde = $root.Jde = (() => {
                      * Properties of a Custom.
                      * @memberof Jde.ApplicationServer.Web.FromClient
                      * @interface ICustom
-                     * @property {number|null} [ApplicationId] Custom ApplicationId
                      * @property {number|null} [RequestId] Custom RequestId
+                     * @property {number|null} [ApplicationId] Custom ApplicationId
                      * @property {Uint8Array|null} [Message] Custom Message
                      */
 
@@ -1585,20 +1630,20 @@ export const Jde = $root.Jde = (() => {
                     }
 
                     /**
-                     * Custom ApplicationId.
-                     * @member {number} ApplicationId
-                     * @memberof Jde.ApplicationServer.Web.FromClient.Custom
-                     * @instance
-                     */
-                    Custom.prototype.ApplicationId = 0;
-
-                    /**
                      * Custom RequestId.
                      * @member {number} RequestId
                      * @memberof Jde.ApplicationServer.Web.FromClient.Custom
                      * @instance
                      */
                     Custom.prototype.RequestId = 0;
+
+                    /**
+                     * Custom ApplicationId.
+                     * @member {number} ApplicationId
+                     * @memberof Jde.ApplicationServer.Web.FromClient.Custom
+                     * @instance
+                     */
+                    Custom.prototype.ApplicationId = 0;
 
                     /**
                      * Custom Message.
@@ -1632,10 +1677,10 @@ export const Jde = $root.Jde = (() => {
                     Custom.encode = function encode(message, writer) {
                         if (!writer)
                             writer = $Writer.create();
-                        if (message.ApplicationId != null && message.hasOwnProperty("ApplicationId"))
-                            writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.ApplicationId);
                         if (message.RequestId != null && message.hasOwnProperty("RequestId"))
-                            writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.RequestId);
+                            writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.RequestId);
+                        if (message.ApplicationId != null && message.hasOwnProperty("ApplicationId"))
+                            writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.ApplicationId);
                         if (message.Message != null && message.hasOwnProperty("Message"))
                             writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.Message);
                         return writer;
@@ -1673,10 +1718,10 @@ export const Jde = $root.Jde = (() => {
                             let tag = reader.uint32();
                             switch (tag >>> 3) {
                             case 1:
-                                message.ApplicationId = reader.uint32();
+                                message.RequestId = reader.uint32();
                                 break;
                             case 2:
-                                message.RequestId = reader.uint32();
+                                message.ApplicationId = reader.uint32();
                                 break;
                             case 3:
                                 message.Message = reader.bytes();
@@ -1716,12 +1761,12 @@ export const Jde = $root.Jde = (() => {
                     Custom.verify = function verify(message) {
                         if (typeof message !== "object" || message === null)
                             return "object expected";
-                        if (message.ApplicationId != null && message.hasOwnProperty("ApplicationId"))
-                            if (!$util.isInteger(message.ApplicationId))
-                                return "ApplicationId: integer expected";
                         if (message.RequestId != null && message.hasOwnProperty("RequestId"))
                             if (!$util.isInteger(message.RequestId))
                                 return "RequestId: integer expected";
+                        if (message.ApplicationId != null && message.hasOwnProperty("ApplicationId"))
+                            if (!$util.isInteger(message.ApplicationId))
+                                return "ApplicationId: integer expected";
                         if (message.Message != null && message.hasOwnProperty("Message"))
                             if (!(message.Message && typeof message.Message.length === "number" || $util.isString(message.Message)))
                                 return "Message: buffer expected";
@@ -1740,10 +1785,10 @@ export const Jde = $root.Jde = (() => {
                         if (object instanceof $root.Jde.ApplicationServer.Web.FromClient.Custom)
                             return object;
                         let message = new $root.Jde.ApplicationServer.Web.FromClient.Custom();
-                        if (object.ApplicationId != null)
-                            message.ApplicationId = object.ApplicationId >>> 0;
                         if (object.RequestId != null)
                             message.RequestId = object.RequestId >>> 0;
+                        if (object.ApplicationId != null)
+                            message.ApplicationId = object.ApplicationId >>> 0;
                         if (object.Message != null)
                             if (typeof object.Message === "string")
                                 $util.base64.decode(object.Message, message.Message = $util.newBuffer($util.base64.length(object.Message)), 0);
@@ -1766,8 +1811,8 @@ export const Jde = $root.Jde = (() => {
                             options = {};
                         let object = {};
                         if (options.defaults) {
-                            object.ApplicationId = 0;
                             object.RequestId = 0;
+                            object.ApplicationId = 0;
                             if (options.bytes === String)
                                 object.Message = "";
                             else {
@@ -1776,10 +1821,10 @@ export const Jde = $root.Jde = (() => {
                                     object.Message = $util.newBuffer(object.Message);
                             }
                         }
-                        if (message.ApplicationId != null && message.hasOwnProperty("ApplicationId"))
-                            object.ApplicationId = message.ApplicationId;
                         if (message.RequestId != null && message.hasOwnProperty("RequestId"))
                             object.RequestId = message.RequestId;
+                        if (message.ApplicationId != null && message.hasOwnProperty("ApplicationId"))
+                            object.ApplicationId = message.ApplicationId;
                         if (message.Message != null && message.hasOwnProperty("Message"))
                             object.Message = options.bytes === String ? $util.base64.encode(message.Message, 0, message.Message.length) : options.bytes === Array ? Array.prototype.slice.call(message.Message) : message.Message;
                         return object;
