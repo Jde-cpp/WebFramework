@@ -15,7 +15,7 @@ export class CookieProfile implements IProfile
 			let x = cookie.substr( 0, cookie.indexOf("=") );
 			const y=cookie.substr( cookie.indexOf("=")+1 );
 			x = x.replace(/^\s+|\s+$/g,"");
-			if( x!=name )
+			if( x!=key )
 				continue;
 			try
 			{
@@ -23,7 +23,7 @@ export class CookieProfile implements IProfile
 			}
 			catch( e )
 			{
-				throw throwError( e );  
+				throw throwError( e );
 			}
 			break;
 		}

@@ -19,6 +19,7 @@ function moveToDir
 
 function addHard
 {
+	if [ -f $2 ]; then rm $2; fi;
 	ln $1/$2 .;
 };
 
