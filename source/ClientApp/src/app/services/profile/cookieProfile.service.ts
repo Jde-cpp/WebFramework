@@ -34,9 +34,13 @@ export class CookieProfile implements IProfile
 	}
 	put<T>( name:string, value:T ):void
 	{
+		this.put( name, JSON.stringify(value) );
+	}
+	putJson( name:string, json:string ):void
+	{
 		const exdate = new Date();
 		exdate.setDate( exdate.getDate() + 364 );
-		const c_value= JSON.stringify(value) + "; expires="+exdate.toUTCString();
+		const c_value = json + "; expires="+exdate.toUTCString();
 		document.cookie = name + "=" + c_value;
 	}
 }

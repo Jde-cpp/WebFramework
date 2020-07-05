@@ -1,13 +1,7 @@
-import {Component,EventEmitter,OnInit,Input,Output, OnDestroy} from '@angular/core';
-//import { ThemePalette } from '@angular/material';
-//import * as AppFromServer from '../../../proto/appFromServer';
-//import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import {Component,EventEmitter,OnInit,Input,Output, OnDestroy, ChangeDetectorRef} from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
-//import {Observable} from 'rxjs';
-//import { emit } from 'cluster';
 
-
-export class PageEvent
+export class IPageEvent
 {
 	constructor(){this.startIndex=0; this.pageSize=50;}
 	//length: number;
@@ -20,6 +14,8 @@ export class PageEvent
 @Component({ selector: 'paginator', templateUrl: './paginator.html' })
 export class PaginatorComponent implements OnInit, OnDestroy
 {
+	constructor( private cdr: ChangeDetectorRef )
+	{}
 	ngOnInit()
 	{
 		this.lengthChangeSubscription = this.lengthChange.subscribe( (value)=>this.length = value );
@@ -45,18 +41,42 @@ export class PaginatorComponent implements OnInit, OnDestroy
 	@Input() hidePageSize: boolean;
 	@Input() lengthChange:Observable<number>;//
 	private lengthChangeSubscription: Subscription;
-	set length(value){ if(!value) value=0; if( value!=this.length ){ this._length=value; this.startIndex=this.startIndex;} } get length(){return this._length;} _length: number=0; //The length of the total number of items that are being paginated.
+	set length(value)
+	{
+		if( !value )
+			value = 0;
+		if( value!=this.length )
+		{
+			this._length = value;
+			if( value!=0 )
+				this.startIndex = this.settingsIndex || this.startIndex;
+			this.settingsIndex = null;
+			this.cdr.detectChanges();
+		}
+	} get length(){return this._length;} _length: number=0; //The length of the total number of items that are being paginated.
 	@Input() set pageIndex( value ){ this.startIndex = value*this.pageSize; } get pageIndex(){return this.startIndex/this.length; }
-	@Input() set pageSize(value){ if( value!=this.pageSize ){ this._pageSize=value; this.startIndex=this.startIndex;} } get pageSize(){return this._pageSize;} _pageSize:number=50;
+	@Input() set pageSize(value)
+	{
+		if( value!=this.pageSize )
+		{
+			this._pageSize=value;
+			this.startIndex=this.startIndex;
+			if( this.page )
+				this.page.next( {startIndex:this.startIndex, pageSize:this.pageSize} );
+		} } get pageSize(){return this._pageSize;} _pageSize:number=50;
 	//@Input() pageSizeOptions: number[];
 	@Input() showFirstLastButtons: boolean=true;
-	@Output() page = new EventEmitter<PageEvent>();
+	@Output() page = new EventEmitter<IPageEvent>();
 	//initialized: Observable<void>;
-
-	set startIndex(value)
+	settingsIndex:number;
+	@Input()	set startIndex(value)
 	{
 		if( value>this.length-1 )
-			value = this.pageSize-1;
+		{
+			if( this.length==0 )
+				this.settingsIndex = value;
+			value = this.length-this.pageSize-1;
+		}
 		if( value<0 )
 			value = 0;
 		if( value!=this.startIndex )
@@ -65,9 +85,16 @@ export class PaginatorComponent implements OnInit, OnDestroy
 			if( this.page )
 				this.page.next( {startIndex:this.startIndex, pageSize:this.pageSize} );
 		}
+		//console.log( `startIndex=${this.startIndex}` );
 	}
 	get startIndex(){return this._startIndex}; _startIndex:number=0;
-	get endIndex(){ return Math.min(this.startIndex+this.pageSize, this.length-1); }
+	get startIndexDisplay(){ return Math.max(0,Math.min(this.startIndex,this.length-1)); }
+	get endIndex()
+	{
+		const endIndex = Math.max( Math.min(this.startIndex+this.pageSize, this.length-1), 0 );
+		//console.log( `length=${this.length} pageSize=${this.pageSize} startIndex=${this.startIndex}, endIndex=${endIndex}` );
+		return endIndex;
+	}
 	get onFirstPage(){ return this.startIndex==0; }
 	get onLastPage(){ return this.endIndex==this.length-1; }
 }
