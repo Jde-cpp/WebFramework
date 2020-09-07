@@ -1,5 +1,5 @@
 import {Component,EventEmitter,Input,Output} from '@angular/core';
-import * as AppFromServer from '../../../proto/appFromServer';
+import * as AppFromServer from 'src/app/proto/proto/appFromServer';
 import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
 
 
