@@ -1,5 +1,6 @@
 import { IProfile } from 'src/app/services/profile/IProfile';
-import { Subject, Observable, CompletionObserver } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
+import { load } from 'protobufjs';
 
 export interface IAssignable<TUnderlying>
 {
@@ -7,35 +8,47 @@ export interface IAssignable<TUnderlying>
 }
 interface ILoad
 {
-	load():Observable<any>;
+	load():Promise<any>;
 }
 export class Settings<TUnderlying extends IAssignable<TUnderlying>> implements ILoad
 {
 	constructor( private type: new()=>TUnderlying, private key:string, private profile:IProfile  )
 	{
 		this.value = new this.type;
+		this.loadedPromise = new Promise<boolean>( (resolve) => {this.resolve = resolve;} );
+		this.load();
 	}
-	load():Observable<TUnderlying>
+	loadThen( fnctn:()=>any )//todo take out
 	{
-		var callback = new Subject<TUnderlying>();
-		this.profile.get<TUnderlying>( this.key ).subscribe(
+		this.load().then( ()=>{fnctn();} );
+	}
+	load():Promise<void>
+	{
+		return new Promise( (resolve)=>
 		{
-			next: value=>
+			this.profile.get<TUnderlying>( this.key ).then( (value)=>
 			{
 				if( value )
 				{
-					this.value.assign( value );
-					if( !this.original )
-						this.original = new this.type;
-					this.original.assign( value );
+					try
+					{
+					    this.value.assign( value );
+    					if( !this.original )
+	    					this.original = new this.type;
+		    			this.original.assign( value );
+					}
+					catch//changed settings
+					{
+						this.value = new this.type;
+						this.original = null;
+					}
 				}
 				else
 					this.original = null;
-				callback.complete();
-			},
-			error: e=>{ console.error( e ); callback.error( e ); }
-		});
-		return callback;
+				this.resolve(true);
+				resolve();
+			});
+		} );
 	}
 	reset( suffix:string )
 	{
@@ -46,6 +59,7 @@ export class Settings<TUnderlying extends IAssignable<TUnderlying>> implements I
 	}
 	save()
 	{
+		if( !this.isLoaded ){ console.log(`tried to save unloaded settings ${this.key}.`); return; }
 		const settings = JSON.stringify( this.value );
 		const originalSettings = this.original ? JSON.stringify( this.original ) : this.defaultJson;
 		const isDefault = settings==this.defaultJson;
@@ -62,25 +76,23 @@ export class Settings<TUnderlying extends IAssignable<TUnderlying>> implements I
 		else if( isDefault )
 			this.original = null;
 	}
-	get value(){return this._value;} set value(value)
-	{
-		this._value=value;
-	} private _value:TUnderlying;
+	loadedPromise: Promise<boolean>;
+	private resolve: Function|null = null;
+	get isLoaded(){return this.original!==undefined;}
+	get value(){return this._value;} set value(value){this._value=value;} private _value:TUnderlying;
 	get defaultJson():string{ return this._defaultJson || (this._defaultJson=JSON.stringify(new this.type));} _defaultJson:string;
-	private get original(){ return this._original;} private set original(value)
-	{
-		this._original=value;
-	} _original:TUnderlying;
+	private get original(){ return this._original;} private set original(value){this._original=value;} _original:TUnderlying;
 }
-export function JoinSettings( ...args: ILoad[] ):Observable<void>
+export function JoinSettings( ...args: ILoad[] ):Promise<void>
 {
-	var callback = new Subject<void>();
-	let i=0;
-	let JoinNext = ( args: ILoad[] )=>
-	{
-		args[0].load().subscribe( {complete: ()=>{if( args.length>1 )JoinNext(args.splice(1)); else callback.complete();} } );
-	}
-	JoinNext( args );
-	return callback;
-}
 
+	return new Promise<void>( (resolve)=>
+	{
+		let i=0;
+		let JoinNext = ( args: ILoad[] )=>
+		{
+			args[0].load().then( ()=>{if( args.length>1 )JoinNext(args.splice(1)); else resolve();} );
+		}
+		JoinNext( args );
+	} );
+}

@@ -26,7 +26,31 @@ export class DateUtilities
 	}
 	static toDays( value:Date ):Day
 	{
+		if( value==null )
+		    debugger;
 		return Math.floor( value.getTime()/(24*60*60000) );
+	}
+	static dayOfWeek( date:Date )
+	{
+		const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+		return days[ date.getUTCDay() ];
+	}
+
+	static display( unix:number ):string
+	{
+		const date = new Date( unix*1000 );
+		const now = new Date();
+		const showYear = date.getFullYear()<now.getFullYear() && date.getMonth()<=now.getMonth();
+		const showMonth = showYear || date>now || DateUtilities.toDays(now)-DateUtilities.toDays(date)>6;
+		let display = "";
+		if( showYear )
+			display = `${date.getFullYear()-2000}-`;
+		if( showMonth )
+			display += `${date.getMonth()+1}-${date.getDate()}`;
+		else
+			display = this.dayOfWeek( date );
+
+		return display;
 	}
 
 	static get easternTimezoneOffset():Minutes//in Minutes
