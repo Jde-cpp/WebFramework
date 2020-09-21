@@ -5,11 +5,10 @@ import { Observable,of, throwError } from 'rxjs';
 @Injectable()
 export class LocalStorageProfile implements IProfile
 {
-	get<T>( key:string ): Observable<T>
+	get<T>( key:string ): Promise<T>
 	{
 		const item = localStorage.getItem( key );
-		var callback:Observable<T> = of( item ? JSON.parse(item) : null );
-		return callback;
+		return Promise.resolve( JSON.parse(item) );
 	}
 	put<T>( name:string, value:T ):void
 	{

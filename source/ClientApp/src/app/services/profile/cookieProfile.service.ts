@@ -5,9 +5,9 @@ import { Observable,of, throwError } from 'rxjs';
 @Injectable()
 export class CookieProfile implements IProfile
 {
-	get<T>( key:string ): Observable<T>
+	get<T>( key:string ): Promise<T>
 	{
-		var callback:Observable<T> = null;
+		var obj:T = null;
 		let foundCookie = null;
 		const cookies = document ? document.cookie.split( ";" ) : [];
 		for( let cookie of cookies )
@@ -19,7 +19,7 @@ export class CookieProfile implements IProfile
 				continue;
 			try
 			{
-				callback = of( JSON.parse(y) );
+				obj = JSON.parse( y );
 			}
 			catch( e )
 			{
@@ -27,10 +27,7 @@ export class CookieProfile implements IProfile
 			}
 			break;
 		}
-		if( !callback )
-			callback = of( null );
-
-		return callback;
+		return Promise.resolve( obj );
 	}
 	put<T>( name:string, value:T ):void
 	{
