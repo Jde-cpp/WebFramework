@@ -36,8 +36,8 @@ export class PaginatorComponent implements OnInit, OnDestroy
 	lastPage(){ this.startIndex = this.length-this.length%this.pageSize; }
 
 	//@Input() color: ThemePalette;
-	//get disabled(){ return this._disabled; }
-	//set disabled(value){this._disabled=value;} _disabled: boolean=false;
+	get disabled(){ return this._disabled; }
+	set disabled(value){this._disabled=value;} _disabled: boolean=false;
 	@Input() hidePageSize: boolean;
 	@Input() lengthChange:Observable<number>;//
 	private lengthChangeSubscription: Subscription;

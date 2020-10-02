@@ -1,6 +1,5 @@
 import { std } from './stl';
 
-
 export class StatResult
 {
 	average:number=0.0;
@@ -8,7 +7,13 @@ export class StatResult
 	min:number=0.0
 	max:number=0.0
 };
-
+export default class Jde
+{
+	static sum<T>( values: T[], fnctn: (element:T) => number ):number
+	{
+		return std.accumulate( values, 0, (sum,value)=>sum+fnctn(value) );
+	}
+}
 export class MathUtilities
 {
 	static Statistics( values:number[], calcVariance:boolean=true ):StatResult
