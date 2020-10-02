@@ -36,9 +36,8 @@ export class DateUtilities
 		return days[ date.getUTCDay() ];
 	}
 
-	static display( unix:number ):string
+	static display( date:Date ):string
 	{
-		const date = new Date( unix*1000 );
 		const now = new Date();
 		const showYear = date.getFullYear()<now.getFullYear() && date.getMonth()<=now.getMonth();
 		const showMonth = showYear || date>now || DateUtilities.toDays(now)-DateUtilities.toDays(date)>6;
@@ -52,7 +51,6 @@ export class DateUtilities
 
 		return display;
 	}
-
 	static get easternTimezoneOffset():Minutes//in Minutes
 	{
 		if( !DateUtilities._easternTimezoneOffset )
