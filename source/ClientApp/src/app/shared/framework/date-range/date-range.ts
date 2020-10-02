@@ -5,9 +5,7 @@ import { Time } from 'highcharts';
 import { assertNotNull } from '@angular/compiler/src/output/output_ast';
 import { IAssignable } from 'src/app/utilities/settings';
 
-
 export enum TimeFrame{None=0, Week=7, Month=30, Quarter=90, Year=360, All=1000}
-
 
 @Component( {selector: 'date-range',templateUrl: 'date-range.html'} )
 export class DateRangeComponent implements OnInit
@@ -78,7 +76,7 @@ export class DateRangeComponent implements OnInit
 }
 export class DateRangeSettings implements IAssignable<DateRangeSettings>
 {
-	constructor( public timeFrame:TimeFrame=undefined, private _max:Day=undefined, private isValidDay:(_:Day)=>boolean=()=>{return true;} )
+	constructor( public timeFrame:TimeFrame=undefined, private _max:Day = DateUtilities.toDays(new Date()), private isValidDay:(_:Day)=>boolean=()=>{return true;} )
 	{}
 	assign(other: DateRangeSettings)
 	{
@@ -90,9 +88,7 @@ export class DateRangeSettings implements IAssignable<DateRangeSettings>
 	{
 		return { dayCount: this.dayCount, end: this.end, timeFrame: this.timeFrame };
   	}
-	//isValidDay(_:Day){ return true; }
-
-	get max(){return this._max ?? DateUtilities.toDays(new Date());} //set baseDay(x){this._baseDay=x;}
+	get max(){ return this._max; }
 	get dayCount()
 	{
 		let dayCount = this._dayCount ?? null;
@@ -112,8 +108,7 @@ export class DateRangeSettings implements IAssignable<DateRangeSettings>
 	{
 		let day = null;
 		if( this.timeFrame!=TimeFrame.All && this.dayCount!=undefined )
-			for( day = (this.end ?? this.max) - this.dayCount+1; day<=(this.end ?? this.max) && !this.isValidDay(day); ++day );
+			for( day = (this.end ?? this.max) - this.dayCount; day<=(this.end ?? this.max) && !this.isValidDay(day); ++day );
 		return day;
-	} set start( x:Day ){ this.dayCount = Math.min( 0, (this.end ?? this.max)-(x ?? 0) ); }
-	//timeFrame: TimeFrame | undefined;
+	} set start( x:Day ){ this.dayCount = Math.max( 0, (this.end ?? this.max)-(x ?? 0) ); }
 }
