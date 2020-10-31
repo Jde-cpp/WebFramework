@@ -1,13 +1,13 @@
 import {Component,EventEmitter,OnInit,Input,Output, OnDestroy, ChangeDetectorRef} from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
 
-export class IPageEvent
+export class PageEvent
 {
-	constructor(){this.startIndex=0; this.pageSize=50;}
+	constructor(){this.startIndex=0; this.pageLength=50;}
 	//length: number;
 	//pageIndex: number;
 	startIndex:number;
-	pageSize: number;
+	pageLength: number;
 	//previousPageIndex: number;
 }
 
@@ -19,28 +19,30 @@ export class PaginatorComponent implements OnInit, OnDestroy
 	ngOnInit()
 	{
 		this.lengthChangeSubscription = this.lengthChange.subscribe( (value)=>this.length = value );
+		this.startIndexChangeSubscription = this.startIndexChange.subscribe( (value)=>this.startIndex = value );
 
 	}
 	ngOnDestroy()
 	{
 		this.lengthChangeSubscription.unsubscribe();
+		this.startIndexChangeSubscription.unsubscribe();
 	}
 	onSelectionChange(  )
 	{}
 
 	firstPage(){ this.startIndex = 0; }
-	prevPage(){ this.startIndex = this.startIndex-this.pageSize; }
+	prevPage(){ this.startIndex = this.startIndex-this.pageLength; }
 	prevItem(){ --this.startIndex; }
 	nextItem(){ ++this.startIndex; }
-	nextPage(){ this.startIndex = this.startIndex+this.pageSize; }
-	lastPage(){ this.startIndex = this.length-this.length%this.pageSize; }
+	nextPage(){ this.startIndex = this.startIndex+this.pageLength; }
+	lastPage(){ this.startIndex = this.length-this.length%this.pageLength; }
 
 	//@Input() color: ThemePalette;
-	get disabled(){ return this._disabled; }
-	set disabled(value){this._disabled=value;} _disabled: boolean=false;
-	@Input() hidePageSize: boolean;
-	@Input() lengthChange:Observable<number>;//
-	private lengthChangeSubscription: Subscription;
+	//get disabled(){ return this._disabled; }
+	//set disabled(value){this._disabled=value;} _disabled: boolean=false;
+	@Input() hidepageLength: boolean;
+	@Input() lengthChange:Observable<number>;	private lengthChangeSubscription: Subscription;
+	@Input() startIndexChange:Observable<number>; private startIndexChangeSubscription: Subscription;
 	set length(value)
 	{
 		if( !value )
@@ -54,19 +56,23 @@ export class PaginatorComponent implements OnInit, OnDestroy
 			this.cdr.detectChanges();
 		}
 	} get length(){return this._length;} _length: number=0; //The length of the total number of items that are being paginated.
-	@Input() set pageIndex( value ){ this.startIndex = value*this.pageSize; } get pageIndex(){return this.startIndex/this.length; }
-	@Input() set pageSize(value)
+	lengthTimeout;
+	@Input() set pageIndex( value ){ this.startIndex = value*this.pageLength; } get pageIndex(){return this.startIndex/this.length; }
+	@Input() set pageLength(value)
 	{
-		if( value!=this.pageSize )
+		if( value!=this.pageLength )
 		{
-			this._pageSize=value;
+			this._pageLength=value;
 			this.startIndex=this.startIndex;
 			if( this.page )
-				this.page.next( {startIndex:this.startIndex, pageSize:this.pageSize} );
-		} } get pageSize(){return this._pageSize;} _pageSize:number=50;
-	//@Input() pageSizeOptions: number[];
+			{
+				if( this.lengthTimeout )
+					clearTimeout( this.lengthTimeout );
+				this.lengthTimeout = setTimeout( ()=>{ this.lengthTimeout = undefined; this.page.next( {startIndex:this.startIndex, pageLength:this.pageLength} ); }, 1000 );
+			}
+		} } get pageLength(){return this._pageLength;} _pageLength:number=50;
 	@Input() showFirstLastButtons: boolean=true;
-	@Output() page = new EventEmitter<IPageEvent>();
+	@Output() page = new EventEmitter<PageEvent>();
 	//initialized: Observable<void>;
 	settingsIndex:number;
 	@Input()	set startIndex(value)
@@ -75,7 +81,7 @@ export class PaginatorComponent implements OnInit, OnDestroy
 		{
 			if( this.length==0 )
 				this.settingsIndex = value;
-			value = this.length-this.pageSize-1;
+			value = this.length-this.pageLength-1;
 		}
 		if( value<0 )
 			value = 0;
@@ -83,7 +89,7 @@ export class PaginatorComponent implements OnInit, OnDestroy
 		{
 			this._startIndex = value;
 			if( this.page )
-				this.page.next( {startIndex:this.startIndex, pageSize:this.pageSize} );
+				this.page.next( {startIndex:this.startIndex, pageLength:this.pageLength} );
 		}
 		//console.log( `startIndex=${this.startIndex}` );
 	}
@@ -91,8 +97,8 @@ export class PaginatorComponent implements OnInit, OnDestroy
 	get startIndexDisplay(){ return Math.max(0,Math.min(this.startIndex,this.length-1)); }
 	get endIndex()
 	{
-		const endIndex = Math.max( Math.min(this.startIndex+this.pageSize, this.length-1), 0 );
-		//console.log( `length=${this.length} pageSize=${this.pageSize} startIndex=${this.startIndex}, endIndex=${endIndex}` );
+		const endIndex = Math.max( Math.min(this.startIndex+this.pageLength, this.length-1), 0 );
+		//console.log( `length=${this.length} pageLength=${this.pageLength} startIndex=${this.startIndex}, endIndex=${endIndex}` );
 		return endIndex;
 	}
 	get onFirstPage(){ return this.startIndex==0; }
