@@ -18,10 +18,15 @@ export class DateUtilities
 		return copy;
 	}
 	// //date control sends a local time date, but
-	static fromDays( value:Day ):Date
+	static fromDays( value:Day, endOfDay=false ):Date
 	{
-		var t = new Date(1970, 0, 1);
-		t.setSeconds( value*24*60*60 );
+		let t = new Date( 1970, 0, 1 ), offset = 0;
+		if( endOfDay )
+		{
+			++value;
+			--offset;
+		}
+		t.setSeconds( value*24*60*60+offset );
 		return t;
 	}
 	static toDays( value:Date ):Day
@@ -50,6 +55,10 @@ export class DateUtilities
 			display = this.dayOfWeek( date );
 
 		return display;
+	}
+	static displayDay( day:Day )
+	{
+		return DateUtilities.display( DateUtilities.fromDays(day) );
 	}
 	static get easternTimezoneOffset():Minutes//in Minutes
 	{
