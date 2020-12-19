@@ -1,4 +1,4 @@
-import { IAssignable } from 'src/app/utilities/settings';
+import { IAssignable } from './settings';
 
 export function toMap<T>( array:T[], getKey:(x:T)=>any ):Map<any,T>
 {

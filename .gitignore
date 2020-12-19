@@ -1,3 +1,15 @@
 source/.vscode/settings.json
 source/ClientApp/node_modules
 *.proto
+control/tsconfig.lib.json
+control/karma.conf.js
+control/ng-package.json
+control/package-lock.json
+control/README.md
+control/tsconfig.lib.prod.json
+control/tsconfig.spec.json
+control/tslint.json
+control/node_modules/*
+control/src/test.ts
+control/src/lib/jde-framework.component.spec.ts
+control/src/lib/jde-framework.service.spec.ts
