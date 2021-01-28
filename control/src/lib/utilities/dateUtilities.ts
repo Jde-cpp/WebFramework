@@ -58,7 +58,7 @@ export class DateUtilities
 	{
 		return DateUtilities.display( DateUtilities.fromDays(day) );
 	}
-	static get easternTimezoneOffset():Minutes//in Minutes
+	static easternTimezoneOffset():Minutes//in Minutes
 	{
 		if( !DateUtilities._easternTimezoneOffset )
 		{
