@@ -14,3 +14,7 @@ export * from './lib/utilities/mathUtilities';
 export * from './lib/utilities/ProgressObservable';
 export * from './lib/utilities/protoUtilities';
 export * from './lib/utilities/settings';
+export * from './lib/utilities/stl';
+export * from './lib/jde-framework.module';
+
+
