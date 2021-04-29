@@ -1,6 +1,5 @@
 import {Component,EventEmitter,Input,Output} from '@angular/core';
-import * as AppFromServer from 'src/app/proto/proto/appFromServer';
-import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import * as AppFromServer from 'jde-cpp/FromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
 
 
 @Component({ selector: 'severity-picker', templateUrl: './severity-picker.html' })

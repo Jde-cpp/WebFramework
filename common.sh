@@ -1,5 +1,7 @@
 #!/bin/bash
 
+windows() { [[ -n "$WINDIR" ]]; }
+
 function addLink
 {
 	if [ -L $2 ]; then
@@ -8,7 +10,17 @@ function addLink
 	if [ -f $2 ]; then
 		rm $2;
 	fi;
-	ln -s $1/$2 .;
+	if windows; then
+		source=$1/$2;
+		source=${source////\\}
+		#echo $source
+		source=${source/\\c/c:}
+		#echo start
+		#echo "mklink $2 $source"
+		cmd <<< "mklink $2 $source" > /dev/null
+	else
+		ln -s $1/$2 .;
+	fi;
 };
 
 function moveToDir
@@ -20,14 +32,30 @@ function moveToDir
 function addHard
 {
 	if [ -f $2 ]; then rm $2; fi;
-	ln $1/$2 .;
+	if windows; then
+		source=$1/$2;
+		source=${source////\\}
+		source=${source/\\c/c:}
+		cmd <<< "mklink /H $2 $source" > /dev/null
+	else
+		ln $1/$2 .;
+	fi;
+
 };
 
 function addHardDir
 {
-	moveToDir $2;
-	for filename in $1/$2/*; do
-		ln $filename .;
-	done;
+	if windows; then
+		source=$1/$2;
+		source=${source////\\}
+		source=${source/\\c/c:}
+		echo "mklink /D /H $2 $source"
+		cmd <<< "mklink /D /H $2 $source" > /dev/null
+	else
+		moveToDir $2;
+		for filename in $1/$2/*; do
+			ln $filename .;
+		done;
+	fi;
 	cd ..;
 }
