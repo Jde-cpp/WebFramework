@@ -1,4 +1,4 @@
-<mat-form-field *ngIf="!hidePageSize" style="margin-left: 10px;width: 60px;">
+<mat-form-field *ngIf="!hidePageLength" style="margin-left: 10px;width: 60px;">
 	<input matInput style="text-align: right; " type="number" [(ngModel)]="pageLength" placeholder="Page Size">
 </mat-form-field>
 <div style="margin-left: 10px;display:inline" class="mat-paginator-range-label">{{startIndexDisplay+1}} – {{endIndex}} of {{length}}</div>

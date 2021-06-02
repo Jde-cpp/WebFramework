@@ -13,3 +13,6 @@ control/node_modules/*
 control/src/test.ts
 control/src/lib/jde-framework.component.spec.ts
 control/src/lib/jde-framework.service.spec.ts
+my-workspace/*
+
+.vscode/settings.json

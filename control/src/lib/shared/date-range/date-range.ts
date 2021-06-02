@@ -102,7 +102,7 @@ export class DateRangeSettings implements IAssignable<DateRangeSettings>
 		return dayCount;
 	} set dayCount(x:number|undefined){ this._dayCount = x;} _dayCount:number| undefined;
 	end: Day | undefined;
-	get start():Day|null
+	get start():Day
 	{
 		let day = null;
 		if( this.timeFrame!=TimeFrame.All && this.dayCount!=undefined )

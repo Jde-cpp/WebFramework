@@ -40,7 +40,7 @@ export class PaginatorComponent implements OnInit, OnDestroy
 	//@Input() color: ThemePalette;
 	get disabled(){ return this._disabled; }
 	set disabled(value){this._disabled=value;} _disabled: boolean=false;
-	@Input() hidepageLength: boolean;
+	@Input() hidePageLength: boolean;
 	@Input() lengthChange:Observable<number>;	private lengthChangeSubscription: Subscription;
 	@Input() startIndexChange:Observable<number>; private startIndexChangeSubscription: Subscription;
 	set length(value)

@@ -1,3 +1,13 @@
+export * from './lib/pages/GraphQL/graph-ql-component';
+export * from './lib/pages/GraphQL/detail/graph-ql-detail';
+export * from './lib/pages/GraphQL/properties/properties';
+export * from './lib/pages/GraphQL/links/links';
+export * from './lib/pages/GraphQL/table/table';
+export * from './lib/pages/GraphQL/select-dialog/select-dialog';
+
+export * from './lib/pages/logs/logs';
+export * from './lib/pages/user-management/users/users';
+export * from './lib/pages/user-management/users/dialog/user-dialog';
 export * from './lib/services/profile/IProfile';
 export * from './lib/services/profile/localStorageProfile.service';
 export * from './lib/services/error/DefaultError.service';

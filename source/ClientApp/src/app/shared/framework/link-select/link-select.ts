@@ -1,6 +1,6 @@
 import {Component, Input, Output, OnInit, EventEmitter} from '@angular/core';
-import { IAssignable } from 'jde-framework';
-import { CircularBuffer } from 'jde-framework'
+import { IAssignable } from '../../../utilities/settings';
+import { CircularBuffer } from '../../../utilities/collections'
 
 
 @Component( {selector: 'link-select',templateUrl: 'link-select.html'} )

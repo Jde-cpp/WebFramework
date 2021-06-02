@@ -1,7 +1,7 @@
 import {Component, Input, Output, OnInit, EventEmitter} from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
-import { DateUtilities, Day } from 'jde-framework';
-import { IAssignable } from 'jde-framework';
+import { DateUtilities, Day } from '../../../utilities/dateUtilities';
+import { IAssignable } from '../../../utilities/settings';
 
 export enum TimeFrame{None=0, Week=7, Month=30, Quarter=90, Year=360, All=1000}
 
