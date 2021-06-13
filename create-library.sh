@@ -17,6 +17,7 @@ if [ ! -d projects/$library ]; then
 	#echo pwd=`pwd`
 	if [ $t != "null" ]; then
 		echo removing from [angular][tsconfig].json;
+		if [ \"$(head -c 2 tsconfig.json)\" == \"/*\" ]; then sed -i '1d' tsconfig.json; fi;
 		cmd="del(.projects.\"$library\")"
 		jq $cmd angular.json > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq $cmd angular.json; exit 1; fi;
 		mv temp.json angular.json;
