@@ -22,7 +22,7 @@ if [ ! -d projects/$library ]; then
 		jq $cmd angular.json > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq $cmd angular.json; exit 1; fi;
 		mv temp.json angular.json;
 		cmd="del(.compilerOptions.paths.\"$library\")";
-		jq $cmd tsconfig.json > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq $cmd tsconfig.json; exit 1; fi;
+		jq $cmd tsconfig.json > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq '$cmd' tsconfig.json; exit 1; fi;
 		mv temp.json tsconfig.json;
 	fi;
 	#echo not removing from [angular][tsconfig].json

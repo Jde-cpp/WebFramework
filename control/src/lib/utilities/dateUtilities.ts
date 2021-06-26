@@ -38,11 +38,15 @@ export class DateUtilities
 		const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 		return days[ date.getUTCDay() ];
 	}
-
+	static dayOfWeekAbr( date:Date )
+	{
+		const days = ["Sun", "Mon", "Tue", "Wed", "Thr", "Fri", "Sat"];
+		return days[ date.getUTCDay() ];
+	}
 	static display( date:Date ):string
 	{
 		const now = new Date();
-		const showYear = date.getFullYear()<now.getFullYear() && date.getMonth()<=now.getMonth();
+		const showYear = date.getFullYear()<now.getFullYear() && ( now.getFullYear()-date.getFullYear()>1 || date.getMonth()<=now.getMonth() );
 		const showMonth = showYear || date>now || DateUtilities.toDays(now)-DateUtilities.toDays(date)>6;
 		let display = "";
 		if( showYear )
@@ -50,7 +54,7 @@ export class DateUtilities
 		if( showMonth )
 			display += `${date.getMonth()+1}-${date.getDate()}`;
 		else
-			display = this.dayOfWeek( date );
+			display = this.dayOfWeekAbr( date );
 
 		return display;
 	}
