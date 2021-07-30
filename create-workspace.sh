@@ -21,10 +21,9 @@ if [ ! -d $workspace ]; then
 	ng new $workspace --create-application=$createApplication --routing=false --style=scss;
 	cd $workspace;
 	sed -i 's/"strict": true,/"strict": true,"strictPropertyInitialization": false, "strictNullChecks": false, "noImplicitAny": false, "noImplicitThis":false,/' tsconfig.json;
-	#npm install -g @angular/cli@latest;
 	ng analytics off;
 	npm install material-design-icons;
-	ng add @angular/material --defaults --skip-confirmation;
+	ng add @angular/material --defaults    #--skip-confirmation;
 	npm install @types/long --save;
 	npm install protobufjs --save;
 
@@ -45,6 +44,7 @@ function execute()
 	fi;
 }
 ##################
+startDir=`pwd`;
 for librarySubDir in "${libraries[@]}"; do
 	echo $librarySubDir - processing;
 	libraryDir=$REPO_WEB/$librarySubDir;
@@ -72,8 +72,9 @@ for librarySubDir in "${libraries[@]}"; do
 		echo ng build $library;
 		exit 1;
 	fi;
-	echo pwd=`pwd`;
+	#echo pwd=`pwd`;
 	cd dist/$library;
-	echo pwd=`pwd`;
-	#npm pack;
+	#echo pwd=`pwd`;
+	npm pack;
+	cd $startDir
 done;

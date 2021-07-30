@@ -40,7 +40,7 @@ import { SeverityPickerComponent } from './shared/severity-picker/severity-picke
 	  MatButtonModule, MatCheckboxModule, MatChipsModule, MatDatepickerModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatIconModule, MatSelectModule, MatSortModule, MatTabsModule, MatTableModule, MatToolbarModule
 	  //,ComponentPageTitle
 	],
-	entryComponents:[SelectDialog],
+	/*entryComponents:[SelectDialog],*/
   	exports: [PaginatorComponent,LinkSelectComponent, DateRangeComponent, SeverityPickerComponent]
 })
 export class JdeFrameworkModule { }
