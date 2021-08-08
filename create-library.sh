@@ -5,24 +5,18 @@ dir=${2}; #WebBlockly
 if [ -z $baseDir ]; then baseDir=`pwd`/..; fi;
 if [ -z $commonBuild ]; then source $baseDir/../../Framework/common.sh; fi;
 controlDir=$(dirname $(readlink -e $baseDir/../$dir/control))/control;
-#echo ng generate library $library --defaults;
+jqApp=$( windows && echo ~/jq-win64.exe || echo jq );
+
 if [ ! -d projects/$library ]; then
-	#export NG_CLI_ANALYTICS=ci;
-	#ng analytics off;
-	#head angular.json;
-	t=`jq .projects.\"$library\".root angular.json`;
-	#echo jq .projects.\"$library\".root angular.json;
-	#echo library=$library;
-	#echo t=$t;
-	#echo pwd=`pwd`
+	t=`$jqApp .projects.\"$library\".root angular.json`;
 	if [ $t != "null" ]; then
 		echo removing from [angular][tsconfig].json;
 		if [ \"$(head -c 2 tsconfig.json)\" == \"/*\" ]; then sed -i '1d' tsconfig.json; fi;
 		cmd="del(.projects.\"$library\")"
-		jq $cmd angular.json > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq $cmd angular.json; exit 1; fi;
+		$jqApp $cmd angular.json > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq $cmd angular.json; exit 1; fi;
 		mv temp.json angular.json;
 		cmd="del(.compilerOptions.paths.\"$library\")";
-		jq $cmd tsconfig.json > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq '$cmd' tsconfig.json; exit 1; fi;
+		$jqApp $cmd tsconfig.json > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq '$cmd' tsconfig.json; exit 1; fi;
 		mv temp.json tsconfig.json;
 	fi;
 	#echo not removing from [angular][tsconfig].json
