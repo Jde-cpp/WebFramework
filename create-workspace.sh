@@ -18,7 +18,7 @@ baseDir=`pwd`;
 REPO_WEB=`readlink -f $scriptDir/..`;
 findExecutable npm;
 if [ ! -x "$(which "ng" 2> /dev/null)" ]; then npm install -g @angular/cli; fi;
-jqApp=$( windows && echo ~/jq-win64.exe || echo jq );
+jqApp=jq;#$( windows && echo ~/jq-win64.exe || echo jq );
 ##################
 if [ ! -d $workspace ]; then
 	echo -------------------- create workspace start --------------------;

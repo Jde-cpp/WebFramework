@@ -5,11 +5,12 @@ dir=${2}; #WebBlockly
 if [ -z $baseDir ]; then baseDir=`pwd`/..; fi;
 if [ -z $commonBuild ]; then source $baseDir/../../Framework/common.sh; fi;
 controlDir=$(dirname $(readlink -e $baseDir/../$dir/control))/control;
-jqApp=$( windows && echo ~/jq-win64.exe || echo jq );
+jqApp=jq;#$( windows && echo ~/jq-win64.exe || echo jq );
 
 if [ ! -d projects/$library ]; then
 	t=`$jqApp .projects.\"$library\".root angular.json`;
-	if [ $t != "null" ]; then
+	#if [ $t != "null" ]; then
+	if [ ! -z "$t" ]; then
 		echo removing from [angular][tsconfig].json;
 		if [ \"$(head -c 2 tsconfig.json)\" == \"/*\" ]; then sed -i '1d' tsconfig.json; fi;
 		cmd="del(.projects.\"$library\")"

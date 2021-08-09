@@ -1,7 +1,6 @@
 source/.vscode/settings.json
 source/ClientApp/node_modules
 *.proto
-control/tsconfig.lib.json
 control/karma.conf.js
 control/ng-package.json
 control/package-lock.json
