@@ -38,6 +38,10 @@ if [ ! -d $workspace ]; then
 	#exit 1;
 	npm install @types/long --save;
 	npm install protobufjs --save;
+	echo -------------------- protobufjs stuff --------------------;
+	npm --silent install chalk@^4.0.0;
+	npm --silent install jsdoc@^3.6.3;
+	npm --silent install uglify-js@^3.7.7;
 	echo -------------------- npm install complete --------------------;
 	cd src;
 	printf "\nimport * as protobuf from 'protobufjs/minimal';\nimport * as Long from 'long';\n\nprotobuf.util.Long = Long;\nprotobuf.configure();" >> main.ts;
