@@ -13,7 +13,6 @@ import {Settings} from '../../../utilities/settings';
 import {StringUtils} from '../../../utilities/StringUtils'
 import { SelectDialog } from '../select-dialog/select-dialog';
 
-
 @Component( { selector: 'graph-ql-links', templateUrl: 'links.html'} )
 export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 {

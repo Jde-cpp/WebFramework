@@ -1,6 +1,6 @@
 @use '../../../../../../jde-material/src/styles/constants';
 
-users {
+graph-ql-detail {
 	font-weight: 400;
 	width: calc(100% - #{constants.$sidenav-width + 1} - #{constants.$content-padding-sidenav * 2});
 
@@ -16,9 +16,4 @@ users {
 	  padding-left: constants.$content-padding-side-xs;
 	  padding-right: constants.$content-padding-side-xs;
 	}
-}
-
-.hidden
-{
-	display: none;
-}
+ }

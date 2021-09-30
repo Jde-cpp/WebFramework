@@ -1,10 +1,13 @@
 import { Observable, Subscription } from 'rxjs';
 import {Component, AfterViewInit, Inject, OnDestroy, Input, OnInit, Output, EventEmitter} from '@angular/core';
 import {SelectionModel} from '@angular/cdk/collections';
+import {Remove} from '@material-ui/icons';
 import { MatTableDataSource } from '@angular/material/table';
 import { Sort } from '@angular/material/sort';
 import { IErrorService } from '../../../services/error/IErrorService';
 import { Field, FieldKind, IGraphQL, Table } from '../../../services/IGraphQL';
+
+
 
 
 @Component( { selector: 'graph-ql-table', styleUrls: ['table.css'], templateUrl: 'table.html'} )
@@ -16,18 +19,9 @@ export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy
 	{
 		this.showDeletedSubscription = this.showDeletedEvents?.subscribe( (x)=>{this.showDeleted = x;} );
 	}
-	//public dialogRef:MatDialogRef<SelectDialog>, @Inject(MAT_DIALOG_DATA) public data:{selectedIds:number[], columns:string[], schema:Table, mutation:string, linkTo:number, linkToField:string, title:string,isChildren:boolean,includeDeleted:boolean,subToField:string, subTo:number},
 	ngAfterViewInit():void
 	{
 		this.viewPromise = Promise.resolve( true );
-/*		GraphQLTable.query( `query{ ${this.query}(filter: ${filter}) {${selectFields.join(" ")}} }` ).then( (results:any)=>
-		{
-			let items:any[] = results[this.query];
-			this.dataSource = new MatTableDataSource<any>( items );
-			const key = this.isFlags ? "name" : "id"; //TODO fix member logic.
-			this.selections = new SelectionModel<any>( true, items.filter((x)=>this.selections.includes(x[key])) );
-			this.viewPromise = Promise.resolve( true );
-		} );*/
 	}
 	ngOnDestroy()
 	{
@@ -58,7 +52,6 @@ export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy
 		else if( schema.fields.find((x)=>x.name=="deleted") )
 			filter = "{deleted: {eq:null}}";
 		return {query: `query{ ${query}(filter: ${filter}) {${selectFields.join(" ")}} }`, displayedColumns: displayedColumns };
-		//return graphQL.query( `query{ ${query}(filter: ${filter}) {${selectFields.join(" ")}} }` );
 	}
 	checkboxLabel( row?: any ): string
 	{
@@ -75,6 +68,21 @@ export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy
 	}
 
 	cellClick( row:any ){  this.selection = this.selection == row ? null : row; this.selectionChanged.emit( this.selection ); }
+
+	edit2( row?: any ): string
+	{
+		return row
+			? `${this.selections.isSelected(row) ? 'deselect' : 'select'} row ${row.name}`
+			: `${this.isAllSelected() ? 'select' : 'deselect'} all`;
+	}
+
+	delete( row?: any ): string
+	{
+		return row
+			? `${this.selections.isSelected(row) ? 'deselect' : 'select'} row ${row.name}`
+			: `${this.isAllSelected() ? 'select' : 'deselect'} all`;
+	}
+
 	isAllSelected(){ return this.selections.selected.length==this.dataSource.data.length; }
 	sortData( event )
 	{}
@@ -90,7 +98,7 @@ export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy
 	@Output() selectionChanged = new EventEmitter();
 
 
-	get displayedColumnNames(){ return (this.selections ? ["select"] : []).concat( this.displayedColumns.filter((x)=>x.displayed).map((x)=>x.name) ); };
+	get displayedColumnNames(){ return (this.selections ? ["select","icons"] : ["icons"]).concat( this.displayedColumns.filter((x)=>x.displayed).map((x)=>x.name) ); };
 	get stringColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.SCALAR && x.type.underlyingName=="String" ).map( (x)=>x.name ); }
 	get objectColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.OBJECT ).map( (x)=>x.name ); }
 	get listColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.LIST ).map( (x)=>x.name ); }

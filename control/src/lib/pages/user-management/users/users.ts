@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, OnInit, OnDestroy, Inject, ViewChild } from '@angular/core';
+import { Component, AfterViewInit, OnInit, OnDestroy, Inject, ViewChild, ViewEncapsulation } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import {Sort} from '@angular/material/sort';
 import { MatTable } from '@angular/material/table';
@@ -25,7 +25,7 @@ export interface IUser
 	deleted?:Date;
 }
 
-@Component( {selector: 'users', styleUrls: ['users.css'], templateUrl: './users.html'} )
+@Component( {selector: 'users', styleUrls: ['users.scss'], templateUrl: './users.html', encapsulation: ViewEncapsulation.None} )
 export class UserComponent implements AfterViewInit, OnInit, OnDestroy
 {
 	constructor( private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )

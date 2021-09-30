@@ -13,7 +13,7 @@ import {Settings} from '../../utilities/settings'
 import { ComponentPageTitle } from 'jde-material';
 import { Subject } from 'rxjs';
 
-@Component( {selector: 'graph-ql-component', styleUrls: ['graph-ql-component.css'], templateUrl: './graph-ql-component.html'} )
+@Component( {selector: 'graph-ql-component.main-content.mat-drawer-container.my-content', styleUrls: ['graph-ql-component.scss'], templateUrl: './graph-ql-component.html'} )
 export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 {
 	constructor( private route: ActivatedRoute, private router:Router, private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
@@ -22,7 +22,6 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	ngOnDestroy(){ this.profile.save(); }
 	ngOnInit()
 	{
-		debugger;
 		let paths = [];
 		for( let x = this.route; x.routeConfig?.data?.name; x = x.parent )
 			paths.push( x.routeConfig.data.name );
@@ -44,7 +43,6 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	}
 	load()
 	{
-		//`query{ users{ id name target description authenticatorId attributes created updated deleted } }`
 		const order = ["name", "description","created", "updated", "deleted", "target"];
 		const sort = ( x:Field,y:Field )=>order.indexOf(x.name)-order.indexOf(y.name);
 		this.displayedColumns = this.schema.fields.filter( (x)=>x.displayed ).sort( sort );
@@ -57,7 +55,6 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 			this.viewPromise = Promise.resolve(true);
 		}).catch( (e)=>console.error(e) );
 	}
-//	cellClick( row:any ){  this.selection = this.selection == row ? null : row; }
 	selectionChanged( $event:any )
 	{
 		this.selection = $event;
@@ -100,14 +97,13 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	selection:any|null|undefined;
 
 	viewPromise:Promise<boolean>;
-	//displayedColumns:string[];// = ["name","target","description","authenticator", "deleted"];
-	displayedColumns:Field[];// = ["name","target","description","authenticator", "deleted"];
+	displayedColumns:Field[];
 	@ViewChild('mainTable',{static: false}) _table:MatTable<any>;
 
 	data:any[];
 	get name():string{ return this.routeConfig.data.name; }
 	get fetchName():string{ return this.routeConfig.path; }
-	profile:Settings<PageSettings>;// = new Settings<PageSettings>( PageSettings, "UserComponent", this.profileService );
+	profile:Settings<PageSettings>;
 	get routeConfig(){ return this.route.routeConfig;}
 	schema:Table;
 	get settings(){ return this.profile.value; }

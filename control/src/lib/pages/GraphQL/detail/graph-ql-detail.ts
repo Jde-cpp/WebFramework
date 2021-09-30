@@ -1,6 +1,6 @@
 import { Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
-import { Component, AfterViewInit, OnInit, OnDestroy, Inject } from '@angular/core';
+import { Component, ViewEncapsulation, OnInit, OnDestroy, Inject } from '@angular/core';
 import {ActivatedRoute, NavigationEnd, Params, Router, RouterModule, Routes} from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 
@@ -14,7 +14,7 @@ import { MetaObject } from '../../../utilities/JsonUtils';
 
 
 
-@Component( { templateUrl: 'graph-ql-detail.html'} )
+@Component( { selector: 'graph-ql-detail', templateUrl: 'graph-ql-detail.html', styleUrls: ['./graph-ql-detail.scss'], encapsulation: ViewEncapsulation.None} )
 export class GraphQLDetailComponent implements OnDestroy, OnInit
 {
 	constructor( private route: ActivatedRoute, private router:Router, private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
