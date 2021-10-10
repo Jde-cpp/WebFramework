@@ -1,12 +1,16 @@
-import {Component, Input, Output, OnInit, EventEmitter} from '@angular/core';
+import {Component, Input, Output, OnInit, EventEmitter, NgModule} from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
+import {MatChipsModule} from '@angular/material/chips';
+import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatFormFieldModule} from '@angular/material/form-field';
+
 import { DateUtilities, Day } from '../../utilities/dateUtilities';
 import { IAssignable } from '../../utilities/settings';
 
 export enum TimeFrame{None=0, Week=7, Month=30, Quarter=90, Year=360, All=1000}
 
 @Component( {selector: 'date-range',templateUrl: 'date-range.html'} )
-export class DateRangeComponent implements OnInit
+export class DateRange implements OnInit
 {
 	ngOnInit()
 	{
@@ -49,8 +53,8 @@ export class DateRangeComponent implements OnInit
 	{
 		return DateUtilities.toDays( new Date(time.getTime()-time.getTimezoneOffset()*60000) );
 	}
-	setStartControl(day:Day){ this.range.controls.start.setValue( day==null ? null : DateRangeComponent.toDate(day) ); }
-	setEndControl(day:Day){ this.range.controls.end.setValue( day ? DateRangeComponent.toDate(day) : null ); }
+	setStartControl(day:Day){ this.range.controls.start.setValue( day==null ? null : DateRange.toDate(day) ); }
+	setEndControl(day:Day){ this.range.controls.end.setValue( day ? DateRange.toDate(day) : null ); }
 	setTimeFrame( x:TimeFrame, force=false )
 	{
 		if( x==TimeFrame.None ){ debugger; throw('unexpected'); }
@@ -110,3 +114,7 @@ export class DateRangeSettings implements IAssignable<DateRangeSettings>
 		return day;
 	} set start( x:Day ){ this.dayCount = Math.max( 0, (this.end ?? this.max)-(x ?? 0) ); }
 }
+
+@NgModule( {exports: [DateRange], declarations: [DateRange], imports:[MatChipsModule,MatDatepickerModule,MatFormFieldModule]} )
+export class DateRangeModule {}
+  

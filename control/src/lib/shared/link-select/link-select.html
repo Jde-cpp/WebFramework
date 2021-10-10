@@ -6,7 +6,8 @@
 		</mat-chip-list>
 	<!--	<div style="width: 200px; height: 20px; display: inline; flex:content; flex-direction: column; background-color:green"></div>
 		<div style="width: 200px; height: 20px; background-color:red"></div>-->
-	    <mat-select style="width: 120px;text-align: right" [(ngModel)]="selected" name="accounts" ngDefaultControl (selectionChange)="valueChange($event.value)">
+		<!-- [(ngModel)]="selected" -->
+	    <mat-select style="width: 120px;text-align: right" name="accounts" ngDefaultControl (selectionChange)="valueChange($event.value)">
 			<mat-option style="text-align: right" *ngFor="let option of options.values | keyvalue" [value]="option.key">{{option.value}}</mat-option>
 		</mat-select>
 	</div>

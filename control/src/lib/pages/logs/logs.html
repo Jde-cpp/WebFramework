@@ -17,11 +17,11 @@
 
 		<button mat-icon-button><mat-icon class="iconButton" (click)="paused=!paused">{{paused ? 'play_arrow' : 'pause'}}</mat-icon></button> <!-- -->
 		<severity-picker style="margin-left:15px;" (levelChange)="onLevelChange($event)" [level]="level"></severity-picker>
-		<mat-form-field>
+		<!-- <mat-form-field>
 			<input matInput [matDatepicker]="dateId" placeholder="Date" [(formControl)]="start" (dateChange)="startChange($event)">
 			<mat-datepicker-toggle matSuffix [for]="dateId"></mat-datepicker-toggle>
 			<mat-datepicker #dateId></mat-datepicker>
-		</mat-form-field>
+		</mat-form-field> -->
 		<!-- <mat-paginator (page)="pageChangeEvent($event)" [pageIndex]="pageIndex" [length]="data.length" [pageSize]="pageSize" [pageSizeOptions]="[14, 100, 500, 1000]" showFirstLastButtons></mat-paginator> -->
 		<paginator (page)="pageChangeEvent($event)" [pageLength]="pageSize" [lengthChange]="lengthChange.asObservable()" [startIndexChange]="startIndexChange.asObservable()"></paginator><!-- [startIndex]="pageInfo.startIndex" -->
 		<mat-form-field>

@@ -100,7 +100,7 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	displayedColumns:Field[];
 	@ViewChild('mainTable',{static: false}) _table:MatTable<any>;
 
-	data:any[];
+	data;
 	get name():string{ return this.routeConfig.data.name; }
 	get fetchName():string{ return this.routeConfig.path; }
 	profile:Settings<PageSettings>;
