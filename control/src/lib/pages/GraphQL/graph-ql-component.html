@@ -8,6 +8,6 @@
 		<mat-checkbox [checked]="showDeleted" color="primary" (change)="toggleShowDeleted()">Show Deleted</mat-checkbox>
 	</mat-toolbar>
 	<div style="align-content: center; margin: auto;  text-align: center">
-		<graph-ql-table [dataSource]="data" [displayedColumns]="displayedColumns" [sort]="sort" [showDeleted]="showDeleted" [showDeletedEvents]="showDeletedSubject.asObservable()" (selectionChanged)="selectionChanged($event)" ></graph-ql-table>
+		<graph-ql-table [dataSource]="data" [displayedColumns]="displayedColumns" [sort]="sort" [showDeleted]="showDeleted" [showDeletedEvents]="showDeletedSubject.asObservable()" [(selection)]="selection" (selectionChange)="selectionChange($event)"></graph-ql-table>
 	</div>
 </ng-container>

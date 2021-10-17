@@ -7,13 +7,13 @@
 			<mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selections.toggle(row) : null" [checked]="selections.isSelected(row)" [aria-label]="checkboxLabel(row)"></mat-checkbox>
 		</mat-cell>
 	</ng-container>
-	<ng-container matColumnDef="icons">
+	<!-- <ng-container matColumnDef="icons">
 		<mat-header-cell [style.flex]="'0 0 60px'" *matHeaderCellDef></mat-header-cell>
 		<mat-cell *matCellDef="let row" [style.flex]="'0 0 60px'">
 			<button mat-icon-button color="primary" style="margin-left :-15px" (click)="edit2(row)"><mat-icon>{{selection?.deleted ? "restore" : "edit_attributes"}}</mat-icon></button>
 			<button mat-icon-button color="primary" style="margin-left :-10px" (click)="delete(row)"><mat-icon>{{selection?.deleted ? "delete_forever" : "remove"}}</mat-icon></button>
 		</mat-cell>
-	</ng-container>
+	</ng-container> -->
 	<ng-container [matColumnDef]="column" *ngFor="let column of stringColumnNames">
 		<mat-header-cell mat-header-cell *matHeaderCellDef> {{column}} </mat-header-cell>
 		<mat-cell *matCellDef="let element"> {{element[column]}} </mat-cell>

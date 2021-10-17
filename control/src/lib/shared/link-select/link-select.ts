@@ -3,6 +3,7 @@ import {MatChipsModule} from '@angular/material/chips';
 import {MatSelectModule} from '@angular/material/select';
 import { IAssignable } from '../../utilities/settings';
 import { CircularBuffer } from '../../utilities/collections'
+import { CommonModule } from '@angular/common';
 
 @Component( {selector: 'link-select',templateUrl: 'link-select.html'} )
 export class LinkSelect<TOptionKey> implements OnInit
@@ -60,5 +61,5 @@ export class LinkSelectOptions<TOptionKey> implements IAssignable<LinkSelectOpti
 	links:CircularBuffer<TOptionKey>;
 }
 
-@NgModule( {exports: [LinkSelect], declarations: [LinkSelect], imports:[MatChipsModule,MatSelectModule]} )
+@NgModule( {exports: [LinkSelect], declarations: [LinkSelect], imports:[CommonModule,MatChipsModule,MatSelectModule]} )
 export class LinkSelectModule {}

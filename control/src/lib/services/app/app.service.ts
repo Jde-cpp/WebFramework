@@ -10,6 +10,12 @@ type StatusSubscription = (statuses:FromServer.IStatuses) => void;
 @Injectable( {providedIn: 'root'} )
 export class AppService
 {
+	constructor()
+	{
+		const url = 'ws://localhost:1967';// 'ws://localhost:1967'
+		this.#socket = webSocket<protobuf.Buffer>( {url: url, deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
+		this.#socket.subscribe( (x)=>this.addMessage(x), (e)=>this.error(e), ()=>this.complete() );
+	}
 //	request<T>( requestType:Requests.ERequests ):Promise<T>{ return this.connection.request<T>(requestType); }
 	get():Observable<FromServer.IApplication[]>
 	{
@@ -147,7 +153,7 @@ export class AppService
 	{
 		var transmission = new FromClient.Transmission(); transmission.Messages.push( request );
 		var writer = FromClient.Transmission.encode( transmission );
-		this.socket.next( writer.finish() );//'17\0'+'1\0'
+		this.#socket.next( writer.finish() );
 	}
 
 	private logsSubscriptions:Map<number,[FromServer.ELogLevel, Subject<[number,FromServer.ITraceMessage]>][]>= new Map<number,[FromServer.ELogLevel, Subject<[number,FromServer.ITraceMessage]>][]>();
@@ -166,29 +172,15 @@ export class AppService
 		for( const subscription of this.statusSubscriptions )
 			subscription.complete();
 	}
-	private get socket():WebSocketSubject<protobuf.Buffer>
-	{
-		//var myWorker = new SharedWorker("worker.js", { name : "mySharedWorker" });
-		if( !this._socket )
-		{
-			//this._socket = localStorage.getItem( "app.service.socket" );
-			if( !this._socket )
-			{
-				this._socket = webSocket<protobuf.Buffer>( {url: 'ws://localhost:1967', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
-				this._socket.subscribe( (msg) => this.addMessage(msg), (err) => this.error(err), () => this.complete() );
-				//localStorage.setItem( "app.service.socket", this._socket );
-			}
-		}
-		return this._socket;
-	} private _socket:WebSocketSubject<protobuf.Buffer>;
+	#socket:WebSocketSubject<protobuf.Buffer>;
 	private sessionId:number;
 	private onMessage( event:MessageEvent ):protobuf.Buffer
 	{
-		var bytearray = new Uint8Array( event.data );//new Uint8Array( event.data );
+		const bytearray = new Uint8Array( event.data );
 		try
 		{
-			const transmission = FromServer.Transmission.decode( bytearray );
-			for( const message of transmission.Messages )
+			const t = FromServer.Transmission.decode( bytearray );
+			for( const message of t.Messages )
 			{
 				if( message.Traces )
 				{

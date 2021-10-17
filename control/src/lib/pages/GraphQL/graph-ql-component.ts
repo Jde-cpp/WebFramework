@@ -6,7 +6,7 @@ import { MatTable } from '@angular/material/table';
 //import { IProfile, IErrorService, Settings, IGraphQL, Table, FieldKind, Field} from 'jd e-framework'
 import {IProfile} from '../../services/profile/IProfile'
 import {IErrorService} from '../../services/error/IErrorService'
-import {IGraphQL, Table, FieldKind, Field}  from '../../services/IGraphQL'
+import {IGraphQL, Table, FieldKind, Field, IQueryResult}  from '../../services/IGraphQL'
 import {Settings} from '../../utilities/settings'
 
 
@@ -28,25 +28,21 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 
 		this.componentPageTitle.title = paths.join( " | " ); 	//this.componentPageTitle.title ? `${this.componentPageTitle.title} | ${title}` : title;
 	};
-	ngAfterViewInit():void
+	async ngAfterViewInit()
 	{
 		this.profile = new Settings<PageSettings>( PageSettings, this.type, this.profileService );
-		this.profile.load().then( ()=>
-		{
-			let ql = `{ __type(name: "${this.type}") { fields { name type { name kind ofType{name kind} } } } }`;
-			this.graphQL.query( ql ).then( (data)=>
-			{
-				this.schema = new Table( data.__type );
-				this.load();
-			});
-		});
+		await this.profile.load();
+		const data = await this.graphQL.query<IQueryResult<any>>( `{ __type(name: "${this.type}") { fields { name type { name kind ofType{name kind} } } } }` );
+		this.schema = new Table( data.__type );
+		this.load();
 	}
 	load()
 	{
 		const order = ["name", "description","created", "updated", "deleted", "target"];
-		const sort = ( x:Field,y:Field )=>order.indexOf(x.name)-order.indexOf(y.name);
+		const sort = ( x:Field,y:Field )=>{const yIndex = order.indexOf( y.name )+1; const xIndex = order.indexOf( x.name )+1; return ( xIndex || order.length )-( yIndex || order.length ); }
 		this.displayedColumns = this.schema.fields.filter( (x)=>x.displayed ).sort( sort );
-
+		//let objectColumnNames = this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.OBJECT ).map( (x)=>x.name );
+		//let stringColumnNames = this.displayedColumns.filter( (x)=>(x.type.underlyingKind==FieldKind.SCALAR && x.type.underlyingName=="String") || x.type.underlyingKind==FieldKind.ENUM ).map( (x)=>x.name );
 		let columns = this.schema.fields.filter( (x)=>x.type.kind!=FieldKind.LIST ).map( (x)=>x.name ).join( " " );
 		let ql = `query{ ${this.fetchName} { ${columns} } }`;
 		this.graphQL.query( ql ).then( (data:any)=>
@@ -55,7 +51,7 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 			this.viewPromise = Promise.resolve(true);
 		}).catch( (e)=>console.error(e) );
 	}
-	selectionChanged( $event:any )
+	selectionChange( $event:any )
 	{
 		this.selection = $event;
 	}
@@ -88,7 +84,12 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	{
 		const purge = this.selection.deleted!=null;
 		const type = purge ? "purge" : "delete";
-		const next = purge ? ()=>this.load() : ()=>this.selection.deleted = new Date();
+		const next = purge ? ()=>this.load() : ()=>
+		{
+			this.selection.deleted = new Date();
+			if( !this.showDeleted )
+				this.selection = null;
+		}
 
 		this.graphQL.query(`{ mutation { ${type}${this.type}(\"id\":${this.selection.id}) } }`).then( next ).catch( (e)=>{ console.error(e.toString()); } );
 	}
@@ -113,6 +114,11 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	showDeletedSubject = new Subject<boolean>();
 	get type():string{ return this.name.substr(0,this.name.length-1); }
 	toggleShowDeleted(){ this.settings.showDeleted = !this.settings.showDeleted; this.showDeletedSubject.next( this.settings.showDeleted ); }
+	eventsSubject: Subject<void> = new Subject<void>();
+
+	emitEventToChild() {
+	  this.eventsSubject.next();
+	}
 }
 
 class PageSettings

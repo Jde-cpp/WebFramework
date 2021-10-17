@@ -3,7 +3,7 @@ import { MetaObject } from "../utilities/JsonUtils";
 
 export interface IGraphQL
 {
-	query( ql: string ):Promise<any>;
+	query<T>( ql: string ):Promise<T>;
 	schema( names:string[] ):Promise<Table[]>;
 	mutations():Promise<Mutation[]>;
 }
@@ -57,7 +57,9 @@ export class Field extends QLSchema
 		super( j )
 		this.type = j.type ? new FieldType( j.type ) : undefined;
 	}
-	get displayed():boolean{ return this.type.ofType?.name!="ID" && this.name!="attributes" && this.type.kind!=FieldKind.LIST; }
+
+	get displayed():boolean{ return this.#displayed ?? (this.type.ofType?.name!="ID" && this.name!="attributes" && this.type.kind!=FieldKind.LIST); } set displayed(x){this.#displayed=x;} #displayed:boolean;
+
 	type:FieldType;
 }
 export class Table extends MetaObject
@@ -96,4 +98,14 @@ export class Arg
 export class Mutation extends QLSchema
 {
 	args:Arg[];
+}
+export interface IEnum
+{
+	id:number;
+	name:string;
+}
+
+export interface IQueryResult<T>
+{
+	__type:Array<T>;
 }

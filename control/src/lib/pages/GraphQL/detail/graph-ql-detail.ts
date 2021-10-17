@@ -143,6 +143,7 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 	data:any;
 	get settings(){ return this.profile.value;}
 	profile:Settings<PageSettings>;// = new Settings<PageSettings>( PageSettings, "UserComponent", this.profileService );
+	get propertiesName(){ return this.target=="$new" ? `New ${this.schema.typeName}` : "Properties"; }
 	schema:Table;
 	siblings: Subject<Map<string,string>> = new Subject<Map<string,string>>();
 	tabs = new Array<Table>();

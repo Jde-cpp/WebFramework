@@ -17,7 +17,10 @@ export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy
 	{}
 	ngOnInit()
 	{
-		this.showDeletedSubscription = this.showDeletedEvents?.subscribe( (x)=>{this.showDeleted = x;} );
+		this.showDeletedSub = this.showDeletedEvents?.subscribe( (x)=>
+		{
+			this.showDeleted = x
+		} );
 	}
 	ngAfterViewInit():void
 	{
@@ -25,7 +28,7 @@ export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy
 	}
 	ngOnDestroy()
 	{
-		this.showDeletedSubscription?.unsubscribe();
+		this.showDeletedSub?.unsubscribe();
 	}
 	static query( graphQL: IGraphQL, schema:Table, query: string, showExtra:boolean, isFlags:boolean ):{query:string, displayedColumns:Field[]}
 	{
@@ -67,7 +70,7 @@ export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy
 			this.selections.select( ...this.dataSource.data );
 	}
 
-	cellClick( row:any ){  this.selection = this.selection == row ? null : row; this.selectionChanged.emit( this.selection ); }
+	cellClick( row:any ){  this.selection = this.selection == row ? null : row; this.selectionChange.emit( this.selection ); }
 
 	edit2( row?: any ): string
 	{
@@ -92,18 +95,25 @@ export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy
 	@Input() dataSource:MatTableDataSource<any>;
 	@Input() selections:SelectionModel<any>;
 	@Input() displayedColumns:Field[]//{ return this.schema.fields.filter( (x)=>x.displayed ); }
-	@Input() showDeleted:boolean;
-	@Input() showDeletedEvents:Observable<boolean>; private showDeletedSubscription: Subscription;
+	@Input() set showDeleted(x)
+	{
+		this.#showDeleted=x;
+		let field = this.displayedColumns.find( (c)=>c.name=="deleted" );
+		if( field )
+			field.displayed = x;
+	} get showDeleted(){return this.#showDeleted;} #showDeleted:boolean;
+	@Input() showDeletedEvents:Observable<boolean>; private showDeletedSub: Subscription;
 	@Input() sort:Sort = { active:"name", direction: 'asc' };
-	@Output() selectionChanged = new EventEmitter();
+	@Input() selection:any;
+	@Output() selectionChange = new EventEmitter();
 
 
-	get displayedColumnNames(){ return (this.selections ? ["select","icons"] : ["icons"]).concat( this.displayedColumns.filter((x)=>x.displayed).map((x)=>x.name) ); };
-	get stringColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.SCALAR && x.type.underlyingName=="String" ).map( (x)=>x.name ); }
+	get displayedColumnNames(){ return (this.selections ? ["select"/*,"icons"*/] : [/*"icons"*/]).concat( this.displayedColumns.filter((x)=>x.displayed).map((x)=>x.name) ); };
+	get stringColumnNames(){ return this.displayedColumns.filter( (x)=>(x.type.underlyingKind==FieldKind.SCALAR && x.type.underlyingName=="String") || x.type.underlyingKind==FieldKind.ENUM ).map( (x)=>x.name ); }
 	get objectColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.OBJECT ).map( (x)=>x.name ); }
 	get listColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.LIST ).map( (x)=>x.name ); }
 	get dateColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingName=="DateTime" ).map( (x)=>x.name ); }
-	selection:any;
+
 
 	viewPromise:Promise<boolean>;
 }
