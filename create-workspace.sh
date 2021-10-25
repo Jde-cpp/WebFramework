@@ -6,7 +6,7 @@
 #run from my-workspace/..
 #../WebFramework/create-workspace.sh my-workspace false MaterialSite WebFramework TwsWebsite WebBlockly
 workspace=${1:-my-workspace};
-createApplication=${2:-false};
+createApplication=${2:-true};
 librariesText=( "$@" );
 declare -a libraries=();
 for i in "${!librariesText[@]}"; do if (( $i > 1 )); then t=${librariesText[$i]}; libraries+=($t); libraryLog="$libraryLog $t";  fi; done;
@@ -18,14 +18,15 @@ baseDir=`pwd`;
 REPO_WEB=`readlink -f $scriptDir/..`;
 findExecutable npm;
 if [ ! -x "$(which "ng" 2> /dev/null)" ]; then npm install -g @angular/cli; fi;
-jqApp=jq;#$( windows && echo ~/jq-win64.exe || echo jq );
 ##################
 if [ ! -d $workspace ]; then
 	echo -------------------- create workspace start --------------------;
+	echo ng new $workspace --create-application=$createApplication --routing=false --style=scss;
 	ng new $workspace --create-application=$createApplication --routing=false --style=scss;
 	echo -------------------- create workspace complete --------------------;
 	cd $workspace;
-	command="$jqApp '.projects.\"$workspace\".architect.build.configurations.production.budgets[0].maximumError = \"5mb\"' angular.json"
+	#echo `pwd`;
+	command="jq '.projects.\"$workspace\".architect.build.configurations.production.budgets[0].maximumError = \"5mb\"' angular.json"
 	eval $command > angular2.json; rm angular.json; mv angular2.json angular.json;
 	sed -i 's/"strict": true,/"strict": true,"strictPropertyInitialization": false, "strictNullChecks": false, "noImplicitAny": false, "noImplicitThis":false,/' tsconfig.json;
 	ng analytics off;
@@ -43,6 +44,7 @@ if [ ! -d $workspace ]; then
 	npm --silent install jsdoc@^3.6.3;
 	npm --silent install uglify-js@^3.7.7;
 	echo -------------------- npm install complete --------------------;
+	#echo `pwd`;
 	cd src;
 	printf "\nimport * as protobuf from 'protobufjs/minimal';\nimport * as Long from 'long';\n\nprotobuf.util.Long = Long;\nprotobuf.configure();" >> main.ts;
 	cd ..;
@@ -66,7 +68,7 @@ for librarySubDir in "${libraries[@]}"; do
 	echo $librarySubDir - processing;
 	libraryDir=$REPO_WEB/$librarySubDir;
 	#findExecutable jq
-	dest=`$jqApp -r .name $libraryDir/control/package.json`
+	dest=`jq -r .name $libraryDir/control/package.json`
 	#dest=`perl -MJSON -e '$/ = undef; my $data = <>; for my $hash (new JSON->incr_parse($data)) { print $hash->{name}; }' < $libraryDir/control/package.json`;
 	library=$( basename $dest );
 	if [ $? -ne 0 ]; then echo $dest failed; exit 1; fi;
@@ -85,15 +87,8 @@ for librarySubDir in "${libraries[@]}"; do
 	cd $baseDir/$workspace;
 	execute $libraryDir/$library.sh;
 	execute $libraryDir/$library-proto.sh;
-	ng build $library;
-	if [ $? -ne 0 ]; then
-		echo `pwd`;
-		echo ng build $library;
-		exit 1;
-	fi;
-	#echo pwd=`pwd`;
-	cd dist/$library;
-	#echo pwd=`pwd`;
-	npm pack;
+	#if release-mode then
+	#ng build $library; if [ $? -ne 0 ]; then echo `pwd`; echo ng build $library; exit 1; fi;
+	#cd dist/$library; npm pack;
 	cd $startDir
 done;

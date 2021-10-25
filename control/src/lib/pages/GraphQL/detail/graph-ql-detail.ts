@@ -28,42 +28,43 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 		// @ts-ignore
 		this.router.events.pipe( filter(e=>e instanceof NavigationEnd) ).subscribe( this.onNavigationEnd );
 	}
-	ngAfterViewInit():void
+	async ngAfterViewInit()
 	{
-		var grandParent = this.route.parent;
-		var parentUrl = this.route.routeConfig.path.substr( 0, this.route.routeConfig.path.length-4 );
-		var parent = grandParent.routeConfig.children.find( (x)=>x.path==parentUrl );
+		const grandParent = this.route.parent;
+		const parentUrl = this.route.routeConfig.path.substr( 0, this.route.routeConfig.path.length-4 );
+		const parent = grandParent.routeConfig.children.find( (x)=>x.path==parentUrl );
 		this.name = parent.data.name;
-		var display = parent.data?.display || "name";
+		const display = parent.data?.display || "name";
 
 		this.profile = new Settings<PageSettings>( PageSettings, `${this.type}-detail`, this.profileService );
-		this.profile.load().then( ()=>
+		try
 		{
-			this.graphQL.schema( [this.type] ).then( (tables)=>
+			await this.profile.load();
+			const tables = await this.graphQL.schema( [this.type] );
+			this.schema = tables[0];
+			const columns = ["name", "target"];
+			if( !columns.includes(display) )
+				columns.push( display );
+			const ql = `query{ ${this.schema.objectCollectionName}(deleted:null){${columns.join(" ")}} }`;
+			const data = await this.graphQL.query( ql );
+			const results = data[this.schema.objectCollectionName];
+			const siblings = new Map<string,string>();
+			if( results )
 			{
-				this.schema = tables[0];
-				var columns = ["name", "target"];
-				if( !columns.includes(display) )
-					columns.push( display );
-				let ql = `query{ ${this.schema.objectCollectionName}(deleted:null){${columns.join(" ")}} }`;
-				this.graphQL.query( ql ).then( (data:any)=>
-				{
-					let results = data[this.schema.objectCollectionName];
-					let siblings = new Map<string,string>();
-					if( results )
-					{
-						var parent = this.route.url["value"][0].path;
-						siblings.set( parent, parent.charAt(0).toUpperCase()+parent.slice(1) );
-						results.forEach( x => siblings.set(x.target,x[display]) );
-					}
-					this.siblings.next( siblings );
-					if( this.target!='$new' )
-						this.load();
-					else
-						this.viewPromise = Promise.resolve( true );
-				});
-			});
-		});
+				const parent = this.route.url["value"][0].path;
+				siblings.set( parent, parent.charAt(0).toUpperCase()+parent.slice(1) );
+				results.forEach( x => siblings.set(x.target,x[display]) );
+			}
+			this.siblings.next( siblings );
+			if( this.target!='$new' )
+				this.load();
+			else
+				this.viewPromise = Promise.resolve( true );
+		}
+		catch( e )
+		{
+			this.cnsle.error( e["message"], e["error"] );
+		}
 	}
 	onNavigationEnd =( val:NavigationEnd )=>///settings
 	{
@@ -71,12 +72,12 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 			return;
 		console.log( `onNavigationEnd( ${val} )` );
 		this.target = this.router.url.substring( this.router.url.lastIndexOf('/')+1 );//settings
-		var grandParent = this.route.parent;
-		var parentUrl = this.route.routeConfig.path.substr( 0, this.route.routeConfig.path.length-4 );//roles
+		const grandParent = this.route.parent;
+		const parentUrl = this.route.routeConfig.path.substr( 0, this.route.routeConfig.path.length-4 );//roles
 		if( this.target==parentUrl )
 			return;
-		var parent = grandParent.routeConfig.children.find( (x)=>x.path==parentUrl );
-		var paths = [this.target, parent.data.name];
+		const parent = grandParent.routeConfig.children.find( (x)=>x.path==parentUrl );
+		const paths = [this.target, parent.data.name];
 		for( let x = grandParent; x.routeConfig?.data?.name; x = x.parent )
 			paths.push( x.routeConfig.data.name );
 		if( this.target=="users" || this.target=="roles" )
@@ -90,26 +91,26 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 	{
 		if( this.target=="settings" )
 			debugger;
-		let fetch = ( columns )=>
+		const fetch = ( columns )=>
 		{
-			let ql = `query{ ${this.fetchName}(filter:{target:{ eq:"${this.target}"}}){ ${columns} } }`;
+			const ql = `query{ ${this.fetchName}(filter:{target:{ eq:"${this.target}"}}){ ${columns} } }`;
 			this.graphQL.query( ql ).then( (data:any)=>
 			{
 				if( data==null )
 					this.cnsle.error( `${this.target} not found` );
 				else
 					this.data = data[this.fetchName];
-				this.viewPromise = Promise.resolve(true);
+				this.viewPromise = Promise.resolve( true );
 			}).catch( (e)=>console.error(e) );
 		}
 		this.tabs.length = 0;
 		let columns = this.schema.columns;
-		var lists = this.schema.listFields.map( (x)=>x.type.ofType.name );
+		const lists = this.schema.listFields.map( (x)=>x.type.ofType.name );
 		if( lists.length )
 		{
 			this.graphQL.schema( lists ).then( (tables)=>
 			{
-				for( let table of tables )
+				for( const table of tables )
 				{
 					if( table.typeName.startsWith(this.schema.typeName) )
 						table.subType = new MetaObject( table.typeName.substring(this.schema.typeName.length) );
@@ -129,10 +130,6 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 	}
 	onSave( newValue:any )
 	{
-		//this.data should already be updated.
-		//for( let m in newValue )
-		//	newValue
-		//debugger;
 	}
 	tabIndexChanged( event )
 	{

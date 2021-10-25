@@ -19,8 +19,9 @@ export class GraphQLProperties implements AfterViewInit
 				let values:Array<IEnum>;
 				if( field.type.underlyingKind==FieldKind.ENUM )
 				{
-					this.clone.set( field.name, 0 );
 					values = ( await this.graphQL.query<IQueryResult<IEnum>>(`query{ __type(name: "${field.type.name}") { enumValues { id name } } }`) ).__type["enumValues"];
+					if( this.#original[field.name] )
+						this.clone.set( field.name, values.find((x)=>x.name==this.#original[field.name])?.id );
 				}
 				this.fields.push( new PropertyField(field, values) );
 			}
@@ -46,11 +47,12 @@ export class GraphQLProperties implements AfterViewInit
 	originalOrder = ( a, b )=> {return 0;}
 	onCancelClick()
 	{
-
+		debugger;
 	}
 	enableSubmit():boolean
 	{
-		return this.fields.find( (x)=>x.nullable && x.type!=InputTypes.Select && this.clone.get(x.name).length==0 )==null;
+		debugger;
+		return !this.saving && this.fields.find( (x)=>x.nullable && x.type!=InputTypes.Select && this.clone.get(x.name).length==0 )==null;
 	}
 	onSubmitClick():void
 	{
@@ -66,11 +68,11 @@ export class GraphQLProperties implements AfterViewInit
 			//if( this.clone[m]!==undefined && this.original[m]!=this.clone[m] )
 			//	input[m] = this.clone[m];
 		}
-		//for( var key in this.clone )
+		
 		for( var [key,value] of this.clone )//previously no description, now description.
 		{
 			if( this.original[key]===undefined )
-				input[key] = this.clone.get(key); //this.clone[key];
+				input[key] = this.clone.get(key); 
 		}
 
 		if( Object.keys(input).length )
@@ -102,17 +104,15 @@ export class GraphQLProperties implements AfterViewInit
 	@Input() set original(x)
 	{
 		this.#original = x ?? {};
-		let add = ( m )=>this.clone.set( m, this.#original[m] ?? '' );//this.clone[m] = this.#original[m] ?? '';
+		let add = ( m )=>this.clone.set( m, this.#original[m] ?? '' );
 		add( "name" );
 		add( "target" );
 		for( let m in x )
 		{
 			if( x[m]===undefined && GraphQLProperties.noShowFields.indexOf(m)==-1 )
-			this.clone.set( m, x[m] ); //this.clone[m] = x[m];
+			this.clone.set( m, x[m] );
 		}
 		add( "description" );
-//		for( var [key,value] of this.clone )
-//			console.log( `${key}=${value}` );
 	} get original(){return this.#original; } #original:any;
 	@Input() type:string;
 	viewPromise:Promise<boolean>;
