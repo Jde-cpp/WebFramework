@@ -73,12 +73,7 @@ for librarySubDir in "${libraries[@]}"; do
 	library=$( basename $dest );
 	if [ $? -ne 0 ]; then echo $dest failed; exit 1; fi;
 	if [ ! -d projects/$library ]; then
-		$REPO_WEB/WebFramework/create-library.sh $library $librarySubDir;
-		if [ $? -ne 0 ]; then
-			echo `pwd`;
-			echo $REPO_WEB/WebFramework/create-library.sh $library $librarySubDir;
-			exit 1;
-		fi;
+		$REPO_WEB/WebFramework/create-library.sh $library $librarySubDir; if [ $? -ne 0 ]; then echo `pwd`; echo $REPO_WEB/WebFramework/create-library.sh $library $librarySubDir; exit 1; fi;
 	fi;
 	cd $baseDir/$workspace/projects/$library/src;
 	if [ -d $libraryDir/control/src/lib ]; then addHardDir lib $libraryDir/control/src; fi;
@@ -92,3 +87,6 @@ for librarySubDir in "${libraries[@]}"; do
 	#cd dist/$library; npm pack;
 	cd $startDir
 done;
+jq '.angularCompilerOptions["strictTemplates"] = 'false'' tsconfig.json  > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq '$cmd' tsconfig.json; exit 1; fi;
+mv temp.json tsconfig.json;
+echo create-workspace.sh success
