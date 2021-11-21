@@ -7,26 +7,33 @@ import * as AppFromClient from 'jde-cpp/FromClient'; import FromClient = AppFrom
 
 type StatusSubscription = (statuses:FromServer.IStatuses) => void;
 
+type Resolve<T> = (value: T | PromiseLike<T>) => void;
+type Reject = (reason?: any) => void;
+class PromiseCallbacks<T>
+{
+	constructor( public resolve:Resolve<T>, public reject:Reject )
+	{}
+}
+
 @Injectable( {providedIn: 'root'} )
 export class AppService
 {
 	constructor()
 	{
-		const url = 'ws://localhost:1967';// 'ws://localhost:1967'
-		this.#socket = webSocket<protobuf.Buffer>( {url: url, deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
+		this.#socket = webSocket<protobuf.Buffer>( {url: AppService.Url, deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
 		this.#socket.subscribe( (x)=>this.addMessage(x), (e)=>this.error(e), ()=>this.complete() );
 	}
 //	request<T>( requestType:Requests.ERequests ):Promise<T>{ return this.connection.request<T>(requestType); }
-	get():Observable<FromServer.IApplication[]>
+	get():Promise<FromServer.IApplication[]>
 	{
-		if( this.applications.length )
-			return of( this.applications ); //eventStream.next(  );
-
-		var eventStream = new Subject<FromServer.IApplication[]>();
-		this.applicationSubjects.push( eventStream );
-		if( this.applicationSubjects.length==1 )
-			this.sendRequest( FromClient.ERequest.Applications );
-		return eventStream;
+		return this.applications.length
+			? Promise.resolve( this.applications )
+			: new Promise<FromServer.IApplication[]>( (resolve,reject)=>
+			{
+				this.applicationPromises.push( new PromiseCallbacks<FromServer.IApplication[]>(resolve,reject) );
+				if( this.applicationPromises.length==1 )
+					this.sendRequest( FromClient.ERequest.Applications );
+			});
 	};
 	statuses():Observable<FromServer.IStatuses>
 	{
@@ -142,10 +149,11 @@ export class AppService
 		return callback;
 	}
 
-	private sendRequest( value:FromClient.ERequest )
+	private sendRequest( x:FromClient.ERequest )
 	{
-		var request = new FromClient.Request(); request.Value = value;
-		var msg = new FromClient.MessageUnion(); msg.Request=request;
+		console.log( `requesting '${FromClient.ERequest[x]}'`)
+		//var request = new FromClient.Request(); request.Value = x;
+		let msg = { Request: {Value:x} };
 		this.send( msg );
 
 	}
@@ -219,18 +227,18 @@ export class AppService
 						callback.next( message.Statuses );
 				}
 				else if( message.Acknowledgement )
+				{
+					console.log( `(${message.Acknowledgement.Id})Connected to '${AppService.Url}'` );
 					this.sessionId = message.Acknowledgement.Id;
+				}
 				else if( message.Applications )
 				{
 					this.applications.length=0;
 					for( var application of message.Applications.Values )
 						this.applications.push( application );
-					for( let callback of this.applicationSubjects )
-					{
-						callback.next( this.applications );
-						callback.complete();
-					}
-					this.applicationSubjects.length = 0;
+					for( let callback of this.applicationPromises )
+						callback.resolve( this.applications );
+					this.applicationPromises.length = 0;
 				}
 				else if( message.Custom )
 				{
@@ -252,9 +260,10 @@ export class AppService
 		return bytearray;
 	}
 	private applications:FromServer.IApplication[]=[];
-	private applicationSubjects:Subject<FromServer.IApplication[]>[]=[];
+	private applicationPromises:PromiseCallbacks<FromServer.IApplication[]>[]=[];
 	private stringRequests:Map<FromClient.IRequestString,Subject<[number,FromServer.IApplicationString]>>= new Map<FromClient.IRequestString,Subject<[number,FromServer.IApplicationString]>>();
 	private statusSubscriptions:Subject<FromServer.IStatuses>[]=[];
 	private customCallbacks = new Map<number,Subject<Uint8Array>>();
 	private _customRequestId:number=0;
+	private static Url = 'ws://localhost:1967';
 }

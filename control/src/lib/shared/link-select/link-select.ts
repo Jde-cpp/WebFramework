@@ -22,7 +22,16 @@ export class LinkSelect<TOptionKey> implements OnInit
 	get links(){ return this.options.links; }
 	get selected(){ return this.options.selected; } set selected(x){ if( this.options.selected!=x ) this.options.selected=x; } @Output() selectChange = new EventEmitter<TOptionKey>();
 	@Input() options:LinkSelectOptions<TOptionKey>;
-	get linkValues():Map<TOptionKey,string>{ var y=new Map<TOptionKey,string>(); this.links?.forEach(x => {if(x!=this.selected && this.options.values.has(x))y.set(x,this.options.values.get(x));}); return y;}
+	get linkValues():Map<TOptionKey,string>
+	{
+		let y=new Map<TOptionKey,string>();
+		this.links?.forEach( x =>
+		{
+			if( x!=this.selected && this.options.values.has(x) )
+				y.set( x, this.options.values.get(x) );
+		});
+		return y;
+	}
 }
 export class LinkSelectOptions<TOptionKey> implements IAssignable<LinkSelectOptions<TOptionKey>>
 {
@@ -31,6 +40,7 @@ export class LinkSelectOptions<TOptionKey> implements IAssignable<LinkSelectOpti
 		this.links = new CircularBuffer<TOptionKey>( linkCount );
 		this.fillLinks();
 		this.selected = _values.keys().next().value;
+		//this.links.push( this.selected );
 	}
 	assign( other:LinkSelectOptions<TOptionKey> )
 	{

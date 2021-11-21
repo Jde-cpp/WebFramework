@@ -32,7 +32,7 @@ export class LogsComponent implements OnInit, OnDestroy
 	constructor( public _componentPageTitle: ComponentPageTitle, private appService:AppService, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private errorService: IErrorService )
 	{}
 
-	ngOnInit()
+	async ngOnInit()
 	{
 		this._componentPageTitle.title = "Logs";
 		/*var beginningOfDay = DateUtilities.beginningOfDay( new Date() );
@@ -41,33 +41,36 @@ export class LogsComponent implements OnInit, OnDestroy
 		var start = beginningOfDay;
 		this._start.setValue( start );*/
 		this.data.onPageChange.subscribe( pageIndex=>this.pageIndex = pageIndex );
-		this.settingsContainer.loadedPromise.then( ()=>
+		await this.settingsContainer.loadedPromise;
+
+		this.data.sort = this.settings.sort;
+		try
 		{
-			this.data.sort = this.settings.sort;
-			this.appService.get().subscribe( applications =>
+			let applications = await this.appService.get();
+			for( let app of applications )
 			{
-				for( let app of applications )
+				this.applications.push( new Application(app) );
+				this.applicationStrings.set( app.Id, new ApplicationStrings(app.Id) );
+			}
+			this.statusSubscription = this.appService.statuses();
+			this.statusSubscription.subscribe( (statuses:FromServer.IStatuses) =>
+			{
+				for( const status of statuses.Values )
 				{
-					this.applications.push( new Application(app) );
-					this.applicationStrings.set( app.Id, new ApplicationStrings(app.Id) );
+					let found = this.applications.find( (existing)=>{return existing.id==status.ApplicationId;} );
+					if( !found )
+						console.error( `Could not find application '${status.ApplicationId}'` );
+					else
+						found.status = status;
 				}
-				this.statusSubscription = this.appService.statuses();
-				this.statusSubscription.subscribe( (statuses:FromServer.IStatuses) =>
-				{
-					for( const status of statuses.Values )
-					{
-						let found = this.applications.find( (existing)=>{return existing.id==status.ApplicationId;} );
-						if( !found )
-							console.error( `Could not find application '${status.ApplicationId}'` );
-						else
-							found.status = status;
-					}
-					//this.applicationId = 1;
-					this.subscribe( this.applicationId, this.level );
-					this.viewPromise = Promise.resolve( true );
-				});
-			});
-		}).catch( (e)=>{console.log(e);} );
+			} );
+			this.subscribe( this.applicationId, this.level );
+			this.viewPromise = Promise.resolve( true );
+		}
+		catch(e)
+		{
+			console.log(e);
+		}
 	}
 	ngOnDestroy()
 	{

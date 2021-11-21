@@ -24,7 +24,7 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	{
 		let paths = [];
 		for( let x = this.route; x.routeConfig?.data?.name; x = x.parent )
-			paths.push( x.routeConfig.data.name );
+			paths.push( x.routeConfig.data['name'] );
 
 		this.componentPageTitle.title = paths.join( " | " ); 	//this.componentPageTitle.title ? `${this.componentPageTitle.title} | ${title}` : title;
 	};
@@ -102,14 +102,14 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	@ViewChild('mainTable',{static: false}) _table:MatTable<any>;
 
 	data;
-	get name():string{ return this.routeConfig.data.name; }
+	get name():string{ return this.routeConfig.data['name']; }
 	get fetchName():string{ return this.routeConfig.path; }
 	profile:Settings<PageSettings>;
 	get routeConfig(){ return this.route.routeConfig;}
 	schema:Table;
 	get settings(){ return this.profile.value; }
 	get sort(){ return this.settings.sort; }
-	get showAdd():boolean{ return this.routeConfig.data.showAdd ?? true};
+	get showAdd():boolean{ return this.routeConfig.data['showAdd'] ?? true};
 	get showDeleted(){return this.settings.showDeleted;}
 	showDeletedSubject = new Subject<boolean>();
 	get type():string{ return this.name.substr(0,this.name.length-1); }

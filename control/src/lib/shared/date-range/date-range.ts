@@ -22,7 +22,7 @@ export class DateRange implements OnInit
 			this.setStartControl( this.start );
 		}
 
-		this.range.controls.start.valueChanges.subscribe( value=>
+		this.range.controls['start'].valueChanges.subscribe( value=>
 		{
 			const day = value==null ? null : DateUtilities.toDays( value );
 			if( day!=this.start )
@@ -33,7 +33,7 @@ export class DateRange implements OnInit
 				this.settingsChange.emit( this.settings );
 			}
 		});
-		this.range.controls.end.valueChanges.subscribe( value=>
+		this.range.controls['end'].valueChanges.subscribe( value=>
 		{
 			const day = value==null ? null : DateUtilities.toDays( value );
 			if( day!=this.end )
@@ -53,8 +53,8 @@ export class DateRange implements OnInit
 	{
 		return DateUtilities.toDays( new Date(time.getTime()-time.getTimezoneOffset()*60000) );
 	}
-	setStartControl(day:Day){ this.range.controls.start.setValue( day==null ? null : DateRange.toDate(day) ); }
-	setEndControl(day:Day){ this.range.controls.end.setValue( day ? DateRange.toDate(day) : null ); }
+	setStartControl(day:Day){ this.range.controls['start'].setValue( day==null ? null : DateRange.toDate(day) ); }
+	setEndControl(day:Day){ this.range.controls['end'].setValue( day ? DateRange.toDate(day) : null ); }
 	setTimeFrame( x:TimeFrame, force=false )
 	{
 		if( x==TimeFrame.None ){ debugger; throw('unexpected'); }
@@ -117,4 +117,3 @@ export class DateRangeSettings implements IAssignable<DateRangeSettings>
 
 @NgModule( {exports: [DateRange], declarations: [DateRange], imports:[MatChipsModule,MatDatepickerModule,MatFormFieldModule]} )
 export class DateRangeModule {}
-  

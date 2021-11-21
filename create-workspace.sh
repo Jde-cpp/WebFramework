@@ -4,7 +4,7 @@
 #sudo apt  install jq
 #chmod 777 ../WebFramework/jde-framework-proto.sh
 #run from my-workspace/..
-#../WebFramework/create-workspace.sh my-workspace false MaterialSite WebFramework TwsWebsite WebBlockly
+#../WebFramework/create-workspace.sh my-workspace true MaterialSite WebFramework TwsWebsite WebBlockly
 workspace=${1:-my-workspace};
 createApplication=${2:-true};
 librariesText=( "$@" );
