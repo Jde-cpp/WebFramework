@@ -23,7 +23,7 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	ngOnInit()
 	{
 		let paths = [];
-		for( let x = this.route; x.routeConfig?.data?.name; x = x.parent )
+		for( let x = this.route; x.routeConfig?.data && x.routeConfig?.data["name"]; x = x.parent )
 			paths.push( x.routeConfig.data['name'] );
 
 		this.componentPageTitle.title = paths.join( " | " ); 	//this.componentPageTitle.title ? `${this.componentPageTitle.title} | ${title}` : title;

@@ -1,7 +1,7 @@
 import { Observable, Subscription } from 'rxjs';
 import {Component, AfterViewInit, Inject, OnDestroy, Input, OnInit, Output, EventEmitter} from '@angular/core';
 import {SelectionModel} from '@angular/cdk/collections';
-import {Remove} from '@material-ui/icons';
+//import {Remove} from '@material-ui/icons';
 import { MatTableDataSource } from '@angular/material/table';
 import { Sort } from '@angular/material/sort';
 import { IErrorService } from '../../../services/error/IErrorService';

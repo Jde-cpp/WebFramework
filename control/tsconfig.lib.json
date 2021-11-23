@@ -7,7 +7,7 @@
     "declaration": true,
     "declarationMap": true,
     "inlineSources": true,
-	 "noPropertyAccessFromIndexSignature": true,
+	 "noPropertyAccessFromIndexSignature": false,
     "types": [],
     "lib": [
       "dom",

@@ -33,8 +33,8 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 		const grandParent = this.route.parent;
 		const parentUrl = this.route.routeConfig.path.substr( 0, this.route.routeConfig.path.length-4 );
 		const parent = grandParent.routeConfig.children.find( (x)=>x.path==parentUrl );
-		this.name = parent.data.name;
-		const display = parent.data?.display || "name";
+		this.name = parent.data["name"];
+		const display = parent.data["display"] || "name";
 
 		this.profile = new Settings<PageSettings>( PageSettings, `${this.type}-detail`, this.profileService );
 		try
@@ -77,9 +77,9 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 		if( this.target==parentUrl )
 			return;
 		const parent = grandParent.routeConfig.children.find( (x)=>x.path==parentUrl );
-		const paths = [this.target, parent.data.name];
-		for( let x = grandParent; x.routeConfig?.data?.name; x = x.parent )
-			paths.push( x.routeConfig.data.name );
+		const paths = [this.target, parent.data["name"] ];
+		for( let x = grandParent; x.routeConfig?.data && x.routeConfig?.data["name"]; x = x.parent )
+			paths.push( x.routeConfig.data["name"] );
 		if( this.target=="users" || this.target=="roles" )
 			debugger;
 		if( paths[0].toUpperCase()==paths[2].toUpperCase() )
