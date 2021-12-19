@@ -65,14 +65,12 @@ export class GraphQLProperties implements AfterViewInit
 		{
 			if( this.clone.get(m)!==undefined && this.original[m]!=this.clone.get(m) )
 				input[m] = this.clone.get(m);
-			//if( this.clone[m]!==undefined && this.original[m]!=this.clone[m] )
-			//	input[m] = this.clone[m];
 		}
-		
+
 		for( var [key,value] of this.clone )//previously no description, now description.
 		{
 			if( this.original[key]===undefined )
-				input[key] = this.clone.get(key); 
+				input[key] = this.clone.get(key);
 		}
 
 		if( Object.keys(input).length )
@@ -130,7 +128,6 @@ class PropertyField
 	get name(){ return this.field.name; }
 	get displayName(){ return this.field.name=="target" ? "Id" : StringUtils.capitalize( this.field.name ); }
 	get nullable(){ return this.field.type.kind!=FieldKind.NON_NULL; }
-
 	get type():InputTypes
 	{
 		let type = InputTypes.None;
