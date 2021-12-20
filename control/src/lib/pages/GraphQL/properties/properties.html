@@ -1,11 +1,10 @@
 <ng-container *ngIf="viewPromise | async">
 	<div>
-		<mat-form-field *ngFor="let field of fields; let index = index" style="width: 100%;" appearance="fill">
+		<mat-form-field *ngFor="let field of fields; let tab = index" style="width: 100%;" appearance="fill">
 			<mat-label>{{field.displayName}}</mat-label>
-			<!-- <input matInput [value]="clone.get(field.name) ?? null" [tabindex]="index+1" (focusout)="clone.set( field.name, $event.target['value'] )" > -->
-			<input matInput *ngIf="field.type==InputTypes.None" [value]="clone.get(field.name)" [tabindex]="index+1" (focusout)="clone.set( field.name, $event.target['value'] )" >
-			<textarea matInput *ngIf="field.type==InputTypes.Text" [value]="clone.get(field.name)" [tabindex]="index+1" (focusout)="clone.set( field.name, $event.target['value'])"></textarea>
-			<mat-select *ngIf="field.type==InputTypes.Select"  (selectionChange)="clone.set( field.name, $event.value )" [value]="clone.get(field.name)">
+			<input matInput *ngIf="field.type==InputTypes.None" [value]="clone.get(field.name)" [tabIndex]="tab+1" (focusout)="clone.set( field.name, $event.target['value'] )" >
+			<textarea matInput *ngIf="field.type==InputTypes.Text" [value]="clone.get(field.name)" [tabIndex]="tab+1" (focusout)="clone.set( field.name, $event.target['value'])"></textarea>
+			<mat-select *ngIf="field.type==InputTypes.Select" [tabIndex]="tab+1" (selectionChange)="clone.set( field.name, $event.value )" [value]="clone.get(field.name)">
 				<mat-option *ngFor="let option of field.options" [value]="option.id">{{option.name}}</mat-option>
 			</mat-select>
 		</mat-form-field>

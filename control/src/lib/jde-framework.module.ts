@@ -9,6 +9,7 @@ import {MatDialogModule} from '@angular/material/dialog';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import {MatNativeDateModule} from '@angular/material/core';
 import {MatSelectModule} from '@angular/material/select';
 import {MatSortModule} from '@angular/material/sort';
 import {MatTabsModule} from '@angular/material/tabs';
@@ -37,10 +38,10 @@ import { SeverityPickerComponent } from './shared/severity-picker/severity-picke
 		UserComponent, UserEntryDialog ],
   	imports: [CommonModule,
 	  FormsModule, ReactiveFormsModule,
-	  MatButtonModule, MatCheckboxModule, MatChipsModule, MatDatepickerModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatIconModule, MatSelectModule, MatSortModule, MatTabsModule, MatTableModule, MatToolbarModule
+	  MatButtonModule, MatCheckboxModule, MatChipsModule, MatDatepickerModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatIconModule, MatNativeDateModule, MatSelectModule, MatSortModule, MatTabsModule, MatTableModule, MatToolbarModule
 	  //,ComponentPageTitle
 	],
 	entryComponents:[SelectDialog],
-  	exports: [PaginatorComponent,SeverityPickerComponent]
+	exports: [PaginatorComponent,SeverityPickerComponent]
 })
 export class JdeFrameworkModule { }

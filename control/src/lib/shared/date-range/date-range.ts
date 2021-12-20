@@ -1,4 +1,4 @@
-import {Component, Input, Output, OnInit, EventEmitter, NgModule} from '@angular/core';
+import {Component, Input, Output, OnInit, EventEmitter, NgModule,ViewChild} from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import {MatChipsModule} from '@angular/material/chips';
 import {MatDatepickerModule} from '@angular/material/datepicker';
@@ -12,18 +12,31 @@ export enum TimeFrame{None=0, Week=7, Month=30, Quarter=90, Year=360, All=1000}
 @Component( {selector: 'date-range',templateUrl: 'date-range.html'} )
 export class DateRange implements OnInit
 {
+	get startDate(){ return DateRange.toDate( this.settings.start ); }
+	get endDate(){ return DateRange.toDate( this.settings.end ); }
+	@ViewChild('picker',{static: false}) picker;
+	@ViewChild('dateRangeStart',{static: false}) dateRangeStart;
+	@ViewChild('dateRangeEnd',{static: false}) dateRangeEnd;
 	ngOnInit()
 	{
 		if( this.settings.timeFrame )
 			this.setTimeFrame( this.settings.timeFrame, true );
 		else
 		{
-			this.setEndControl( this.end );
-			this.setStartControl( this.start );
+			//this.end.value = this.settings.end;
+			let x  = this.picker;
+			let a  = this.dateRangeStart;
+			let b  = this.dateRangeEnd;
+
+			this.start = new FormControl( this.settings.start );
+			this.end = new FormControl( this.settings.end );
+			//this.setEndControl( this.end );
+			//this.setStartControl( this.start );
 		}
 
-		this.range.controls['start'].valueChanges.subscribe( value=>
+	/*	this.range.controls['start'].valueChanges.subscribe( value=>
 		{
+			debugger;
 			const day = value==null ? null : DateUtilities.toDays( value );
 			if( day!=this.start )
 			{
@@ -35,6 +48,7 @@ export class DateRange implements OnInit
 		});
 		this.range.controls['end'].valueChanges.subscribe( value=>
 		{
+			debugger;
 			const day = value==null ? null : DateUtilities.toDays( value );
 			if( day!=this.end )
 			{
@@ -43,6 +57,7 @@ export class DateRange implements OnInit
 				this.settingsChange.emit( this.settings );
 			}
 		});
+*/
 	}
 	static toDate( day:Day ):Date
 	{
@@ -53,26 +68,41 @@ export class DateRange implements OnInit
 	{
 		return DateUtilities.toDays( new Date(time.getTime()-time.getTimezoneOffset()*60000) );
 	}
+	startChange( e )
+	{
+		var x = e.value;
+		console.log( 'start='+this.range.controls['start'].value );
+		console.log( 'end='+this.range.controls['end'].value );
+		debugger;
+	}
+	endChange( e )
+	{
+		var y = e.value;
+		console.log( 'start='+this.range.controls['start'].value );
+		console.log( 'end='+this.range.controls['end'].value );
+		debugger;
+	}
 	setStartControl(day:Day){ this.range.controls['start'].setValue( day==null ? null : DateRange.toDate(day) ); }
 	setEndControl(day:Day){ this.range.controls['end'].setValue( day ? DateRange.toDate(day) : null ); }
 	setTimeFrame( x:TimeFrame, force=false )
 	{
-		if( x==TimeFrame.None ){ debugger; throw('unexpected'); }
-		if( x==this.timeFrame && !force )
+		if( x==TimeFrame.None || (x==this.timeFrame && !force) )
 			return;
 		this.timeFrame = x;
 		this.settings.dayCount = this.settings.end = undefined;
-		this.setStartControl( this.start );
-		this.setEndControl( this.end );
+		this.start.setValue( this.settings.start );
+		this.end.setValue( this.settings.end );
 
 		this.settingsChange.emit( this.settings );
 	}
 	/*set baseDay(x:Day){this.settings.baseDay = x;}*/ get max():Day{ return this.settings.max; };
 	get dayCount(){ return this.settings.dayCount; }
-	get end():Day{ return !this.timeFrame && this.settings.end ? this.settings.end : null; }
+	//get end():Day{ return !this.timeFrame && this.settings.end ? this.settings.end : null; }
 	@Input() set placeholder( value ){ this._placeholder = value;} get placeholder(){return this._placeholder} private _placeholder:string="Date range";
 	@Input()settings:DateRangeSettings; @Output() settingsChange = new EventEmitter<DateRangeSettings>();
-	get start():Day{ return this.settings.start; }
+	//get start():Day{ return this.settings.start; }
+	start:FormControl;
+	end:FormControl;
 	get timeFrame(){return this.settings.timeFrame;} set timeFrame(x){this.settings.timeFrame = x;}TimeFrameType = TimeFrame;
 	range = new FormGroup( { start: new FormControl(), end: new FormControl() } );
 }
