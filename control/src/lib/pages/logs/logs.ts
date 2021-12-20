@@ -26,7 +26,7 @@ import { FormControl } from '@angular/forms';
 // Add dates.
 // Fix pause button.
 // Comment out statuses
-@Component({selector: 'logs',templateUrl: './logs.html',styleUrls: ['./logs.css']})
+@Component({selector: 'logs.main-content.mat-drawer-container.my-content',templateUrl: './logs.html',styleUrls: ['./logs.css']})
 export class LogsComponent implements OnInit, OnDestroy
 {
 	constructor( public _componentPageTitle: ComponentPageTitle, private appService:AppService, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private errorService: IErrorService )

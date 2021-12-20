@@ -16,7 +16,7 @@ import { Subject } from 'rxjs';
 @Component( {selector: 'graph-ql-component.main-content.mat-drawer-container.my-content', styleUrls: ['graph-ql-component.scss'], templateUrl: './graph-ql-component.html'} )
 export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 {
-	constructor( private route: ActivatedRoute, private router:Router, private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
+	constructor( private route: ActivatedRoute, private router:Router, private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsl: IErrorService )
 	{}
 
 	ngOnDestroy(){ this.profile.save(); }
@@ -91,7 +91,7 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 				this.selection = null;
 		}
 
-		this.graphQL.query(`{ mutation { ${type}${this.type}(\"id\":${this.selection.id}) } }`).then( next ).catch( (e)=>{ console.error(e.toString()); } );
+		this.graphQL.query(`{ mutation { ${type}${this.type}(\"id\":${this.selection.id}) } }`).then( next ).catch( (e)=>{  this.cnsl.error(e.message); console.error( JSON.stringify(e) ); } );
 	}
 
 	get haveSelection(){ return !!this.selection; }

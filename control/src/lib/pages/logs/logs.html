@@ -1,5 +1,5 @@
 <ng-container *ngIf="viewPromise | async">
-	<mat-toolbar style="padding-top: 20px">
+	<mat-toolbar style="padding-top: 20px; width: 100%;">
 		<!-- <i class="material-icons" [innerHTML]="connected ? 'power' : 'power_off'"></i> -->
 		<!-- <button class="mdc-icon-button material-icons" (click)="settings()" >settings</button>  -->
 		<!--  [value]="application.Name" -->
@@ -46,7 +46,7 @@
 		</ng-container>
 		<ng-container matColumnDef="file">
 			<mat-header-cell mat-sort-header *matHeaderCellDef [style.flex]="'0 0 200px'"> File </mat-header-cell>
-			<mat-cell mat-cell *matCellDef="let element" [style.flex]="'0 0 300px'"> {{element.fileName}} </mat-cell>
+			<mat-cell mat-cell *matCellDef="let element" [style.flex]="'0 0 200px'"> {{element.fileName}} </mat-cell>
 		</ng-container>
 		<ng-container matColumnDef="function">
 			<mat-header-cell mat-sort-header *matHeaderCellDef class="function"> Function </mat-header-cell>

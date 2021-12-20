@@ -15,7 +15,7 @@ export class GraphQLProperties implements AfterViewInit
 			const schema = await this.graphQL.schema( [this.type] );
 			for( const field of schema[0].fields.filter((x)=>[FieldKind.OBJECT,FieldKind.LIST].indexOf(x.type.underlyingKind)==-1 && GraphQLProperties.noShowFields.indexOf(x.name)==-1) )
 			{
-				console.log( field.name );
+				//console.log( field.name );
 				let values:Array<IEnum>;
 				if( field.type.underlyingKind==FieldKind.ENUM )
 				{
@@ -68,11 +68,11 @@ export class GraphQLProperties implements AfterViewInit
 			//if( this.clone[m]!==undefined && this.original[m]!=this.clone[m] )
 			//	input[m] = this.clone[m];
 		}
-		
+
 		for( var [key,value] of this.clone )//previously no description, now description.
 		{
 			if( this.original[key]===undefined )
-				input[key] = this.clone.get(key); 
+				input[key] = this.clone.get(key);
 		}
 
 		if( Object.keys(input).length )

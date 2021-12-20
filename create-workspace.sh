@@ -4,13 +4,12 @@
 #sudo apt  install jq
 #chmod 777 ../WebFramework/jde-framework-proto.sh
 #run from my-workspace/..
-#../WebFramework/create-workspace.sh my-workspace true MaterialSite WebFramework TwsWebsite WebBlockly
+#../WebFramework/create-workspace.sh my-workspace MaterialSite WebFramework TwsWebsite WebBlockly
 workspace=${1:-my-workspace};
-createApplication=${2:-true};
 librariesText=( "$@" );
 declare -a libraries=();
-for i in "${!librariesText[@]}"; do if (( $i > 1 )); then t=${librariesText[$i]}; libraries+=($t); libraryLog="$libraryLog $t";  fi; done;
-echo create-workspace.sh workspace=$workspace createApplication=$createApplication librares=\"${libraryLog:1}\"
+for i in "${!librariesText[@]}"; do if (( $i > 0 )); then t=${librariesText[$i]}; libraries+=($t); libraryLog="$libraryLog $t";  fi; done;
+echo create-workspace.sh workspace=$workspace librares=\"${libraryLog:1}\"
 
 scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source $scriptDir/../../Framework/common.sh;
@@ -21,6 +20,7 @@ if [ ! -x "$(which "ng" 2> /dev/null)" ]; then npm install -g @angular/cli; fi;
 ##################
 if [ ! -d $workspace ]; then
 	echo -------------------- create workspace start --------------------;
+	createApplication=true;
 	echo ng new $workspace --create-application=$createApplication --routing=false --style=scss;
 	ng new $workspace --create-application=$createApplication --routing=false --style=scss;
 	echo -------------------- create workspace complete --------------------;

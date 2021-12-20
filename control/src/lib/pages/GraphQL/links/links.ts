@@ -12,6 +12,7 @@ import {IProfile} from '../../../services/profile/IProfile';
 import {Settings} from '../../../utilities/settings';
 import {StringUtils} from '../../../utilities/StringUtils'
 import { SelectDialog } from '../select-dialog/select-dialog';
+import { MetaObject } from '../../../utilities/JsonUtils';
 
 @Component( { selector: 'graph-ql-links', templateUrl: 'links.html'} )
 export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
@@ -26,27 +27,38 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 	{// @ts-ignore
 		this.router.events.pipe( filter(e=>e instanceof NavigationEnd) ).subscribe( this.onNavigationEnd );
 	}
-	ngAfterViewInit():void
+	async ngAfterViewInit()
 	{
-		var id = this.router.url.substring( 0, this.router.url.lastIndexOf('/')+1 )+this.schema.objectReferenceName;
-		this.profile = new Settings<PageSettings>( PageSettings, id, this.profileService );
-		this.profile.load().then( ()=>
+		await this.profile.load();
+		try
 		{
-			this.graphQL.mutations().then( (mutations)=>
+			let mutations = await this.graphQL.mutations();
+			const mutationA = `add${this.parentType}${this.schema.typeName}`;
+			const mutationB = `add${this.schema.typeName}${this.parentType}`;
+			const mutationC = `add${this.schema.typeName}`
+			var mutation = mutations.find( (x)=>x.name==mutationA || x.name==mutationB || x.name==mutationC ); if( !mutation ) throw `could not find mutation ${mutationA}/${mutationB}`;
+			this.mutation = mutation.name.substr( 3 );
+			console.log( `objectCollectionName=${this.schema.objectCollectionName}` );
+			console.log( `parent=${JSON.stringify(this.parent)}` );
+			for( var i of this.items )
 			{
-				const mutationA = `add${this.parentType}${this.schema.typeName}`;
-				const mutationB = `add${this.schema.typeName}${this.parentType}`;
-				const mutationC = `add${this.schema.typeName}`
-				var mutation = mutations.find( (x)=>x.name==mutationA || x.name==mutationB || x.name==mutationC ); if( !mutation ) throw `could not find mutation ${mutationA}/${mutationB}`;
-				this.mutation = mutation.name.substr( 3 );
-				for( var field of this.schema.nonListFields.filter((x)=>x.displayed) )
-				{
-					//					this.table.addColumnDef( )
-				}
-				//this.displayedColumns = this.schema.fields.filter( (x)=>x.displayed ).map( (x)=>x.name );
-				this.viewPromise = Promise.resolve( true );
-			} );
-		} );
+				console.log( i );
+			}
+			for( var f of this.schema.fields )
+				console.log( f );
+/*			for( var field of this.schema.nonListFields.filter((x)=>x.displayed) )
+			{
+				console.log( field );
+				CdkColumnDef def;
+				this.table.addColumnDef( CdkColumnDef )
+			}*/
+			//this.displayedColumns = this.schema.fields.filter( (x)=>x.displayed ).map( (x)=>x.name );
+		}
+		catch( e )
+		{
+			this.cnsle.error( "could not load page.", e );
+		}
+		this.viewPromise = Promise.resolve( true );
 	}
 	onNavigationEnd =( val:NavigationEnd )=>
 	{
@@ -69,17 +81,15 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 			});
 		}).catch( (e)=>console.error(e) );
 	}
-	load()
+	async load()
 	{
 		this.viewPromise = null;
 		const valueMember = this.schema.objectCollectionName;
 		let ql = `query{ ${this.parentSelect}(filter:{ id:{eq:${this.parent.id}}}){ ${valueMember}{${this.schema.columns}} } }`;
-		this.graphQL.query( ql ).then( (data:any)=>
-		{
-			this.parent[valueMember].length=0;
-			data[this.parentSelect][valueMember].forEach( x => {this.parent[valueMember].push(x);} );
-			this.viewPromise = Promise.resolve( true );
-		} );
+		let data = await this.graphQL.query( ql );
+		this.parent[valueMember].length=0;
+		data[this.parentSelect][valueMember].forEach( x => {this.parent[valueMember].push(x);} );
+		this.viewPromise = Promise.resolve( true );
 	}
 	cellClick( row:any ){  this.selection = this.selection == row ? null : row; }
 	addLink()
@@ -111,7 +121,8 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 	}
 	removeLink()
 	{//role permissions = this.schema.subType.objectReferenceName
-		const ql = `{ mutation{ remove${this.mutation}("input":{ "${this.parentTypeField}": ${this.parent.id}, "${this.schema.subType.objectReferenceName}Id": ${this.selection.id}} ) } }`;
+		//const ql = `{ mutation{ remove${this.mutation}("input":{ "${this.parentTypeField}": ${this.parent.id}, "${this.schema.subType.objectReferenceName}Id": ${this.selection.id}} ) } }`; did not work with roles remove group.
+		const ql = `{ mutation{ remove${this.mutation}("input":{ "${this.parentTypeField}": ${this.parent.id}, "${new MetaObject(this.schema.typeName).singular}Id": ${this.selection.id}} ) } }`;
 		this.graphQL.query( ql ).then( (x)=>
 		{
 			this.selection = null;
@@ -128,7 +139,9 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 	@ViewChild(MatTable, {static: true}) table: MatTable<any>;
 	get items(){ return this.parent[this.schema.objectCollectionName]; }
 	@Input() parent:any;
-	profile:Settings<PageSettings>;
+	get id(){ return  this.router.url.substring( 0, this.router.url.lastIndexOf('/')+1 )+this.schema.objectReferenceName; }
+
+	get profile():Settings<PageSettings>{ return this.#profile ?? ( this.#profile = new Settings<PageSettings>(PageSettings, this.id, this.profileService) ); } #profile:Settings<PageSettings>;
 	get sort(){return this.profile.value.sort; }
 	get displayedColumns():Field[]{ return this.schema.fields.filter( (x)=>x.displayed && !["created", "updated", "deleted", "target"].includes(x.name) ); }
 	get displayedColumnNames(){ return this.displayedColumns.map( (x)=>x.name ); };// = ["name","target","description","authenticator", "deleted"];
