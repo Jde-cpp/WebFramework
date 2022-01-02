@@ -1,5 +1,7 @@
-import {Component,EventEmitter,OnInit,Input,Output, OnDestroy, ChangeDetectorRef} from '@angular/core';
+import {Component,EventEmitter,OnInit,Input,Output, OnDestroy, ChangeDetectorRef, NgModule} from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 export class PageEvent
 {
@@ -12,7 +14,7 @@ export class PageEvent
 }
 
 @Component({ selector: 'paginator', templateUrl: './paginator.html' })
-export class PaginatorComponent implements OnInit, OnDestroy
+export class Paginator implements OnInit, OnDestroy
 {
 	constructor( private cdr: ChangeDetectorRef )
 	{}
@@ -105,3 +107,5 @@ export class PaginatorComponent implements OnInit, OnDestroy
 	get onLastPage(){ return this.endIndex==this.length-1; }
 }
 
+@NgModule( {exports: [Paginator], declarations: [Paginator], imports:[MatIconModule,MatButtonModule]} )
+export class PaginatorModule {}

@@ -1,7 +1,7 @@
 <mat-form-field style="margin-bottom: -1.25em" appearance="fill">
   <mat-label>{{placeholder}}</mat-label>
   <!-- [formGroup]="range" -->
-  <mat-date-range-input  [rangePicker]="picker">
+  <mat-date-range-input #dateRange [rangePicker]="picker">
     <input matStartDate #dateRangeStart [value]="startDate" placeholder=Start (dateChange)="startChange( $event )">
     <input matEndDate #dateRangeEnd [value]="endDate" placeholder=End (dateChange)="endChange( $event )" >
   </mat-date-range-input>

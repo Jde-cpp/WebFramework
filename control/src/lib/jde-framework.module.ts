@@ -24,24 +24,18 @@ import {SelectDialog} from './pages/GraphQL/select-dialog/select-dialog';
 import { LogsComponent } from './pages/logs/logs';
 import { UserEntryDialog } from './pages/user-management/users/dialog/user-dialog';
 import { UserComponent } from './pages/user-management/users/users';
-//import { DateRangeComponent } from './shared/date-range/date-range'
-//import { LinkSelectModule } from './shared/link-select/link-select'
-import { PaginatorComponent } from './shared/paginator/paginator';
 import { SeverityPickerComponent } from './shared/severity-picker/severity-picker';
 
-//import { ComponentPageTitle } from 'jde-material';
-
 @NgModule({
-  	declarations: [PaginatorComponent,SeverityPickerComponent,
+  	declarations: [SeverityPickerComponent,
 		SelectDialog, LogsComponent,
 		GraphQLTable, GraphQLComponent, GraphQLDetailComponent, GraphQLLinkComponent, GraphQLProperties,
 		UserComponent, UserEntryDialog ],
   	imports: [CommonModule,
 	  FormsModule, ReactiveFormsModule,
 	  MatButtonModule, MatCheckboxModule, MatChipsModule, MatDatepickerModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatIconModule, MatNativeDateModule, MatSelectModule, MatSortModule, MatTabsModule, MatTableModule, MatToolbarModule
-	  //,ComponentPageTitle
 	],
 	entryComponents:[SelectDialog],
-	exports: [PaginatorComponent,SeverityPickerComponent]
+	exports: [SeverityPickerComponent]
 })
 export class JdeFrameworkModule { }
