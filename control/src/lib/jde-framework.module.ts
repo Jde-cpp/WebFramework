@@ -6,6 +6,7 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatChipsModule} from '@angular/material/chips';
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatDialogModule} from '@angular/material/dialog';
+import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -20,22 +21,24 @@ import { GraphQLComponent } from './pages/GraphQL/graph-ql-component';
 import { GraphQLLinkComponent } from './pages/GraphQL/links/links';
 import { GraphQLProperties } from './pages/GraphQL/properties/properties';
 import { GraphQLTable } from './pages/GraphQL/table/table';
+import {EditDialog} from './pages/applications/applications'
 import {SelectDialog} from './pages/GraphQL/select-dialog/select-dialog';
+import { Applications } from './pages/applications/applications';
 import { LogsComponent } from './pages/logs/logs';
 import { UserEntryDialog } from './pages/user-management/users/dialog/user-dialog';
 import { UserComponent } from './pages/user-management/users/users';
-import { SeverityPickerComponent } from './shared/severity-picker/severity-picker';
+import { SeverityPickerModule } from './shared/severity-picker/severity-picker';
 
 @NgModule({
-  	declarations: [SeverityPickerComponent,
-		SelectDialog, LogsComponent,
+  	declarations: [
+		EditDialog, SelectDialog, Applications, LogsComponent,
 		GraphQLTable, GraphQLComponent, GraphQLDetailComponent, GraphQLLinkComponent, GraphQLProperties,
 		UserComponent, UserEntryDialog ],
-  	imports: [CommonModule,
+  	imports: [CommonModule, SeverityPickerModule,
 	  FormsModule, ReactiveFormsModule,
-	  MatButtonModule, MatCheckboxModule, MatChipsModule, MatDatepickerModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatIconModule, MatNativeDateModule, MatSelectModule, MatSortModule, MatTabsModule, MatTableModule, MatToolbarModule
+	  MatButtonModule, MatCheckboxModule, MatChipsModule, MatDatepickerModule, MatDialogModule, MatDividerModule, MatFormFieldModule, MatInputModule, MatIconModule, MatNativeDateModule, MatSelectModule, MatSortModule, MatTabsModule, MatTableModule, MatToolbarModule
 	],
-	entryComponents:[SelectDialog],
-	exports: [SeverityPickerComponent]
+	entryComponents:[SelectDialog,EditDialog],
+	exports: []
 })
 export class JdeFrameworkModule { }

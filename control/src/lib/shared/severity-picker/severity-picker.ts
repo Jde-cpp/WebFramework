@@ -1,9 +1,10 @@
-import {Component,EventEmitter,Input,Output} from '@angular/core';
+import {Component,EventEmitter,Input,NgModule,Output} from '@angular/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import {MatSelectModule} from '@angular/material/select';
 import * as AppFromServer from 'jde-cpp/FromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
 
-
 @Component({ selector: 'severity-picker', templateUrl: './severity-picker.html' })
-export class SeverityPickerComponent
+export class SeverityPicker
 {
 	onSelectionChange( value:FromServer.ELogLevel )
 	{
@@ -24,3 +25,6 @@ interface LogOption
 	name:string;
 	value:FromServer.ELogLevel;
 }
+
+@NgModule( {exports: [SeverityPicker], declarations: [SeverityPicker], imports:[MatFormFieldModule,MatSelectModule]} )
+export class SeverityPickerModule {}

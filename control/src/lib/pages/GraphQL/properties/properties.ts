@@ -1,27 +1,31 @@
-import {Component, Inject, Input, Output, AfterViewInit, EventEmitter} from '@angular/core';
+import {Component, Inject, Input, Output, AfterViewInit, EventEmitter, ViewChild, ViewChildren, ElementRef, OnInit, QueryList, ChangeDetectorRef} from '@angular/core';
+import { MatFormField } from '@angular/material/form-field';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Field, FieldKind, IEnum, IGraphQL, IQueryResult } from '../../../services/IGraphQL';
 import { StringUtils } from '../../../utilities/StringUtils';
 
 @Component( { selector: 'graph-ql-properties', templateUrl: 'properties.html'} )
-export class GraphQLProperties implements AfterViewInit
+export class GraphQLProperties implements OnInit, AfterViewInit
 {
-	constructor( private route: ActivatedRoute, private router:Router, @Inject('IGraphQL') private graphQL: IGraphQL )
+	constructor( private route: ActivatedRoute, private router:Router, @Inject('IGraphQL') private graphQL: IGraphQL, private cdr: ChangeDetectorRef )
 	{}
-	async ngAfterViewInit()
+	async ngOnInit()
 	{
 		try
 		{
 			const schema = await this.graphQL.schema( [this.type] );
 			for( const field of schema[0].fields.filter((x)=>[FieldKind.OBJECT,FieldKind.LIST].indexOf(x.type.underlyingKind)==-1 && GraphQLProperties.noShowFields.indexOf(x.name)==-1) )
 			{
-				//console.log( field.name );
 				let values:Array<IEnum>;
 				if( field.type.underlyingKind==FieldKind.ENUM )
 				{
 					values = ( await this.graphQL.query<IQueryResult<IEnum>>(`query{ __type(name: "${field.type.name}") { enumValues { id name } } }`) ).__type["enumValues"];
 					if( this.#original[field.name] )
-						this.clone.set( field.name, values.find((x)=>x.name==this.#original[field.name])?.id );
+					{
+						const v = values.find( (x)=>x.name==this.#original[field.name] )?.id;
+						this.clone.set( field.name, v );
+						this.#original[field.name] = v;
+					}
 				}
 				this.fields.push( new PropertyField(field, values) );
 			}
@@ -43,11 +47,19 @@ export class GraphQLProperties implements AfterViewInit
 		this.fields.sort( sort );
 
 		this.viewPromise = Promise.resolve( true );
+		setTimeout( ()=>{ this.viewChildren.first["nativeElement"].focus(); this.cdr.detectChanges();}, 0 );
 	}
+
+	@ViewChildren('myInput') viewChildren:QueryList<MatFormField>;
+
+	ngAfterViewInit()
+	{
+	}
+
 	originalOrder = ( a, b )=> {return 0;}
 	onCancelClick()
 	{
-		debugger;
+		this.router.navigate( ['..'], { relativeTo: this.route } );
 	}
 	enableSubmit():boolean
 	{
@@ -108,7 +120,7 @@ export class GraphQLProperties implements AfterViewInit
 		for( let m in x )
 		{
 			if( x[m]===undefined && GraphQLProperties.noShowFields.indexOf(m)==-1 )
-			this.clone.set( m, x[m] );
+				this.clone.set( m, x[m] );
 		}
 		add( "description" );
 	} get original(){return this.#original; } #original:any;

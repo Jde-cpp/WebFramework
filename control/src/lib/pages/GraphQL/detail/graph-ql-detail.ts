@@ -91,17 +91,22 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 	{
 		if( this.target=="settings" )
 			debugger;
-		const fetch = ( columns )=>
+		const fetch = async ( columns )=>
 		{
 			const ql = `query{ ${this.fetchName}(filter:{target:{ eq:"${this.target}"}}){ ${columns} } }`;
-			this.graphQL.query( ql ).then( (data:any)=>
+			try
 			{
+				const data = await this.graphQL.query( ql );
 				if( data==null )
-					this.cnsle.error( `${this.target} not found` );
-				else
-					this.data = data[this.fetchName];
-				this.viewPromise = Promise.resolve( true );
-			}).catch( (e)=>console.error(e) );
+					throw "data==null";
+				this.data = data[this.fetchName];
+			}
+			catch( e )
+			{
+				debugger;
+				this.cnsle.error( `${this.target} not found`, e );
+			}
+			this.viewPromise = Promise.resolve( true );
 		}
 		this.tabs.length = 0;
 		let columns = this.schema.columns;
@@ -153,5 +158,4 @@ class PageSettings
 {
 	assign( value:PageSettings ){ this.tabIndex = value.tabIndex;  }
 	tabIndex:number=0;
-	//sort:Sort = {active: "name", direction: "asc"};
 }

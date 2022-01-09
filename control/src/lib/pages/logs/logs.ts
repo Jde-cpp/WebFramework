@@ -2,7 +2,6 @@ import { HostListener, Component, OnDestroy, OnInit, ViewChild, Inject } from '@
 import { MatTable } from '@angular/material/table';
 import {Sort} from '@angular/material/sort';
 import {MatDatepickerInputEvent} from '@angular/material/datepicker';
-//import {MatOptionSelectionChange} from '@angular/material/select';
 import { Observable, Subject } from 'rxjs';
 import { TraceEntry } from './TraceEntry';
 import { DataSource } from './DataSource';
@@ -18,8 +17,7 @@ import {IErrorService} from '../../services/error/IErrorService';
 
 import * as AppFromServer from 'jde-cpp/FromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
 
-import * as AppFromClient from 'jde-cpp/FromClient';
-import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
+import * as AppFromClient from 'jde-cpp/FromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
 import { FormControl } from '@angular/forms';
 
 // Move levels to combo.
