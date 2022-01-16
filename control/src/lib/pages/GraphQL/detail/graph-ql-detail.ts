@@ -68,7 +68,7 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 	}
 	onNavigationEnd =( val:NavigationEnd )=>///settings
 	{
-		if( val.url.split('/').length==3 )
+		if( val.url.split('/').length<4 )//users->portfolio=2
 			return;
 		console.log( `onNavigationEnd( ${val} )` );
 		this.target = this.router.url.substring( this.router.url.lastIndexOf('/')+1 );//settings

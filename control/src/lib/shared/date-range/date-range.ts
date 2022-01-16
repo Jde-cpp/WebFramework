@@ -132,7 +132,7 @@ export class DateRangeSettings implements IAssignable<DateRangeSettings>
 	}
 	toJSON = function()
 	{
-		return { dayCount: this.dayCount, end: this.end, timeFrame: this.timeFrame };
+		return { start: this.start, end: this.end, timeFrame: this.timeFrame };
   	}
 	get max(){ return this._max; }
 	get dayCount()

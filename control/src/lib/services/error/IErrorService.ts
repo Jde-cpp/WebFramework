@@ -1,6 +1,7 @@
 ﻿
 export abstract class IErrorService
 {
+	abstract show( e:any ):void;
 	abstract error( message:string, error?: any ):void;
 	abstract assert( condition:boolean ):void;
 	abstract warn( message: string ):void;
@@ -9,6 +10,7 @@ export abstract class IErrorService
 
 export class ErrorService implements IErrorService
 {
+	show( e:any ):void{};
 	error( message:string, error: any ):void{}
 	assert( condition:boolean ):void{}
 	warn( message: string ):void{}

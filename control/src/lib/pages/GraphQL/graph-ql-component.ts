@@ -10,13 +10,13 @@ import {IGraphQL, Table, FieldKind, Field, IQueryResult}  from '../../services/I
 import {Settings} from '../../utilities/settings'
 
 
-import { ComponentPageTitle } from 'jde-material';
+import { ComponentPageTitle, IAuth } from 'jde-material';
 import { Subject } from 'rxjs';
 
 @Component( {selector: 'graph-ql-component.main-content.mat-drawer-container.my-content', styleUrls: ['graph-ql-component.scss'], templateUrl: './graph-ql-component.html'} )
 export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 {
-	constructor( private route: ActivatedRoute, private router:Router, private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsl: IErrorService )
+	constructor( private route: ActivatedRoute, private router:Router, private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsl: IErrorService, @Inject('IAuth') public authorizationService: IAuth )
 	{}
 
 	ngOnDestroy(){ this.profile.save(); }
@@ -32,11 +32,19 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	{
 		this.profile = new Settings<PageSettings>( PageSettings, this.type, this.profileService );
 		await this.profile.load();
-		const data = await this.graphQL.query<IQueryResult<any>>( `{ __type(name: "${this.type}") { fields { name type { name kind ofType{name kind} } } } }` );
-		this.schema = new Table( data.__type );
-		this.load();
+		try
+		{
+			await this.authorizationService.login();
+			const data = await this.graphQL.query<IQueryResult<any>>( `{ __type(name: "${this.type}") { fields { name type { name kind ofType{name kind} } } } }` );
+			this.schema = new Table( data.__type );
+			this.load();
+		}
+		catch( e )
+		{
+			this.cnsl.show( e );
+		}
 	}
-	load()
+	async load()
 	{
 		const order = ["name", "description","created", "updated", "deleted", "target"];
 		const sort = ( x:Field,y:Field )=>{const yIndex = order.indexOf( y.name )+1; const xIndex = order.indexOf( x.name )+1; return ( xIndex || order.length )-( yIndex || order.length ); }
@@ -45,11 +53,17 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 		//let stringColumnNames = this.displayedColumns.filter( (x)=>(x.type.underlyingKind==FieldKind.SCALAR && x.type.underlyingName=="String") || x.type.underlyingKind==FieldKind.ENUM ).map( (x)=>x.name );
 		let columns = this.schema.fields.filter( (x)=>x.type.kind!=FieldKind.LIST ).map( (x)=>x.name ).join( " " );
 		let ql = `query{ ${this.fetchName} { ${columns} } }`;
-		this.graphQL.query( ql ).then( (data:any)=>
+		try
 		{
-			this.data = data[this.fetchName];
+			let d = await this.graphQL.query( ql );
+			this.data = d[this.fetchName];
 			this.viewPromise = Promise.resolve(true);
-		}).catch( (e)=>console.error(e) );
+		}
+		catch( e )
+		{
+			this.cnsl.show( e );
+			debugger;
+		}
 	}
 	selectionChange( $event:any )
 	{

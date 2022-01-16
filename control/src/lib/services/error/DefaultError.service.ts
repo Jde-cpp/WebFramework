@@ -27,6 +27,11 @@ export class DefaultErrorService implements IErrorService
 		//this.showUserError( isDevMode() && error ? `${message}:  ${error.toString()}` : message );
 		this.showUserError( message );
 	}
+	show( e: any )
+	{
+		this.error( e["message"], e );
+	}
+
 	warn( message:string )
 	{
 		this.showUser( message, 'yellow-snackbar' );
