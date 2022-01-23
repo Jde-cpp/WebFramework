@@ -16,7 +16,9 @@
 		</mat-form-field>
 
 		<button mat-icon-button><mat-icon class="iconButton" (click)="paused=!paused">{{paused ? 'play_arrow' : 'pause'}}</mat-icon></button> <!-- -->
+		<div>|</div>
 		<severity-picker style="margin-left:15px;" (levelChange)="onLevelChange($event)" [level]="level"></severity-picker>
+		<div>|</div>
 		<!-- <mat-form-field>
 			<input matInput [matDatepicker]="dateId" placeholder="Date" [(formControl)]="start" (dateChange)="startChange($event)">
 			<mat-datepicker-toggle matSuffix [for]="dateId"></mat-datepicker-toggle>

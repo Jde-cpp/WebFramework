@@ -61,12 +61,11 @@ export class GraphQLProperties implements OnInit, AfterViewInit
 	{
 		this.router.navigate( ['..'], { relativeTo: this.route } );
 	}
-	enableSubmit():boolean
+	get enableSubmit():boolean
 	{
-		debugger;
-		return !this.saving && this.fields.find( (x)=>x.nullable && x.type!=InputTypes.Select && this.clone.get(x.name).length==0 )==null;
+		return !this.saving && this.fields.find( (x)=>!x.nullable && x.type!=InputTypes.Select && this.clone.get(x.name).length==0 )==null;
 	}
-	onSubmitClick():void
+	async onSubmitClick()
 	{
 		const update = this.original.id!=null;
 		let idString = update ? `"id":${this.original.id},` : "";
@@ -88,21 +87,26 @@ export class GraphQLProperties implements OnInit, AfterViewInit
 		if( Object.keys(input).length )
 		{
 			var ql = `{ mutation { ${cmd}${this.type}( ${idString} "input": ${JSON.stringify(input)} )${output} } }`;
-			this.graphQL.query( ql ).then( (x)=>
+			try
 			{
-				if( update && this.original.target==this.clone["target"] )
-				{
-					for( let m in input )
-						this.original[m] = input[m];
-					this.save.emit( this.original );
-				}
-				else
-					this.router.navigate([`../${input.target ?? this.original.target}`], { relativeTo: this.route });
-			}).catch( (e)=>
+				//throw "here";
+				await this.graphQL.query( ql );
+				this.router.navigate( ['..'], { relativeTo: this.route } );
+				// if( update && this.original.target==this.clone["target"] )
+				// {
+				// 	for( let m in input )
+				// 		this.original[m] = input[m];
+				// 	this.save.emit( this.original );
+				// }
+				// else
+				// 	this.router.navigate([`../${input.target ?? this.original.target}`], { relativeTo: this.route });
+			}
+			catch( e )
 			{
 				debugger;
 				console.log( e.toString() );
-			}).finally( ()=>this.saving=false );
+			}
+			this.saving=false;
 		}
 	}
 	get InputTypes(){ return InputTypes; }

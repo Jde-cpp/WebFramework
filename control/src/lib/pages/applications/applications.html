@@ -1,6 +1,5 @@
 <!-- <component-page-header>Applications</component-page-header> -->
 <div class="docs-component-category-list">
-	<!-- <a *ngFor="let application of applications" class="docs-component-category-list-item" [routerLink]="applications"> -->
 	<span *ngFor="let application of applications" class="docs-component-list-item">
 		<mat-card class="docs-component-category-list-card">
 			<mat-card-title-group><mat-card-title><mat-icon aria-hidden="false" style="padding-right:10px" aria-label="App Icon">{{application.icon}}</mat-icon>{{application.name}}</mat-card-title></mat-card-title-group>
@@ -19,5 +18,5 @@
 				<button mat-icon-button><mat-icon class="iconButton" (click)="edit( application )" >edit</mat-icon></button>
 			</mat-card-actions>
 		</mat-card>
-	</span><!-- </a> -->
+	</span>
 </div>

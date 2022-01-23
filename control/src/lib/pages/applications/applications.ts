@@ -105,8 +105,8 @@ export class EditDialog
 {
 	constructor( public dialogRef:MatDialogRef<EditDialog>, @Inject(MAT_DIALOG_DATA) public data:DialogData, private appService:AppService )
 	{
-		this.dbLevel = this.app.status.DBLogLevel;
-		this.clientLevel = this.app.status.FileLogLevel;
+		this.dbLevel = this.app.status?.DBLogLevel;
+		this.clientLevel = this.app.status?.FileLogLevel;
 	}
 
 	onCancelClick(): void
@@ -122,6 +122,6 @@ export class EditDialog
 	dbLevel:FromServer.ELogLevel;
 	clientLevel:FromServer.ELogLevel;
 	options:LogOption[]=[{name:'Trace',value:FromServer.ELogLevel.Trace},{name:'Debug',value:FromServer.ELogLevel.Debug}, {name:'Info',value:FromServer.ELogLevel.Information},{name:'Warning',value:FromServer.ELogLevel.Warning},{name:'Error',value:FromServer.ELogLevel.Error},{name:'Critical',value:FromServer.ELogLevel.Critical},{name:'None',value:FromServer.ELogLevel.None}]
-	get app():Application{return this.data.app;}
+	get app():Application{ return this.data.app; }
 	saving:boolean=false;
 }

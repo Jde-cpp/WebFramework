@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
 import {MatChipsModule} from '@angular/material/chips';
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatDialogModule} from '@angular/material/dialog';
@@ -36,9 +37,9 @@ import { SeverityPickerModule } from './shared/severity-picker/severity-picker';
 		UserComponent, UserEntryDialog ],
   	imports: [CommonModule, SeverityPickerModule,
 	  FormsModule, ReactiveFormsModule,
-	  MatButtonModule, MatCheckboxModule, MatChipsModule, MatDatepickerModule, MatDialogModule, MatDividerModule, MatFormFieldModule, MatInputModule, MatIconModule, MatNativeDateModule, MatSelectModule, MatSortModule, MatTabsModule, MatTableModule, MatToolbarModule
+	  MatButtonModule, MatCheckboxModule, MatCardModule,MatChipsModule, MatDatepickerModule, MatDialogModule, MatDividerModule, MatFormFieldModule, MatInputModule, MatIconModule, MatNativeDateModule, MatSelectModule, MatSortModule, MatTabsModule, MatTableModule, MatToolbarModule
 	],
 	entryComponents:[SelectDialog,EditDialog],
 	exports: []
 })
-export class JdeFrameworkModule { }
+export class JdeFrameworkModule{}

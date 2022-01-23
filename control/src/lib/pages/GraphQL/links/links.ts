@@ -18,9 +18,7 @@ import { MetaObject } from '../../../utilities/JsonUtils';
 export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 {
 	constructor( private route: ActivatedRoute, private router:Router, private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
-	{
-//		this.target = this.router.url.substring( this.router.url.lastIndexOf('/')+1 );
-	}
+	{}
 
 	ngOnDestroy(){ this.profile.save(); }
 	ngOnInit()
@@ -29,6 +27,7 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 	}
 	async ngAfterViewInit()
 	{
+		let self = this;
 		await this.profile.load();
 		try
 		{
@@ -37,22 +36,13 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 			const mutationB = `add${this.schema.typeName}${this.parentType}`;
 			const mutationC = `add${this.schema.typeName}`
 			var mutation = mutations.find( (x)=>x.name==mutationA || x.name==mutationB || x.name==mutationC ); if( !mutation ) throw `could not find mutation ${mutationA}/${mutationB}`;
-			this.mutation = mutation.name.substr( 3 );
+			this.mutation = mutation.name.substring( 3 );
 			console.log( `objectCollectionName=${this.schema.objectCollectionName}` );
 			console.log( `parent=${JSON.stringify(this.parent)}` );
-			for( var i of this.items )
-			{
-				console.log( i );
-			}
-			for( var f of this.schema.fields )
-				console.log( f );
-/*			for( var field of this.schema.nonListFields.filter((x)=>x.displayed) )
-			{
-				console.log( field );
-				CdkColumnDef def;
-				this.table.addColumnDef( CdkColumnDef )
-			}*/
-			//this.displayedColumns = this.schema.fields.filter( (x)=>x.displayed ).map( (x)=>x.name );
+			// for( var i of this.items )
+			// 	console.log( i );
+			// for( var f of this.schema.fields )
+			// 	console.log( f );
 		}
 		catch( e )
 		{
@@ -120,8 +110,7 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 			show( this.schema );
 	}
 	removeLink()
-	{//role permissions = this.schema.subType.objectReferenceName
-		//const ql = `{ mutation{ remove${this.mutation}("input":{ "${this.parentTypeField}": ${this.parent.id}, "${this.schema.subType.objectReferenceName}Id": ${this.selection.id}} ) } }`; did not work with roles remove group.
+	{
 		const ql = `{ mutation{ remove${this.mutation}("input":{ "${this.parentTypeField}": ${this.parent.id}, "${new MetaObject(this.schema.typeName).singular}Id": ${this.selection.id}} ) } }`;
 		this.graphQL.query( ql ).then( (x)=>
 		{
@@ -145,7 +134,8 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 	get sort(){return this.profile.value.sort; }
 	get displayedColumns():Field[]{ return this.schema.fields.filter( (x)=>x.displayed && !["created", "updated", "deleted", "target"].includes(x.name) ); }
 	get displayedColumnNames(){ return this.displayedColumns.map( (x)=>x.name ); };// = ["name","target","description","authenticator", "deleted"];
-	get stringColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.SCALAR && x.type.underlyingName=="String" ).map( (x)=>x.name ); }
+	get stringColumnNames(){ return this.enumColumnNames.concat( this.displayedColumns.filter((x)=>x.type.underlyingKind==FieldKind.SCALAR && x.type.underlyingName=="String" ).map( (x)=>x.name) ); }
+	get enumColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.ENUM ).map( (x)=>x.name ); }
 	get objectColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.OBJECT ).map( (x)=>x.name ); }
 	get listColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.LIST ).map( (x)=>x.name ); }
 	get dateColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingName=="DateTime" ).map( (x)=>x.name ); }
@@ -155,17 +145,6 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 	get parentTypeField(){ return this.parentSelect+"Id"; }
 	viewPromise:Promise<boolean>;
 	showDeleted=false;
-	/*
-	get fetchName():string{ return this.schema.jsonName; }
-	name:string;
-	data:any;
-	get settings(){ return this.profile.value;}
-	schema:Table;
-	siblings: Subject<Map<string,string>> = new Subject<Map<string,string>>();
-	tabs = new Array<Table>();
-	target:string;
-	get type():string{ return this.name.substr( 0, this.name.length-1 ); }
-	*/
 }
 
 class PageSettings
