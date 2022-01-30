@@ -61,17 +61,9 @@ export class GraphQLProperties implements OnInit, AfterViewInit
 	{
 		this.router.navigate( ['..'], { relativeTo: this.route } );
 	}
-	get enableSubmit():boolean
+	mods():any
 	{
-		return !this.saving && this.fields.find( (x)=>!x.nullable && x.type!=InputTypes.Select && this.clone.get(x.name).length==0 )==null;
-	}
-	async onSubmitClick()
-	{
-		const update = this.original.id!=null;
-		let idString = update ? `"id":${this.original.id},` : "";
-		let output = update ? "" : "{id}";
-		let cmd = update ? "update" : "create";
-		let input:any = update ? {} : {...this.clone};
+		let input:any = this.original.id==null ? {...this.clone} : {};
 		for( var m in this.original )
 		{
 			if( this.clone.get(m)!==undefined && this.original[m]!=this.clone.get(m) )
@@ -83,7 +75,23 @@ export class GraphQLProperties implements OnInit, AfterViewInit
 			if( this.original[key]===undefined )
 				input[key] = this.clone.get(key);
 		}
-
+		return input;
+	}
+	get enableSubmit():boolean
+	{
+		let enable = !this.saving
+			&& this.fields.find( (x)=>!x.nullable && x.type!=InputTypes.Select && this.clone.get(x.name).length==0 )==null; //non-null is null
+		if( enable && this.original.id!=null )
+			enable = Object.keys( this.mods() ).length>0;
+		return enable;
+	}
+	async onSubmitClick()
+	{
+		const update = this.original.id!=null;
+		let idString = update ? `"id":${this.original.id},` : "";
+		let output = update ? "" : "{id}";
+		let cmd = update ? "update" : "create";
+		const input = this.mods();
 		if( Object.keys(input).length )
 		{
 			var ql = `{ mutation { ${cmd}${this.type}( ${idString} "input": ${JSON.stringify(input)} )${output} } }`;

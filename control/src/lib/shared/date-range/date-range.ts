@@ -36,8 +36,6 @@ export class DateRange implements OnInit
 
 			this.start = new FormControl( this.settings.start );
 			this.end = new FormControl( this.settings.end );
-			//this.setEndControl( this.end );
-			//this.setStartControl( this.start );
 		}
 
 	/*	this.range.controls['start'].valueChanges.subscribe( value=>
@@ -103,8 +101,14 @@ export class DateRange implements OnInit
 			return;
 		this.timeFrame = x;
 		this.settings.dayCount = this.settings.end = undefined;
-		this.start.setValue( this.settings.start );
-		this.end.setValue( this.settings.end );
+		if( !this.end )
+			this.end = new FormControl( new Date() );
+		else
+			this.end.setValue( new Date() );
+		if( !this.start )
+			this.start = new FormControl( this.end.value.getDate()-this.timeFrame );
+		else
+			this.start.setValue( this.end.value.getDate()-this.timeFrame );
 
 		this.settingsChange.emit( this.settings );
 	}
@@ -127,7 +131,6 @@ export class DateRangeSettings implements IAssignable<DateRangeSettings>
 	{
 		this.end = other.end;
 		this.start = other.start;
-		//this.dayCount = other.dayCount;
 		this.timeFrame = other.timeFrame;
 	}
 	toJSON = function()
@@ -148,17 +151,10 @@ export class DateRangeSettings implements IAssignable<DateRangeSettings>
 			dayCount = this.max - DateUtilities.toDays( start );
 		}
 		return dayCount;
-	} set dayCount(x:number|undefined){ this.#dayCount = x;} #dayCount:number| undefined;
+	} set dayCount( x:number|undefined ){ this.#dayCount = x; } #dayCount:number | undefined;
 	get end(){ return this.#end; } set end( x:Day ){ this.#end = x; }  #end:Day;
 
 	get start(){ return this.#start; } set start( x:Day ){ this.#start = x; }  #start:Day;
-	/*get start():Day
-	{
-		let day = null;
-		if( this.timeFrame!=TimeFrame.All && this.dayCount!=undefined )
-			for( day = (this.end ?? this.max) - this.dayCount; day<=(this.end ?? this.max) && !this.isValidDay(day); ++day );
-		return day;
-	} set start( x:Day ){ this.dayCount = Math.max( 0, (this.end ?? this.max)-(x ?? 0) ); }*/
 }
 
 @NgModule( {exports: [DateRange], declarations: [DateRange], imports:[MatChipsModule,MatDatepickerModule,MatFormFieldModule]} )

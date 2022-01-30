@@ -68,20 +68,19 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 	}
 	onNavigationEnd =( val:NavigationEnd )=>///settings
 	{
-		if( val.url.split('/').length<4 )//users->portfolio=2
+		var parts = val.url.split( '/' ); parts.shift();
+		if( parts.length<3 )//users->portfolio=2
 			return;
 		console.log( `onNavigationEnd( ${val} )` );
 		this.target = this.router.url.substring( this.router.url.lastIndexOf('/')+1 );//settings
 		const grandParent = this.route.parent;
-		const parentUrl = this.route.routeConfig.path.substr( 0, this.route.routeConfig.path.length-4 );//roles
-		if( this.target==parentUrl )
+		const parentUrl = this.route.routeConfig.path.substring( 0, this.route.routeConfig.path.length-4 );//roles
+		if( this.target==parentUrl || !parts.find((x)=>x.toLowerCase()==parentUrl.toLowerCase()) )//going from groups to roles.
 			return;
 		const parent = grandParent.routeConfig.children.find( (x)=>x.path==parentUrl );
 		const paths = [this.target, parent.data["name"] ];
 		for( let x = grandParent; x.routeConfig?.data && x.routeConfig?.data["name"]; x = x.parent )
 			paths.push( x.routeConfig.data["name"] );
-		if( this.target=="users" || this.target=="roles" )
-			debugger;
 		if( paths[0].toUpperCase()==paths[2].toUpperCase() )
 			return;
 		this.componentPageTitle.title = paths.join( " | " );
@@ -94,11 +93,15 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 		const fetch = async ( columns )=>
 		{
 			const ql = `query{ ${this.fetchName}(filter:{target:{ eq:"${this.target}"}}){ ${columns} } }`;
+			console.log( `(${this.instance})${ql}` );
 			try
 			{
 				const data = await this.graphQL.query( ql );
 				if( data==null )
+				{
+					debugger;
 					throw "data==null";
+				}
 				this.data = data[this.fetchName];
 			}
 			catch( e )

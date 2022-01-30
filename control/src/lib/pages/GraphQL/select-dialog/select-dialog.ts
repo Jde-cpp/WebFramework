@@ -73,7 +73,7 @@ export class SelectDialog implements OnDestroy, AfterViewInit
 			: `${this.isAllSelected() ? 'select' : 'deselect'} all`;
 	}
 	onCancelClick = ()=>this.dialogRef.close( null );
-	onSubmitClick():void
+	onSubmitClick()
 	{
 		var queries = [];
 		if( this.isFlags )
@@ -110,14 +110,20 @@ export class SelectDialog implements OnDestroy, AfterViewInit
 		if( queries.length )
 		{
 			let index=0;
-			queries.forEach( (ql)=>
+			queries.forEach( async (ql)=>
 			{
-				this.graphQL.query( ql ).then( (x)=>
+				try
 				{
-//					console.log( `index=${index+1}==${queries.length}` );
+					const y = await this.graphQL.query( ql );  //console.log( `index=${index+1}==${queries.length}` );
 					if( ++index==queries.length )
 						this.dialogRef.close( queries.length );
-				} ).catch( (e)=>{ this.cnsle.error("Save failed."); console.error(e.message); this.saving = false;} );
+				}
+				catch( e )
+				{
+					this.cnsle.error( "Save failed." );
+					console.error( e["message"] );
+					this.saving = false;
+				}
 			} );
 		}
 		else
