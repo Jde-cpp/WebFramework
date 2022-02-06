@@ -93,7 +93,6 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 		const fetch = async ( columns )=>
 		{
 			const ql = `query{ ${this.fetchName}(filter:{target:{ eq:"${this.target}"}}){ ${columns} } }`;
-			console.log( `(${this.instance})${ql}` );
 			try
 			{
 				const data = await this.graphQL.query( ql );

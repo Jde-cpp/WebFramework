@@ -26,7 +26,7 @@ export class DateRange implements OnInit
 	ngOnInit()
 	{
 		if( this.settings.timeFrame )
-			this.setTimeFrame( this.settings.timeFrame, true );
+			this.setTimeFrame( this.settings.timeFrame, true, false );
 		else
 		{
 			//this.end.value = this.settings.end;
@@ -95,7 +95,7 @@ export class DateRange implements OnInit
 	}
 	setStartControl(day:Day){ this.range.controls['start'].setValue( day==null ? null : DateRange.toDate(day) ); }
 	setEndControl(day:Day){ this.range.controls['end'].setValue( day ? DateRange.toDate(day) : null ); }
-	setTimeFrame( x:TimeFrame, force=false )
+	setTimeFrame( x:TimeFrame, force=false, sendChange=true )
 	{
 		if( x==TimeFrame.None || (x==this.timeFrame && !force) )
 			return;
@@ -109,15 +109,12 @@ export class DateRange implements OnInit
 			this.start = new FormControl( this.end.value.getDate()-this.timeFrame );
 		else
 			this.start.setValue( this.end.value.getDate()-this.timeFrame );
-
-		this.settingsChange.emit( this.settings );
+		if( sendChange )
+			this.settingsChange.emit( this.settings );
 	}
-	/*set baseDay(x:Day){this.settings.baseDay = x;}*/ get max():Day{ return this.settings.max; };
 	get dayCount(){ return this.settings.dayCount; }
-	//get end():Day{ return !this.timeFrame && this.settings.end ? this.settings.end : null; }
 	@Input() set placeholder( value ){ this._placeholder = value;} get placeholder(){return this._placeholder} private _placeholder:string="Date range";
 	@Input()settings:DateRangeSettings; @Output("change") settingsChange = new EventEmitter<DateRangeSettings>();
-	//get start():Day{ return this.settings.start; }
 	start:FormControl;
 	end:FormControl;
 	get timeFrame(){return this.settings.timeFrame;} set timeFrame(x){this.settings.timeFrame = x;}TimeFrameType = TimeFrame;

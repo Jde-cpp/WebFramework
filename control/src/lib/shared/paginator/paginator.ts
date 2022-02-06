@@ -1,16 +1,17 @@
 import {Component,EventEmitter,OnInit,Input,Output, OnDestroy, ChangeDetectorRef, NgModule} from '@angular/core';
-import { Observable, Subscription } from 'rxjs';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { BrowserModule } from '@angular/platform-browser';
+import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { Observable, Subscription } from 'rxjs';
 
 export class PageEvent
 {
 	constructor(){this.startIndex=0; this.pageLength=50;}
-	//length: number;
-	//pageIndex: number;
 	startIndex:number;
 	pageLength: number;
-	//previousPageIndex: number;
 }
 
 @Component({ selector: 'paginator', templateUrl: './paginator.html' })
@@ -22,7 +23,6 @@ export class Paginator implements OnInit, OnDestroy
 	{
 		this.lengthChangeSubscription = this.lengthChange.subscribe( (value)=>this.length = value );
 		this.startIndexChangeSubscription = this.startIndexChange.subscribe( (value)=>this.startIndex = value );
-
 	}
 	ngOnDestroy()
 	{
@@ -39,7 +39,6 @@ export class Paginator implements OnInit, OnDestroy
 	nextPage(){ this.startIndex = this.startIndex+this.pageLength; }
 	lastPage(){ this.startIndex = this.length-this.length%this.pageLength; }
 
-	//@Input() color: ThemePalette;
 	get disabled(){ return this._disabled; }
 	set disabled(value){this._disabled=value;} _disabled: boolean=false;
 	@Input() hidePageLength: boolean;
@@ -75,7 +74,6 @@ export class Paginator implements OnInit, OnDestroy
 		} } get pageLength(){return this._pageLength;} _pageLength:number=50;
 	@Input() showFirstLastButtons: boolean=true;
 	@Output() page = new EventEmitter<PageEvent>();
-	//initialized: Observable<void>;
 	settingsIndex:number;
 	@Input()	set startIndex(value)
 	{
@@ -93,19 +91,17 @@ export class Paginator implements OnInit, OnDestroy
 			if( this.page )
 				this.page.next( {startIndex:this.startIndex, pageLength:this.pageLength} );
 		}
-		//console.log( `startIndex=${this.startIndex}` );
 	}
 	get startIndex(){return this._startIndex}; _startIndex:number=0;
 	get startIndexDisplay(){ return Math.max(0,Math.min(this.startIndex,this.length-1)); }
 	get endIndex()
 	{
 		const endIndex = Math.max( Math.min(this.startIndex+this.pageLength, this.length-1), 0 );
-		//console.log( `length=${this.length} pageLength=${this.pageLength} startIndex=${this.startIndex}, endIndex=${endIndex}` );
 		return endIndex;
 	}
 	get onFirstPage(){ return this.startIndex==0; }
 	get onLastPage(){ return this.endIndex==this.length-1; }
 }
 
-@NgModule( {exports: [Paginator], declarations: [Paginator], imports:[MatIconModule,MatButtonModule]} )
+@NgModule( {exports: [Paginator], declarations: [Paginator], imports:[MatIconModule, MatButtonModule, CommonModule, BrowserModule, MatInputModule, FormsModule]} )
 export class PaginatorModule {}
