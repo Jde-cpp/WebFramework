@@ -62,7 +62,7 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 			{
 				width: '600px',
 				height: '650px',
-				data: { schema: x[0], selectedIds:element[fieldName], query:fieldName, mutation:this.mutation, linkTo:this.parent.id, linkToField: this.parentTypeField, subTo:element.id, subToField: this.schema.subType.idReferenceName, title:StringUtils.capitalize(fieldName), includeDeleted: true }
+				data: { schema: x[0], selectedIds:element[fieldName], query:fieldName, mutation:this.mutation, linkTo:this.parent.id, linkToField: this.parentTypeField, subTo:element.id ?? `"${element[ element.target ? "target" : "name" ]}"`, subToField: element.id ? this.schema.subType.idReferenceName : element.target ? "target" : "name", title:StringUtils.capitalize(fieldName), includeDeleted: true }
 			});
 			dialogRef.afterClosed().subscribe( result =>
 			{
@@ -111,7 +111,14 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 	}
 	removeLink()
 	{
-		const ql = `{ mutation{ remove${this.mutation}("input":{ "${this.parentTypeField}": ${this.parent.id}, "${new MetaObject(this.schema.typeName).singular}Id": ${this.selection.id}} ) } }`;
+		let ql = `{mutation{remove${this.mutation}("input":{ "${this.parentTypeField}": ${this.parent.id}, `;
+		if( this.selection.id )
+			ql+=`"${new MetaObject(this.schema.typeName).singular}Id": ${this.selection.id}} ) } }`;
+		else if( this.selection.target )
+			ql+=`"target": "${this.selection.target}" })}}`;
+		else
+			ql+=`"name": "${this.selection.name}" })}}`;
+
 		this.graphQL.query( ql ).then( (x)=>
 		{
 			this.selection = null;

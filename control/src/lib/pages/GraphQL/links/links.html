@@ -27,7 +27,7 @@
 				<mat-cell *matCellDef="let element"> {{element[column] | date:'mediumDate'}} </mat-cell>
 			 </ng-container>
 			<mat-header-row *matHeaderRowDef="displayedColumnNames; sticky: true"></mat-header-row>
-			<mat-row mat-row *matRowDef="let row; columns: displayedColumnNames;" (click)="cellClick(row)" [class.hidden]="!showDeleted && row.deleted" [class.highlight]="selection?.id==row.id"></mat-row>
+			<mat-row mat-row *matRowDef="let row; columns: displayedColumnNames;" (click)="cellClick(row)" [class.hidden]="!showDeleted && row.deleted" [class.highlight]="selection?.name==row.name"></mat-row>
 		</mat-table>
 	</div>
 </ng-container>

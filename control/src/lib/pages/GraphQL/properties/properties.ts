@@ -1,13 +1,15 @@
 import {Component, Inject, Input, Output, AfterViewInit, EventEmitter, ViewChild, ViewChildren, ElementRef, OnInit, QueryList, ChangeDetectorRef} from '@angular/core';
 import { MatFormField } from '@angular/material/form-field';
 import { ActivatedRoute, Router } from '@angular/router';
+import { IErrorService } from 'jde-framework';
+import { ComponentPageTitle } from 'jde-material';
 import { Field, FieldKind, IEnum, IGraphQL, IQueryResult } from '../../../services/IGraphQL';
 import { StringUtils } from '../../../utilities/StringUtils';
 
 @Component( { selector: 'graph-ql-properties', templateUrl: 'properties.html'} )
 export class GraphQLProperties implements OnInit, AfterViewInit
 {
-	constructor( private route: ActivatedRoute, private router:Router, @Inject('IGraphQL') private graphQL: IGraphQL, private cdr: ChangeDetectorRef )
+	constructor( private route: ActivatedRoute, private router:Router, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, private cdr: ChangeDetectorRef, @Inject('IErrorService') private cnsl: IErrorService )
 	{}
 	async ngOnInit()
 	{
@@ -111,7 +113,7 @@ export class GraphQLProperties implements OnInit, AfterViewInit
 			}
 			catch( e )
 			{
-				debugger;
+				this.cnsl.error( "Saving properties failed", e );
 				console.log( e.toString() );
 			}
 			this.saving=false;
@@ -126,6 +128,7 @@ export class GraphQLProperties implements OnInit, AfterViewInit
 	@Input() set original(x)
 	{
 		this.#original = x ?? {};
+		this.componentPageTitle.detail = this.#original["name"] ?? "New";
 		let add = ( m )=>this.clone.set( m, this.#original[m] ?? '' );
 		add( "name" );
 		add( "target" );

@@ -35,13 +35,12 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 		const parent = grandParent.routeConfig.children.find( (x)=>x.path==parentUrl );
 		this.name = parent.data["name"];
 		const display = parent.data["display"] || "name";
-
+		this.componentPageTitle.title = parent.data["name"];
 		this.profile = new Settings<PageSettings>( PageSettings, `${this.type}-detail`, this.profileService );
 		try
 		{
 			await this.profile.load();
-			const tables = await this.graphQL.schema( [this.type] );
-			this.schema = tables[0];
+			this.schema = ( await this.graphQL.schema( [this.type] ) )[0];
 			const columns = ["name", "target"];
 			if( !columns.includes(display) )
 				columns.push( display );
