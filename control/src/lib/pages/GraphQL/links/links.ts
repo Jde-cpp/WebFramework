@@ -2,8 +2,8 @@ import { filter } from 'rxjs/operators';
 import { Component, AfterViewInit, OnInit, OnDestroy, Inject, ViewChild, Input, AfterContentInit, ContentChildren, QueryList, ContentChild } from '@angular/core';
 import {ActivatedRoute, NavigationEnd, Params, Router, RouterModule, Routes} from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import {Sort} from '@angular/material/sort';
-import { MatColumnDef, MatHeaderRowDef, MatNoDataRow, MatRowDef, MatTable } from '@angular/material/table';
+import { Sort } from '@angular/material/sort';
+import { MatTable } from '@angular/material/table';
 import { ComponentPageTitle } from 'jde-material';
 
 import {IErrorService} from '../../../services/error/IErrorService';
@@ -138,7 +138,7 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 	get id(){ return  this.router.url.substring( 0, this.router.url.lastIndexOf('/')+1 )+this.schema.objectReferenceName; }
 
 	get profile():Settings<PageSettings>{ return this.#profile ?? ( this.#profile = new Settings<PageSettings>(PageSettings, this.id, this.profileService) ); } #profile:Settings<PageSettings>;
-	get sort(){return this.profile.value.sort; }
+	get sort(){ return this.profile.value.sort; }
 	get displayedColumns():Field[]{ return this.schema.fields.filter( (x)=>x.displayed && !["created", "updated", "deleted", "target"].includes(x.name) ); }
 	get displayedColumnNames(){ return this.displayedColumns.map( (x)=>x.name ); };// = ["name","target","description","authenticator", "deleted"];
 	get stringColumnNames(){ return this.enumColumnNames.concat( this.displayedColumns.filter((x)=>x.type.underlyingKind==FieldKind.SCALAR && x.type.underlyingName=="String" ).map( (x)=>x.name) ); }
