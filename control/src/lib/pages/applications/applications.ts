@@ -2,7 +2,7 @@ import {Component, OnDestroy, OnInit, Inject} from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { SeverityPicker } from '../../shared/severity-picker/severity-picker'
 import { DomSanitizer } from "@angular/platform-browser";
-import {ActivatedRoute, Params} from '@angular/router';
+import {Params} from '@angular/router';
 import { MatIconRegistry } from "@angular/material/icon";
 import { ComponentPageTitle } from 'jde-material';
 import {AppService} from '../../services/app/app.service';
@@ -23,7 +23,7 @@ export class Applications implements OnInit, OnDestroy
 	routeParamSubscription: Subscription;
 	_categoryListSummary: string;
 
-	constructor( public _componentPageTitle: ComponentPageTitle, private _route: ActivatedRoute, private appService:AppService, private dialog:MatDialog, private matIconRegistry: MatIconRegistry, private domSanitizer: DomSanitizer, @Inject('IErrorService') private cnsl: IErrorService )
+	constructor( public _componentPageTitle: ComponentPageTitle, private appService:AppService, private dialog:MatDialog, private matIconRegistry: MatIconRegistry, private domSanitizer: DomSanitizer, @Inject('IErrorService') private cnsl: IErrorService )
 	{
 		const url = this.domSanitizer.bypassSecurityTrustResourceUrl("../assets/download.svg");
 		this.matIconRegistry.addSvgIcon( "ib", "download.svg" );
