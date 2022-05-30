@@ -28,7 +28,7 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 	async ngAfterViewInit()
 	{
 		let self = this;
-		await this.profile.load();
+		await this.profile.loadedPromise;
 		try
 		{
 			let mutations = await this.graphQL.mutations();

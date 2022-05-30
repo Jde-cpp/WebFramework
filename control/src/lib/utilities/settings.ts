@@ -6,9 +6,10 @@ export interface IAssignable<TUnderlying>
 }
 interface ILoad
 {
-	load():Promise<any>;
+	//load():Promise<any>;
+	loadedPromise:Promise<boolean>;
 }
-export class Settings<TUnderlying extends IAssignable<TUnderlying>> implements ILoad
+export class Settings<TUnderlying extends IAssignable<TUnderlying>> //implements ILoad
 {
 	constructor( private type: new()=>TUnderlying, private key:string, private profile:IProfile  )
 	{
@@ -20,7 +21,7 @@ export class Settings<TUnderlying extends IAssignable<TUnderlying>> implements I
 	{
 		this.load().then( ()=>{fnctn();} );
 	}
-	load():Promise<void>
+	private load():Promise<void>
 	{
 		return new Promise( (resolve)=>
 		{
@@ -84,14 +85,10 @@ export class Settings<TUnderlying extends IAssignable<TUnderlying>> implements I
 }
 export function JoinSettings( ...args: ILoad[] ):Promise<void>
 {
-
-	return new Promise<void>( (resolve)=>
+	return new Promise<void>( async (resolve)=>
 	{
-		let i=0;
-		let JoinNext = ( args: ILoad[] )=>
-		{
-			args[0].load().then( ()=>{if( args.length>1 )JoinNext(args.splice(1)); else resolve();} );
-		}
-		JoinNext( args );
+		for( var a of args )
+			await a.loadedPromise;
+		resolve();
 	} );
 }

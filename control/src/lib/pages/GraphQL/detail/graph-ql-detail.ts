@@ -37,9 +37,9 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 		const display = parent.data["display"] || "name";
 		this.componentPageTitle.title = parent.data["name"];
 		this.profile = new Settings<PageSettings>( PageSettings, `${this.type}-detail`, this.profileService );
+		await this.profile.loadedPromise;
 		try
 		{
-			await this.profile.load();
 			this.schema = ( await this.graphQL.schema( [this.type] ) )[0];
 			const columns = ["name", "target"];
 			if( !columns.includes(display) )

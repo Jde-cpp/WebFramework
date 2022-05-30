@@ -31,7 +31,7 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	async ngAfterViewInit()
 	{
 		this.profile = new Settings<PageSettings>( PageSettings, this.type, this.profileService );
-		await this.profile.load();
+		await this.profile.loadedPromise;
 		try
 		{
 			await this.authorizationService.login();

@@ -40,9 +40,10 @@ export class UserComponent implements AfterViewInit, OnInit, OnDestroy
 	{
 		this.profile.save();
 	}
-	ngAfterViewInit():void
+	async ngAfterViewInit()
 	{
-		this.profile.load().then( ()=>{this.load();} );
+		await this.profile.loadedPromise;
+		this.load();
 	}
 	cellClick( row:IUser )
 	{
