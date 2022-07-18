@@ -16,7 +16,9 @@ source $scriptDir/../../Framework/common.sh;
 baseDir=`pwd`;
 REPO_WEB=`readlink -f $scriptDir/..`;
 findExecutable npm;
-if [ ! -x "$(which "ng" 2> /dev/null)" ]; then npm install -g @angular/cli; fi;
+if [ ! -x "$(which "ng" 2> /dev/null)" ]; then
+	sudo npm install -g @angular/cli; if [ $? -ne 0 ]; then echo `pwd`; echo npm install -g @angular/cli; exit 1; fi;
+fi;
 ##################
 if [ ! -d $workspace ]; then
 	echo -------------------- create workspace start --------------------;
@@ -44,7 +46,7 @@ if [ ! -d $workspace ]; then
 	npm --silent install jsdoc@^3.6.3;
 	npm --silent install uglify-js@^3.7.7;
 	echo -------------------- npm install complete --------------------;
-	#echo `pwd`;
+	echo `pwd`;
 	cd src;
 	printf "\nimport * as protobuf from 'protobufjs/minimal';\nimport * as Long from 'long';\n\nprotobuf.util.Long = Long;\nprotobuf.configure();" >> main.ts;
 	cd ..;

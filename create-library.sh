@@ -19,8 +19,7 @@ if [ ! -d projects/$library ]; then
 		mv temp.json tsconfig.json;
 	fi;
 
-	ng analytics project off;#should add to angular.json "cli": {"analytics": false},
-
+	ng analytics off;#should add to angular.json "cli": {"analytics": false},
 	ng g library $library --defaults; if [ $? -ne 0 ]; then echo `pwd`; echo ng g library $library --defaults; exit 1; fi;
 	configConent="[\"projects/$library/src/public-api\", \"dist/$library/$library\", \"dist/$library\"]";
 	jq "$configPath = $configConent" tsconfig.json > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq \"$configPath = $configConent\" tsconfig.json; exit 1; fi;
