@@ -27,11 +27,12 @@ if [ ! -d $workspace ]; then
 	ng new $workspace --create-application=$createApplication --routing=false --style=scss;
 	echo -------------------- create workspace complete --------------------;
 	cd $workspace;
-	#echo `pwd`;
 	command="jq '.projects.\"$workspace\".architect.build.configurations.production.budgets[0].maximumError = \"5mb\"' angular.json"
 	eval $command > angular2.json; rm angular.json; mv angular2.json angular.json;
 	sed -i 's/"strict": true,/"strict": true,"strictPropertyInitialization": false, "strictNullChecks": false, "noImplicitAny": false, "noImplicitThis":false,/' tsconfig.json;
-	ng analytics off;
+	command="jq '.cli.analytics = false' angular.json"
+	eval $command > angular2.json; rm angular.json; mv angular2.json angular.json;
+	#ng analytics disable;
 	echo -------------------- npm install start --------------------;
 	npm install material-design-icons;
 	echo -------------------- icons installed --------------------;
