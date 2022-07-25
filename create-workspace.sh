@@ -17,14 +17,20 @@ baseDir=`pwd`;
 REPO_WEB=`readlink -f $scriptDir/..`;
 findExecutable npm;
 if [ ! -x "$(which "ng" 2> /dev/null)" ]; then
-	sudo npm install -g @angular/cli; if [ $? -ne 0 ]; then echo `pwd`; echo npm install -g @angular/cli; exit 1; fi;
+	cmd=npm install -g @angular/cli 
+	if windows; then 
+		$cmd;
+	else
+		sudo $cmd; 
+	fi;
+	if [ $? -ne 0 ]; then echo `pwd`; echo $cmd; exit 1; fi;
 fi;
 ##################
 if [ ! -d $workspace ]; then
 	echo -------------------- create workspace start --------------------;
 	createApplication=true;
-	echo ng new $workspace --create-application=$createApplication --routing=false --style=scss;
-	ng new $workspace --create-application=$createApplication --routing=false --style=scss;
+	cmd="ng new $workspace --create-application=$createApplication --routing=false --style=scss"
+	$cmd; if [ $? -ne 0 ]; then echo $cmd; exit 1; fi;
 	echo -------------------- create workspace complete --------------------;
 	cd $workspace;
 	command="jq '.projects.\"$workspace\".architect.build.configurations.production.budgets[0].maximumError = \"5mb\"' angular.json"
@@ -49,7 +55,7 @@ if [ ! -d $workspace ]; then
 	echo -------------------- npm install complete --------------------;
 	echo `pwd`;
 	cd src;
-	printf "\nimport * as protobuf from 'protobufjs/minimal';\nimport * as Long from 'long';\n\nprotobuf.util.Long = Long;\nprotobuf.configure();" >> main.ts;
+	printf "\nimport * as protobuf from 'protobufjs/minimal';\nimport Long from 'long';\n\nprotobuf.util.Long = Long;\nprotobuf.configure();" >> main.ts;
 	cd ..;
 else
 	echo workspace already exists
