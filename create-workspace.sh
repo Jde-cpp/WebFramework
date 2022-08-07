@@ -17,11 +17,11 @@ baseDir=`pwd`;
 REPO_WEB=`readlink -f $scriptDir/..`;
 findExecutable npm;
 if [ ! -x "$(which "ng" 2> /dev/null)" ]; then
-	cmd=npm install -g @angular/cli 
-	if windows; then 
+	cmd=npm install -g @angular/cli
+	if windows; then
 		$cmd;
 	else
-		sudo $cmd; 
+		sudo $cmd;
 	fi;
 	if [ $? -ne 0 ]; then echo `pwd`; echo $cmd; exit 1; fi;
 fi;
@@ -86,8 +86,8 @@ for librarySubDir in "${libraries[@]}"; do
 	fi;
 	cd $baseDir/$workspace/projects/$library/src;
 	if [ -d $libraryDir/control/src/lib ]; then addHardDir lib $libraryDir/control/src; fi;
-	if [ -d $libraryDir/control/src/lib ]; then addHardDir assets $libraryDir/control/src; fi;
-	if [ -d $libraryDir/control/src/lib ]; then addHardDir styles $libraryDir/control/src; fi;
+	if [ -d $libraryDir/control/src/assets ]; then addHardDir assets $libraryDir/control/src; fi;
+	if [ -d $libraryDir/control/src/styles ]; then addHardDir styles $libraryDir/control/src; fi;
 	cd $baseDir/$workspace;
 	execute $libraryDir/$library.sh;
 	execute $libraryDir/$library-proto.sh;
