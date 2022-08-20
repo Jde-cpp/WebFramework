@@ -35,7 +35,7 @@ if [ ! -d $workspace ]; then
 	cd $workspace;
 	command="jq '.projects.\"$workspace\".architect.build.configurations.production.budgets[0].maximumError = \"5mb\"' angular.json"
 	eval $command > angular2.json; rm angular.json; mv angular2.json angular.json;
-	sed -i 's/"strict": true,/"strict": true,"strictPropertyInitialization": false, "strictNullChecks": false, "noImplicitAny": false, "noImplicitThis":false,/' tsconfig.json;
+	sed -i 's/"strict": true,/"strict": true,"strictPropertyInitialization": false, "strictNullChecks": false, "noImplicitAny": false, "noImplicitThis":false, "allowSyntheticDefaultImports":true,/' tsconfig.json;
 	command="jq '.cli.analytics = false' angular.json"
 	eval $command > angular2.json; rm angular.json; mv angular2.json angular.json;
 	#ng analytics disable;
