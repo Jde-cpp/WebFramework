@@ -15,9 +15,15 @@ cd node_modules;
 moveToDir jde-cpp;
 mklink FromClient.proto $jdeRoot/Public/jde/log/types/proto;
 mklink FromServer.proto $jdeRoot/Public/jde/log/types/proto;
+mklink BaseFromServer.proto $jdeRoot/Public/src/io/proto;
+
 npx pbjs -r app_from_client -t static-module -w es6 -o FromClient.js FromClient.proto;
 npx pbts -o FromClient.d.ts FromClient.js;
 npx pbjs -r app_from_server -t static-module -w es6 -o FromServer.js FromServer.proto;
 npx pbts -o FromServer.d.ts FromServer.js;
+
+#npx pbjs -r from_server -t static-module -w es6 -o BaseFromServer.js BaseFromServer.proto;
+#npx pbts -o BaseFromServer.d.ts BaseFromServer.js;
+
 popd > /dev/null;
 echo jde-framework-proto.sh complete.
