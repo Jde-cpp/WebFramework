@@ -49,13 +49,13 @@ export class Applications implements OnInit, OnDestroy
 	onStatus = ( statuses:FromServer.IStatuses ):void =>
 	{
 		this.mainOn = true;
-		for( const status of statuses.Values )
+		for( const status of statuses.values )
 		{
-			let existing = this.applications.find( app=>app.id==status.ApplicationId );
+			let existing = this.applications.find( app=>app.id==status.applicationId );
 			if( existing )
 				existing.status = status;
 			else
-			console.warn( `could not find app ${status.ApplicationId}` );
+			console.warn( `could not find app ${status.applicationId}` );
 		}
 	}
 
@@ -105,8 +105,8 @@ export class EditDialog
 {
 	constructor( public dialogRef:MatDialogRef<EditDialog>, @Inject(MAT_DIALOG_DATA) public data:DialogData, private appService:AppService )
 	{
-		this.dbLevel = this.app.status?.DBLogLevel;
-		this.clientLevel = this.app.status?.FileLogLevel;
+		this.dbLevel = this.app.status?.dbLogLevel;
+		this.clientLevel = this.app.status?.fileLogLevel;
 	}
 
 	onCancelClick(): void

@@ -8,10 +8,10 @@ export class Application
 	constructor( private app:FromServer.IApplication )
 	{}
 	status:FromServer.IStatus
-	get id():number{return this.app.Id};
-	get name():string{return this.app.Name};
-	get instanceId():number{ return ProtoUtilities.toNumber(this.status ? this.status.InstanceId : 0); }
-	get startTime():Date|null{return !this.status || !this.status.StartTime ? null : new Date(this.status.StartTime*1000);}
+	get id():number{return this.app.id};
+	get name():string{return this.app.name};
+	get instanceId():number{ return ProtoUtilities.toNumber(this.status ? this.status.instanceId : 0); }
+	get startTime():Date|null{return !this.status || !this.status.startTime ? null : new Date(this.status.startTime*1000);}
 	get startTimeString():string
 	{
 		if( !this.startTime )
@@ -26,7 +26,7 @@ export class Application
 			result = pipe.transform( startTime, 'shortDate' );
 		return result;
 	}
-	get memory():number{ return this.status.Memory ? ProtoUtilities.toNumber(this.status.Memory) : 0; }
+	get memory():number{ return this.status.memory ? ProtoUtilities.toNumber(this.status.memory) : 0; }
 	get memoryString():string
 	{
 		var value = this.memory;
@@ -46,9 +46,9 @@ export class Application
 				test( Math.pow(2,10), "KB" );
 		return Math.round(value).toString()+suffix;
 	}
-	get dbLevel():string{return FromServer.ELogLevel[this.status.DBLogLevel];}
-	get clientLevel():string{return FromServer.ELogLevel[this.status.FileLogLevel];}
-	get description():string[]{return this.status.Values;}
+	get dbLevel():string{return FromServer.ELogLevel[this.status.dbLogLevel];}
+	get clientLevel():string{return FromServer.ELogLevel[this.status.fileLogLevel];}
+	get description():string[]{return this.status.values;}
 	get on():boolean{return this.startTime!=null && this.startTime.getTime()!=0; }
 	get icon():string
 	{

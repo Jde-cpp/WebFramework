@@ -8,16 +8,16 @@ export class TraceEntry
 	constructor( trace:FromServer.ITraceMessage, private applicationStrings:ApplicationStrings )
 	{
 		this.id = ProtoUtilities.toNumber( trace.id );
-		this.instanceId = ProtoUtilities.toNumber( trace.InstanceId );
-		this.time = new Date( ProtoUtilities.toNumber(trace.Time) );
-		this.level = trace.Level;
-		this.messageId = trace.MessageId;
-		this.fileId = trace.FileId;
-		this.functionId = trace.FunctionId;
-		this.lineNumber = trace.LineNumber;
-		this.userId = trace.UserId;
-		this.threadId = ProtoUtilities.toNumber(trace.ThreadId);
-		for( let variable of trace.Variables )
+		this.instanceId = ProtoUtilities.toNumber( trace.instanceId );
+		this.time = new Date( ProtoUtilities.toNumber(trace.time) );
+		this.level = trace.level;
+		this.messageId = trace.messageId;
+		this.fileId = trace.fileId;
+		this.functionId = trace.functionId;
+		this.lineNumber = trace.lineNumber;
+		this.userId = trace.userId;
+		this.threadId = ProtoUtilities.toNumber(trace.threadId);
+		for( let variable of trace.variables )
 			this.variables.push( variable );
 	}
 	time:Date;

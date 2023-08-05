@@ -48,16 +48,16 @@ export class LogsComponent implements OnInit, OnDestroy
 			for( let app of applications )
 			{
 				this.applications.push( new Application(app) );
-				this.applicationStrings.set( app.Id, new ApplicationStrings(app.Id) );
+				this.applicationStrings.set( app.id, new ApplicationStrings(app.id) );
 			}
 			this.statusSubscription = this.appService.statuses();
 			this.statusSubscription.subscribe( (statuses:FromServer.IStatuses) =>
 			{
-				for( const status of statuses.Values )
+				for( const status of statuses.values )
 				{
-					let found = this.applications.find( (existing)=>{return existing.id==status.ApplicationId;} );
+					let found = this.applications.find( (existing)=>{return existing.id==status.applicationId;} );
 					if( !found )
-						console.error( `Could not find application '${status.ApplicationId}'` );
+						console.error( `Could not find application '${status.applicationId}'` );
 					else
 						found.status = status;
 				}
@@ -88,7 +88,7 @@ export class LogsComponent implements OnInit, OnDestroy
 		var applicationStrings = this.applicationStrings.get( applicationId );
 		let entry = new TraceEntry( trace, applicationStrings );
 		var stringRequests = applicationStrings.requests( entry );
-		if( stringRequests.Values.length>0 )
+		if( stringRequests.values.length>0 )
 		{
 			// for( let v of stringRequests.Values )
 			// {
@@ -100,11 +100,11 @@ export class LogsComponent implements OnInit, OnDestroy
 		}
 
 		entry.hidden = this.settings.hiddenMessages.indexOf(entry.messageId)!=-1;
-		if( stringRequests.Values.length>0 || this.buffer.length )
+		if( stringRequests.values.length>0 || this.buffer.length )
 			this.buffer.push( entry );
 		else
 			this.push( [entry] );
-//		if( stringRequests.Values.length==0 && this.buffer.length )
+//		if( stringRequests.values.length==0 && this.buffer.length )
 //			this.onStrings( applicationId, null );
 	}
 	push( entries:TraceEntry[] )
@@ -146,7 +146,7 @@ export class LogsComponent implements OnInit, OnDestroy
 		if( !applicationStrings )
 			return;
 		if( value )
-			applicationStrings.set( <FromClient.EStringRequest>value.StringRequestType, value.Id, value.Value );
+			applicationStrings.set( <FromClient.EStringRequest>value.stringRequestType, value.id, value.value );
 		let i=0;
 		let entries = [];
 		for( ; i<this.buffer.length; ++i )

@@ -12,22 +12,22 @@ export class ApplicationStrings
 		var requests = new FromClient.RequestStrings();
 		if( !this.messages.has(entry.messageId) )
 		{
-			requests.Values.push( new FromClient.RequestString({"ApplicationId":this.id, "Value": entry.messageId, "Type":FromClient.EStringRequest.MessageString}) );
+			requests.values.push( new FromClient.RequestString({applicationId:this.id, value: entry.messageId, type:FromClient.EStringRequest.MessageString}) );
 			this.messages.set( entry.messageId, null );
 		}
 		if( entry.fileId && !this.files.has(entry.fileId) )
 		{
-			requests.Values.push( new FromClient.RequestString({"ApplicationId":this.id, "Value": entry.fileId, "Type":FromClient.EStringRequest.File}) );
+			requests.values.push( new FromClient.RequestString({applicationId:this.id, value: entry.fileId, type:FromClient.EStringRequest.File}) );
 			this.files.set( entry.fileId, null );
 		}
 		if( entry.functionId && !this.functions.has(entry.functionId) )
 		{
-			requests.Values.push( new FromClient.RequestString({"ApplicationId":this.id, "Value": entry.functionId, "Type":FromClient.EStringRequest.Function}) );
+			requests.values.push( new FromClient.RequestString({applicationId:this.id, value: entry.functionId, type:FromClient.EStringRequest.Function}) );
 			this.functions.set( entry.functionId, null );
 		}
 		if( entry.userId && !this.users.has(entry.userId) )
 		{
-			requests.Values.push( new FromClient.RequestString({"ApplicationId":this.id, "Value": entry.userId, "Type":FromClient.EStringRequest.User}) );
+			requests.values.push( new FromClient.RequestString({applicationId:this.id, value: entry.userId, type:FromClient.EStringRequest.User}) );
 			this.users.set( entry.userId, null );
 		}
 		return requests;

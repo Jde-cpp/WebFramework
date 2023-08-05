@@ -9,11 +9,14 @@ export * from './lib/pages/applications/applications';
 export * from './lib/pages/logs/logs';
 export * from './lib/pages/user-management/users/users';
 export * from './lib/pages/user-management/users/dialog/user-dialog';
+export * from './lib/services/IGraphQL'
+export * from './lib/services/auth.service'
+export * from './lib/services/proto.service'
+export * from './lib/services/app/app.service';
 export * from './lib/services/profile/IProfile';
 export * from './lib/services/profile/localStorageProfile.service';
 export * from './lib/services/error/DefaultError.service';
 export * from './lib/services/error/IErrorService';
-export * from './lib/services/IGraphQL'
 export * from './lib/shared/date-range/date-range'
 export * from './lib/shared/link-select/link-select'
 export * from './lib/shared/paginator/paginator'

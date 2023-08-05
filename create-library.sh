@@ -30,6 +30,7 @@ if [ -f $controlDir/package.json ]; then addHard package.json $controlDir; fi;
 if [ -f $controlDir/tsconfig.lib.json ]; then addHard tsconfig.lib.json $controlDir; fi;
 cd src;
 addHard public-api.ts $controlDir/src;
+if [ -d environments ]; then addHardDir environments $controlDir/src; fi;
 cd lib;
 if [ -f $library.component.ts ]; then rm $library.component.*; fi;
 if [ -f $library.service.ts ]; then rm $library.service.*; fi;

@@ -10,7 +10,7 @@ import { Field, FieldKind, IGraphQL, Table } from '../../../services/IGraphQL';
 
 
 
-@Component( { selector: 'graph-ql-table', styleUrls: ['table.css'], templateUrl: 'table.html'} )
+@Component( { selector: 'graph-ql-table', styleUrls: ['table.scss'], templateUrl: 'table.html'} )
 export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy
 {
 	constructor( @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IErrorService') private cnsle: IErrorService )

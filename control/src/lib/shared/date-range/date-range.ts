@@ -155,4 +155,5 @@ export class DateRangeSettings implements IAssignable<DateRangeSettings>
 }
 
 @NgModule( {exports: [DateRange], declarations: [DateRange], imports:[MatChipsModule,MatDatepickerModule,MatFormFieldModule]} )
-export class DateRangeModule {}
+export class DateRangeModule
+{}

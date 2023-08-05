@@ -17,6 +17,7 @@ import {MatSortModule} from '@angular/material/sort';
 import {MatTabsModule} from '@angular/material/tabs';
 import {MatTableModule} from '@angular/material/table';
 import {MatToolbarModule} from '@angular/material/toolbar';
+import {IEnvironment} from 'jde-material';
 import { GraphQLDetailComponent } from './pages/GraphQL/detail/graph-ql-detail';
 import { GraphQLComponent } from './pages/GraphQL/graph-ql-component';
 import { GraphQLLinkComponent } from './pages/GraphQL/links/links';
