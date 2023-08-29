@@ -1,13 +1,14 @@
 //get googleId on login.
-import { Subject,Observable,of } from 'rxjs';
-import { IAuth } from 'jde-material';
+import { Subject,Observable,firstValueFrom } from 'rxjs';
 import { Injectable, Inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { IErrorService } from '../error/IErrorService';
 
 import { ProtoService, IError } from '../proto.service';
 import * as AppFromServer from 'jde-cpp/FromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
 import * as AppFromClient from 'jde-cpp/FromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
-import { IEnvironment } from 'jde-material';
+import { IAuth,IEnvironment } from 'jde-material';
+import { IGraphQL } from '../IGraphQL';
 
 type StatusSubscription = (statuses:FromServer.IStatuses) => void;
 
@@ -18,20 +19,11 @@ class PromiseCallbacks<T>
 	constructor( public resolve:Resolve<T>, public reject:Reject )
 	{}
 }
-/*
-export abstract class foo{
-	constructor( x:any ){}
-	send( request:any ):void	{}
-	get nextRequestId(){ return 5; } getRequestId(){ return 5;} #requestId=0;
-	sendStringPromise<ERequest,TResult>( e:ERequest, value:string, transform:(string)=>any, what:string ):Promise<TResult>{ return null; }
-	abstract handleConnectionError( err );
-	protected sessionId:number;
-}
-*/
+
 @Injectable( {providedIn: 'root'} )
-export class AppService extends ProtoService<FromClient.Transmission,FromServer.IMessageUnion>
+export class AppService extends ProtoService<FromClient.Transmission,FromServer.IMessageUnion> implements IGraphQL
 {
-	constructor( @Inject('IEnvironment') private environment: IEnvironment, @Inject('IErrorService') private cnsle: IErrorService )
+	constructor( private http: HttpClient, @Inject('IEnvironment') private environment: IEnvironment, @Inject('IErrorService') private cnsle: IErrorService )
 	{
 		super( FromClient.Transmission, environment.get('applicationServerUrl') );
 	}
@@ -146,8 +138,8 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 	}
 	request( instanceId:number, value:number )
 	{
-		var request = new FromClient.RequestId(); request.value = value; request.instanceId = instanceId;
-		var msg = new FromClient.MessageUnion(); msg.requestId=request;
+		var request = new FromClient.RequestApp(); request.type = value; request.instanceId = instanceId;
+		var msg = new FromClient.MessageUnion(); msg.requestApp=request;
 		this.send( msg );
 	}
 
@@ -193,11 +185,47 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 		this.#socket.next( writer.finish() );
 	}*/
 
-	googleLogin( token:string ):Promise<void>
+	target( suffix:string ){ return `${this.url}/${suffix}` }
+
+	async post<Y>( target:string, body:any ):Promise<Y>
 	{
-		//console.log( `(${this.nextRequestId})googleLogin( ${token?.length} )` );
-		return this.sendStringPromise<FromClient.ERequest,void>( FromClient.ERequest.GoogleLogin, token, null, FromClient.ERequest[FromClient.ERequest.GoogleLogin] );
-	};
+		let o = await this.http.post( this.target(target), body );
+		return o["value"];
+	}
+
+	async googleLogin( token:string, authorizationService:IAuth ):Promise<void>
+	{
+//		return this.sendStringPromise<FromClient.ERequest,void>( FromClient.ERequest.GoogleLogin, token, null, FromClient.ERequest[FromClient.ERequest.GoogleLogin] );
+		if( this.log.rest )	console.log( `googleLogin( ${token} )` );
+		super.sessionId = await this.post<number>( 'login', {token:token} );
+
+		super.authorizationService = authorizationService;
+		//let p = this.sendPromise<FromClient.IRequestValue,void>( "requestValue", {requestId: id, type: FromClient.ERequest.GoogleLogin, string: token } );
+
+		//return p;
+	}
+	async googleAuthClientId():Promise<string>
+	{
+		try
+		{
+			if( this.log.rest )	console.log( `googleAuthClientId()` );
+			//JSON.parse( "{'value': '445012155442-1v8ntaa22konm0boge6hj5mfs15o9lvd.apps.googleusercontent.com'}" );
+			let o = await firstValueFrom( this.http.get(`http://localhost:1999/GoogleAuthClientId`) );
+			return o["value"];
+		}
+		catch( e )
+		{
+			console.log( e );
+			throw e;
+		}
+		//.);
+
+		// const id = this.getRequestId();
+		// if( this.log.requests )	console.log( `(${id})googleAuthClientId()` );
+		// let p = this.sendPromise<FromClient.IRequestValue,string>( "requestValue", {requestId: id, type: FromClient.ERequest.GoogleAuthClientId}, (x:FromServer.StringValue)=>x["stringResult"] );
+		// //this.stringValuePromises.set( id, p );
+		// return p;
+	}
 
 	private logsSubscriptions:Map<number,[FromServer.ELogLevel, Subject<[number,FromServer.ITraceMessage]>][]>= new Map<number,[FromServer.ELogLevel, Subject<[number,FromServer.ITraceMessage]>][]>();
 	//private addMessage( msg ):void{}
@@ -222,6 +250,8 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 			const t = FromServer.Transmission.decode( bytearray );
 			for( const message of t.messages )
 			{
+				if( super.processCommonMessage(message) )
+					continue;
 				if( message.traces )
 				{
 					const applicationId = message.traces.applicationId;
@@ -261,9 +291,7 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 				else if( message.acknowledgement )
 				{
 					console.log( `(${message.acknowledgement.id})Connected to '${super.url}'` );
-					this.sessionId = message.acknowledgement.id;
-					for( var m of this.backlog )
-						this.sendTransmission( m );
+					this.setSessionId( message.acknowledgement.id );
 				}
 				else if( message.applications )
 				{
@@ -281,6 +309,23 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 						callback.next( message.custom.message );
 					else
 						console.error( `no callback for '${message.custom.requestId}'` );
+				}
+				else if( message.message )
+				{
+					let p = this._callbacks.get( message.message.intValue );
+					if( p )
+						p.resolve( null );
+					else
+						console.error( `no callback for '${message.message.intValue}'` );
+				}
+				else if( message.stringValue )
+				{
+//					var p = this.stringValuePromises.get( message.stringValue.requestId );
+					let p = this._callbacks.get( message.stringValue.requestId );
+					if( p )
+						p.resolve( message.stringValue.value );
+					else
+						console.error( `no callback for '${message.stringValue.requestId}'` );
 				}
 				else if( message.error )
 				{
@@ -303,9 +348,10 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 	private applications:FromServer.IApplication[]=[];
 	private applicationPromises:PromiseCallbacks<FromServer.IApplication[]>[]=[];
 	private singularRequests = new Map<number,{resolve:any,reject:any}>;
-	private stringRequests:Map<FromClient.IRequestString,Subject<[number,FromServer.IApplicationString]>>= new Map<FromClient.IRequestString,Subject<[number,FromServer.IApplicationString]>>();
+	private stringRequests:Map<FromClient.IRequestAppString,Subject<[number,FromServer.IApplicationString]>>= new Map<FromClient.IRequestAppString,Subject<[number,FromServer.IApplicationString]>>();
 	private statusSubscriptions:Subject<FromServer.IStatuses>[]=[];
 	private customCallbacks = new Map<number,Subject<Uint8Array>>();
+	//private stringValuePromises = new Map<number,Promise<string>>();
 	private _customRequestId:number=0;
 //	private static Url = environment.applicationServerUrl;// 'ws://localhost:1967';
 }

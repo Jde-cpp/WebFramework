@@ -34,13 +34,14 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 		await this.profile.loadedPromise;
 		try
 		{
-			await this.authorizationService.login();
+			//await this.authorizationService.login();
 			const data = await this.graphQL.query<IQueryResult<any>>( `{ __type(name: "${this.type}") { fields { name type { name kind ofType{name kind} } } } }` );
 			this.schema = new Table( data.__type );
 			this.load();
 		}
 		catch( e )
 		{
+			console.log( e );
 			this.cnsl.show( e );
 		}
 	}

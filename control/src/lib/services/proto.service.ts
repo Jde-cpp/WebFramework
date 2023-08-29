@@ -1,4 +1,5 @@
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
+import { IAuth } from 'jde-material';
 import { Table, IGraphQL, Mutation } from './IGraphQL';
 
 import * as AppFromClient from 'jde-cpp/FromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
@@ -41,6 +42,8 @@ export abstract class ProtoService<Transmission,ResultMessage>
 	{
 	//	debugger;
 		this.sessionId = null;
+		if( this.authorizationService )
+			this.authorizationService.onLogout();
 		console.log( "No longer connected to Server.", err );
 		this.handleConnectionError( err );
 	}
@@ -56,7 +59,7 @@ export abstract class ProtoService<Transmission,ResultMessage>
 		else
 			this.sendTransmission( t );
 	}
-	sendPromise<TInput,TResult>( param:string, value:TInput, result:(ResultMessage)=>any, transformInput?:TransformInput ):Promise<TResult>
+	sendPromise<TInput,TResult>( param:string, value:TInput, result?:(ResultMessage)=>any, transformInput?:TransformInput ):Promise<TResult>
 	{
 		this.send( {[param]: value} ); //new Requests.MessageUnion( <Requests.IMessageUnion>{[param]: value}) );
 		return new Promise<TResult>( ( resolve, reject )=>
@@ -79,7 +82,7 @@ export abstract class ProtoService<Transmission,ResultMessage>
 		//return this.sendStringPromise<Requests.ERequest,T>( this.queryId, ql, (x:string)=>x ? JSON.parse(x).data : null );
 		const id = this.getRequestId();
 		if( this.log.requests ) console.log( `(${id})query( ${ql} )` );
-		return this.sendPromise<FromClient.IGraphQL,T>( "query", {requestId: id, query: ql}, (x:ResultMessage)=>x["stringResult"], (x:string)=>x ? JSON.parse(x).data : null );
+		return this.sendPromise<FromClient.IGraphQL,T>( "graphQl", {requestId: id, query: ql}, (x:ResultMessage)=>x["json"], (x:string)=>x ? JSON.parse(x).data : null );
 	}
 	schema( names:string[] ):Promise<Table[]>
 	{
@@ -139,6 +142,21 @@ export abstract class ProtoService<Transmission,ResultMessage>
 		this.processMessage( m );
 		return m;
 	}
+
+	processCommonMessage( m:any ):boolean
+	{
+		let handled = true;
+		let message = Object.entries(m)[0][1];
+		let c = message["requestId"] ? this._callbacks.get( message["requestId"] ) : null;
+		if( c )
+		{
+			if( m["graphQl"] )
+				c.resolve( c.transformInput(message["json"]) );
+		}
+		else
+			handled = false;
+		return handled;
+	}
 	processCallback( id:number, resolution:any, log:string )
 	{
 		if( !this._callbacks.has(id) )
@@ -164,9 +182,10 @@ export abstract class ProtoService<Transmission,ResultMessage>
 
 	abstract handleConnectionError( err );
 	abstract encode( t:Transmission );
-	//get url(){return this.#url;} set url(x){this.#url=x;} #url:string;
+
+	protected authorizationService:IAuth;
 	protected backlog:Transmission[] = [];
-	protected log = { requests:true, results:true };
+	protected log = { requests:true, results:true, rest:true };
 	protected sessionId:number;
 	//abstract get queryId():number;
 	#socket:WebSocketSubject<protobuf.Buffer>;
@@ -174,4 +193,5 @@ export abstract class ProtoService<Transmission,ResultMessage>
 	static #tables = new Map<string,Table>();
 	static #mutations:Array<Mutation>;
 	public get url(){return this._url;}
+
 }

@@ -14,6 +14,10 @@ export class AuthService implements IAuth
 	{
 		return this.loggedIn ? Promise.resolve() : this.pushLoginPromise( token );
 	}
+	onLogout():void
+	{
+		this.#loggedIn = false;
+	}
 	pushLoginPromise( token?:string ):Promise<void>
 	{
 		let p = new Promise<void>( (resolve, reject)=>this.#promises.push( [resolve,reject] ) );
@@ -21,13 +25,30 @@ export class AuthService implements IAuth
 			this.callServer( token );
 		return p;
 	}
+	async googleAuthClientId():Promise<string>
+	{
+		if( this.#googleAuthClientId )
+			return Promise.resolve( this.#googleAuthClientId );
+		let p = await this.app.googleAuthClientId();
+		this.#googleAuthClientId = p;
+
+		return p;
+
+		// let thisResolve:()=>void, thisRefect:(x:any)=>void;
+		// let p = this.#googleAuthClientId
+		// 	? Promise.resolve( this.#googleAuthClientId )
+		// 	: new Promise<string>( (resolve, reject)=>{thisResolve=resolve, thisReject} );
+		// if( this.#googleAuthClientIdPromises.length==1 )
+		// 	this.googleAuthClientIdAsync( p );
+		// return p;
+	}
 	async callServer( token?:string )
 	{
 		let self = this;
 		try
 		{
-			await this.app.googleLogin( token );
-			debugger;
+			await this.app.googleLogin( token, this );
+			this.#loggedIn = true;
 			this.#promises.forEach( x=>x[0]() );
 			this.#promises.length=0;
 		}
@@ -40,4 +61,5 @@ export class AuthService implements IAuth
 	get loggedIn(){return this.#loggedIn;} #loggedIn=false;
 	idToken:string;
 	#promises:[()=>void,(x:any)=>void][]=[];
+	#googleAuthClientId:string;
 }
