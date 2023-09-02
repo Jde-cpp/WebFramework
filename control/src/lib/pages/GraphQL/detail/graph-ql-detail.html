@@ -1,5 +1,5 @@
 <div style="display: block;width: 100%;">
-	<mat-tab-group *ngIf="viewPromise | async" class="my-content" [selectedIndex]="settings.tabIndex" (selectedIndexChange)="tabIndexChanged">
+	<mat-tab-group *ngIf="viewPromise | async" class="my-content" [selectedIndex]="settings.tabIndex" (selectedIndexChange)="tabIndexChanged" dynamicHeight="true">
 		<mat-tab>
 			<ng-template mat-tab-label>{{propertiesName}}</ng-template>
 			<ng-template matTabContent>

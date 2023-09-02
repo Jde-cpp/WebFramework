@@ -34,7 +34,7 @@ export class Applications implements OnInit, OnDestroy
 		this.applications.length = 0;
 		try
 		{
-			const applications = await this.appService.get();
+			const applications = await this.appService.getApplications();
 			for( let app of applications )
 				this.applications.push( new Application(app) );
 			this.subscription = this.appService.statuses();

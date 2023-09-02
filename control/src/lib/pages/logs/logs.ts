@@ -44,7 +44,7 @@ export class LogsComponent implements OnInit, OnDestroy
 		this.data.sort = this.settings.sort;
 		try
 		{
-			let applications = await this.appService.get();
+			let applications = await this.appService.getApplications();
 			for( let app of applications )
 			{
 				this.applications.push( new Application(app) );

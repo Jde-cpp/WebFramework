@@ -17,6 +17,7 @@ import {MatSortModule} from '@angular/material/sort';
 import {MatTabsModule} from '@angular/material/tabs';
 import {MatTableModule} from '@angular/material/table';
 import {MatToolbarModule} from '@angular/material/toolbar';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {IEnvironment} from 'jde-material';
 import { GraphQLDetailComponent } from './pages/GraphQL/detail/graph-ql-detail';
 import { GraphQLComponent } from './pages/GraphQL/graph-ql-component';
@@ -36,7 +37,7 @@ import { SeverityPickerModule } from './shared/severity-picker/severity-picker';
 		EditDialog, SelectDialog, Applications, LogsComponent,
 		GraphQLTable, GraphQLComponent, GraphQLDetailComponent, GraphQLLinkComponent, GraphQLProperties,
 		UserComponent, UserEntryDialog ],
-  	imports: [CommonModule, SeverityPickerModule,
+  	imports: [CommonModule, SeverityPickerModule, MatAutocompleteModule,
 	  FormsModule, ReactiveFormsModule,
 	  MatButtonModule, MatCheckboxModule, MatCardModule,MatChipsModule, MatDatepickerModule, MatDialogModule, MatDividerModule, MatFormFieldModule, MatInputModule, MatIconModule, MatNativeDateModule, MatSelectModule, MatSortModule, MatTabsModule, MatTableModule, MatToolbarModule
 	],
