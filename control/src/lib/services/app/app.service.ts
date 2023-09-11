@@ -31,7 +31,7 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 	{
 		return this.sendSingularRequest( FromClient.ERequest.Ping );
 	}
-//	request<T>( requestType:Requests.ERequests ):Promise<T>{ return this.connection.request<T>(requestType); }
+	iotServerUrl():string{ return ""; }
 	getApplications():Promise<FromServer.IApplication[]>
 	{
 		return this.applications.length
@@ -196,29 +196,28 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 		}
 		catch( e )
 		{
-			console.log( e.toString() );
-			let a = e["error"];
-			console.log( a );
-			let s =  "{\"message\": \"'johnmduffy@gmail.com' not found.\"}";
-			let b = JSON.parse( s );
 			throw e["error"] ? e["error"] : e;
 		}
 	}
 
 	async get<Y>( target:string ):Promise<Y>
 	{
-		let o =  await firstValueFrom( this.http.get(this.target(target)) );
+		let headers = this.sessionId ? {sessionId:this.sessionId} : null;
+		let options = headers ? { headers: headers } : {};
+		let o = await firstValueFrom( this.http.get(this.target(target), options) );
 		return <Y>o;
 	}
 
 	async googleLogin( token:string, authorizationService:IAuth ):Promise<void>
 	{
 //		return this.sendStringPromise<FromClient.ERequest,void>( FromClient.ERequest.GoogleLogin, token, null, FromClient.ERequest[FromClient.ERequest.GoogleLogin] );
-		if( this.log.rest )	console.log( `googleLogin( ${token} )` );
+		let self = this;
+		if( this.log.restRequests )	console.log( `googleLogin( ${token} )` );
 		let o = await this.post<string>( 'GoogleLogin', {value:token} );
-		super.sessionId = o["value"];
+		self.sessionId = o;
+		if( this.log.restResults )	console.log( `sessionId='${self.sessionId}'` );
 
-		super.authorizationService = authorizationService;
+		self.authorizationService = authorizationService;
 		//let p = this.sendPromise<FromClient.IRequestValue,void>( "requestValue", {requestId: id, type: FromClient.ERequest.GoogleLogin, string: token } );
 
 		//return p;
@@ -227,7 +226,7 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 	{
 //		try
 //		{
-			if( this.log.rest )	console.log( `googleAuthClientId()` );
+			if( this.log.restRequests )	console.log( `googleAuthClientId()` );
 			//JSON.parse( "{'value': '445012155442-1v8ntaa22konm0boge6hj5mfs15o9lvd.apps.googleusercontent.com'}" );
 			let o = await firstValueFrom( this.http.get(`http://localhost:1999/GoogleAuthClientId`) );
 			return o["value"];
@@ -247,9 +246,9 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 	//}
 	override async query<Y>( ql: string ):Promise<Y>
 	{
-		if( this.log.rest )	console.log( `graphql?query=${ql}` );
+		if( this.log.restRequests )	console.log( `graphql?query=${ql}` );
 		const y = await this.get( `graphql?query=${ql}` );
-		return y["data"];
+		return y ? y["data"] : null;
 	}
 
 	private logsSubscriptions:Map<number,[FromServer.ELogLevel, Subject<[number,FromServer.ITraceMessage]>][]>= new Map<number,[FromServer.ELogLevel, Subject<[number,FromServer.ITraceMessage]>][]>();

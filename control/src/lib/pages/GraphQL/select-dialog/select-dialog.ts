@@ -19,7 +19,7 @@ interface Item
 @Component( {templateUrl: 'select-dialog.html'} )
 export class SelectDialog implements OnDestroy, AfterViewInit
 {
-	constructor( public dialogRef:MatDialogRef<SelectDialog>, @Inject(MAT_DIALOG_DATA) public data:{selectedIds:number[], /*columns:string[],*/ schema:Table, mutation:string, linkTo:number, linkToField:string, title:string,isChildren:boolean,includeDeleted:boolean,subToField:string, subTo:number}, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IErrorService') private cnsle: IErrorService )
+	constructor( public dialogRef:MatDialogRef<SelectDialog>, @Inject(MAT_DIALOG_DATA) public data:{selectedIds:number[], /*columns:string[],*/ schema:Table, mutation:string, linkTo:number, linkToField:string, title:string,isChildren:boolean,includeDeleted:boolean,subToField:string, subTo:number, graphQL:IGraphQL}, @Inject('IErrorService') private cnsle: IErrorService )
 	{}
 
 	ngAfterViewInit():void
@@ -139,6 +139,7 @@ export class SelectDialog implements OnDestroy, AfterViewInit
 	get isFlags(){ return this.data.includeDeleted; }
 	get title(){ return this.data.title; }
 	get fkField(){ return this.queryType.substr(0, this.queryType.length-1)+"Id"; }
+	get graphQL(){ return this.data.graphQL;}
 	sort:Sort = { active:"name", direction: 'asc' };
 	//dataSource:MatTableDataSource<Item>;
 	items:[];

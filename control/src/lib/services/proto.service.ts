@@ -185,8 +185,8 @@ export abstract class ProtoService<Transmission,ResultMessage>
 
 	protected authorizationService:IAuth;
 	protected backlog:Transmission[] = [];
-	protected log = { requests:true, results:true, rest:true };
-	protected sessionId:number;
+	protected log = { requests:true, results:true, restRequests:true, restResults:true };
+	protected sessionId:string;
 	//abstract get queryId():number;
 	#socket:WebSocketSubject<protobuf.Buffer>;
 	_callbacks = new Map<number, RequestPromise<ResultMessage>>();

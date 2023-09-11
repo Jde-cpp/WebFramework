@@ -62,7 +62,7 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 			{
 				width: '600px',
 				height: '650px',
-				data: { schema: x[0], selectedIds:element[fieldName], query:fieldName, mutation:this.mutation, linkTo:this.parent.id, linkToField: this.parentTypeField, subTo:element.id ?? `"${element[ element.target ? "target" : "name" ]}"`, subToField: element.id ? this.schema.subType.idReferenceName : element.target ? "target" : "name", title:StringUtils.capitalize(fieldName), includeDeleted: true }
+				data: { schema: x[0], selectedIds:element[fieldName], query:fieldName, mutation:this.mutation, linkTo:this.parent.id, linkToField: this.parentTypeField, subTo:element.id ?? `"${element[ element.target ? "target" : "name" ]}"`, subToField: element.id ? this.schema.subType.idReferenceName : element.target ? "target" : "name", title:StringUtils.capitalize(fieldName), includeDeleted: true, graphQL:this.graphQL }
 			});
 			dialogRef.afterClosed().subscribe( result =>
 			{
