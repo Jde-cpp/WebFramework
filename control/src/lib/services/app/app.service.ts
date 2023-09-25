@@ -2,6 +2,7 @@
 import { Subject,Observable,firstValueFrom } from 'rxjs';
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import {Instance} from './app.service.types'
 import { IErrorService } from '../error/IErrorService';
 
 import { ProtoService, IError } from '../proto.service';
@@ -23,15 +24,21 @@ class PromiseCallbacks<T>
 @Injectable( {providedIn: 'root'} )
 export class AppService extends ProtoService<FromClient.Transmission,FromServer.IMessageUnion> implements IGraphQL
 {
-	constructor( private http: HttpClient, @Inject('IEnvironment') private environment: IEnvironment, @Inject('IErrorService') private cnsle: IErrorService )
+	constructor( http: HttpClient, @Inject('IEnvironment') private environment: IEnvironment, @Inject('IErrorService') private cnsle: IErrorService )
 	{
-		super( FromClient.Transmission, environment.get('applicationServerUrl') );
+		super( FromClient.Transmission, http );
+		super.instances = [environment.get('applicationServer')];
 	}
 	ping():Promise<string>
 	{
 		return this.sendSingularRequest( FromClient.ERequest.Ping );
 	}
-	iotServerUrl():string{ return ""; }
+	async iotInstances():Promise<Instance[]>
+	{
+		if( this.log.restRequests )	console.log( '/IotWebSocket' );
+		const y = await this.get( "IotWebSocket" );
+		return y["servers"];
+	}
 	getApplications():Promise<FromServer.IApplication[]>
 	{
 		return this.applications.length
@@ -185,29 +192,6 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 		this.#socket.next( writer.finish() );
 	}*/
 
-	target( suffix:string ){ return `http://localhost:1999/${suffix}` }
-
-	async post<Y>( target:string, body:any ):Promise<Y>
-	{
-		try
-		{
-			let o =  await firstValueFrom( this.http.post(this.target(target), body) );
-			return o["value"];
-		}
-		catch( e )
-		{
-			throw e["error"] ? e["error"] : e;
-		}
-	}
-
-	async get<Y>( target:string ):Promise<Y>
-	{
-		let headers = this.sessionId ? {sessionId:this.sessionId} : null;
-		let options = headers ? { headers: headers } : {};
-		let o = await firstValueFrom( this.http.get(this.target(target), options) );
-		return <Y>o;
-	}
-
 	async googleLogin( token:string, authorizationService:IAuth ):Promise<void>
 	{
 //		return this.sendStringPromise<FromClient.ERequest,void>( FromClient.ERequest.GoogleLogin, token, null, FromClient.ERequest[FromClient.ERequest.GoogleLogin] );
@@ -244,13 +228,6 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 		// //this.stringValuePromises.set( id, p );
 		// return p;
 	//}
-	override async query<Y>( ql: string ):Promise<Y>
-	{
-		if( this.log.restRequests )	console.log( `graphql?query=${ql}` );
-		const y = await this.get( `graphql?query=${ql}` );
-		return y ? y["data"] : null;
-	}
-
 	private logsSubscriptions:Map<number,[FromServer.ELogLevel, Subject<[number,FromServer.ITraceMessage]>][]>= new Map<number,[FromServer.ELogLevel, Subject<[number,FromServer.ITraceMessage]>][]>();
 	//private addMessage( msg ):void{}
 	override handleConnectionError( err ):void
@@ -314,7 +291,7 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 				}
 				else if( message.acknowledgement )
 				{
-					console.log( `(${message.acknowledgement.id})Connected to '${super.url}'` );
+					console.log( `(${message.acknowledgement.id})Connected to '${super.socketUrl}'` );
 					this.setSessionId( message.acknowledgement.id );
 				}
 				else if( message.applications )

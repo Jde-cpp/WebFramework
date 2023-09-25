@@ -1,7 +1,7 @@
 import {Component,EventEmitter,OnInit,Input,Output, OnDestroy, ChangeDetectorRef, NgModule} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { BrowserModule } from '@angular/platform-browser';
+//import { BrowserModule } from '@angular/platform-browser';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -103,5 +103,5 @@ export class Paginator implements OnInit, OnDestroy
 	get onLastPage(){ return this.endIndex==this.length-1; }
 }
 
-@NgModule( {exports: [Paginator], declarations: [Paginator], imports:[MatIconModule, MatButtonModule, CommonModule, BrowserModule, MatInputModule, FormsModule]} )
+@NgModule( {exports: [Paginator], declarations: [Paginator], imports:[MatIconModule, MatButtonModule, CommonModule, /*BrowserModule,*/ MatInputModule, FormsModule]} )
 export class PaginatorModule {}

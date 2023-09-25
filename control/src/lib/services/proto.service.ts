@@ -1,8 +1,11 @@
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
+import { firstValueFrom } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { IAuth } from 'jde-material';
 import { Table, IGraphQL, Mutation } from './IGraphQL';
 
 import * as AppFromClient from 'jde-cpp/FromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
+import { Instance } from './app/app.service.types';
 
 interface IStringRequest<T>{ requestId:number; type:T; value:string; }
 interface IStringResult{ id:number; value:string; }
@@ -22,11 +25,11 @@ class RequestPromise<ResultMessage>
 export abstract class ProtoService<Transmission,ResultMessage>
 {
 	//, private UnionCreator:{ new (key:string,value:any):IRequestUnion }
-	constructor( private TCreator: { new (): Transmission; }, private _url:string ){
+	constructor( private TCreator: { new (): Transmission; }, protected http: HttpClient ){
 	}
 	connect():void
 	{
-		this.#socket = webSocket<protobuf.Buffer>( {url: this.url, deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
+		this.#socket = webSocket<protobuf.Buffer>( {url: this.socketUrl, deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
 		this.#socket.subscribe(
 			( msg ) => this.addMessage( msg ),
 			( err ) => this.error( err ),
@@ -76,14 +79,48 @@ export abstract class ProtoService<Transmission,ResultMessage>
 
 		return this.sendPromise<IStringRequest<ERequest>,TResult>( "stringRequest", {requestId: id, type: e, value: value}, (x:ResultMessage)=>x["stringResult"], transform );
 	}
-
-	query<T>( ql: string ):Promise<T>
+	async InitWait():Promise<void>
 	{
-		//return this.sendStringPromise<Requests.ERequest,T>( this.queryId, ql, (x:string)=>x ? JSON.parse(x).data : null );
-		const id = this.getRequestId();
-		if( this.log.requests ) console.log( `(${id})query( ${ql} )` );
-		return this.sendPromise<FromClient.IGraphQL,T>( "graphQl", {requestId: id, query: ql}, (x:ResultMessage)=>x["json"], (x:string)=>x ? JSON.parse(x).data : null );
+		let p = new Promise<void>( (resolve,reject)=>this.#initCallbacks.push({resolve:resolve,reject:reject}) );
+		await p;
+		console.log("InitWait done");
 	}
+	target( suffix:string ){ return `${this.restUrl}/${suffix}` }
+
+	async get<Y>( target:string ):Promise<Y>
+	{
+		if( !this.#instances )
+		{
+			await this.InitWait();
+		}
+		let headers = this.sessionId ? {sessionId:this.sessionId} : null;
+		let options = headers ? { headers: headers } : {};
+		let o = await firstValueFrom( this.http.get(this.target(target), options) );
+		return <Y>o;
+	}
+	async post<Y>( target:string, body:any ):Promise<Y>
+	{
+		try
+		{
+			if( !this.#instances )
+				await this.InitWait();
+			let o =  await firstValueFrom( this.http.post(this.target(target), body) );
+			return o["value"];
+		}
+		catch( e )
+		{
+			throw e["error"] ? e["error"] : e;
+		}
+	}
+
+
+	async query<Y>( ql: string ):Promise<Y>
+	{
+		if( this.log.restRequests )	console.log( `graphql?query=${ql}` );
+		const y = await this.get( `graphql?query=${ql}` );
+		return y ? y["data"] : null;
+	}
+
 	schema( names:string[] ):Promise<Table[]>
 	{
 		return new Promise<Table[]>( (resolve, reject)=>
@@ -187,11 +224,24 @@ export abstract class ProtoService<Transmission,ResultMessage>
 	protected backlog:Transmission[] = [];
 	protected log = { requests:true, results:true, restRequests:true, restResults:true };
 	protected sessionId:string;
+	get instances(){return this.#instances;} set instances(x)
+	{
+		this.#instances = x;
+		for( let callback of this.#initCallbacks )
+		{
+			if( x.length )
+				callback.resolve();
+			else
+				callback.reject( {requestId:0,message:"no server instances found."} );
+		}
+	} #instances:Instance[];
+	#initCallbacks:{resolve:()=>void, reject:Reject}[]=[];
 	//abstract get queryId():number;
 	#socket:WebSocketSubject<protobuf.Buffer>;
-	_callbacks = new Map<number, RequestPromise<ResultMessage>>();
+	protected _callbacks = new Map<number, RequestPromise<ResultMessage>>();
 	static #tables = new Map<string,Table>();
 	static #mutations:Array<Mutation>;
-	public get url(){return this._url;}
+	protected get socketUrl(){if(!this.instances?.length) throw "no instances"; return `ws://${this.instances[0].host}:${this.instances[0].websocketPort}`;}
+	protected get restUrl(){if(!this.instances?.length) throw "no instances"; return `http://${this.instances[0].host}:${this.instances[0].restPort}`;}
 
 }

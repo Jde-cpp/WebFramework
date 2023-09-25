@@ -1,5 +1,5 @@
 import {Component,EventEmitter,Input,NgModule,Output} from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser'
+//import { BrowserModule } from '@angular/platform-browser'
 import { MatFormFieldModule } from '@angular/material/form-field';
 import {MatSelectModule} from '@angular/material/select';
 import * as AppFromServer from 'jde-cpp/FromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
@@ -31,5 +31,5 @@ interface LogOption
 	value:FromServer.ELogLevel;
 }
 
-@NgModule( {exports: [SeverityPicker], declarations: [SeverityPicker], imports:[BrowserModule,MatFormFieldModule,MatSelectModule]} )
+@NgModule( {exports: [SeverityPicker], declarations: [SeverityPicker], imports:[/*BrowserModule,*/MatFormFieldModule,MatSelectModule]} )
 export class SeverityPickerModule {}
