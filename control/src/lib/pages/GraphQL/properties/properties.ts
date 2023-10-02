@@ -1,4 +1,4 @@
-import {Component, Inject, Input, Output, AfterViewInit, EventEmitter, ViewChild, ViewChildren, ElementRef, OnInit, QueryList, ChangeDetectorRef} from '@angular/core';
+import {Component, Inject, Input, Output, AfterViewInit, EventEmitter, ViewChild, ViewChildren, ElementRef, OnInit, OnDestroy, QueryList, ChangeDetectorRef} from '@angular/core';
 import { MatFormField } from '@angular/material/form-field';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IErrorService } from 'jde-framework';
@@ -7,10 +7,17 @@ import { Field, FieldKind, IEnum, IGraphQL, IQueryResult } from '../../../servic
 import { StringUtils } from '../../../utilities/StringUtils';
 
 @Component( { selector: 'graph-ql-properties', templateUrl: 'properties.html'} )
-export class GraphQLProperties implements OnInit, AfterViewInit
+export class GraphQLProperties implements OnInit, AfterViewInit, OnDestroy
 {
 	constructor( private route: ActivatedRoute, private router:Router, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, private cdr: ChangeDetectorRef, @Inject('IErrorService') private cnsl: IErrorService )
 	{}
+	async ngOnDestroy()
+	{
+		for( const f of this.fields.filter(f=>f.type==InputTypes.Select) ){
+			if( this.#original[f.name] )
+				this.#original[f.name] = f.options.find( (x)=>x.id==this.#original[f.name] ).name;
+		}
+	}
 	async ngOnInit()
 	{
 		try
@@ -29,7 +36,8 @@ export class GraphQLProperties implements OnInit, AfterViewInit
 						this.#original[field.name] = v;
 					}
 				}
-				this.fields.push( new PropertyField(field, values) );
+				const p = new PropertyField(field, values);
+				(p.type==InputTypes.Bool ? this.boolFields : this.fields).push( p );
 			}
 		}
 		catch( e )
@@ -63,6 +71,7 @@ export class GraphQLProperties implements OnInit, AfterViewInit
 	{
 		this.router.navigate( ['..'], { relativeTo: this.route } );
 	}
+
 	mods():any
 	{
 		let input:any = this.original.id==null ? {...this.clone} : {};
@@ -82,7 +91,7 @@ export class GraphQLProperties implements OnInit, AfterViewInit
 	get enableSubmit():boolean
 	{
 		let enable = !this.saving
-			&& this.fields.find( (x)=>!x.nullable && x.type!=InputTypes.Select && this.clone.get(x.name).length==0 )==null; //non-null is null
+			&& this.fields.find( (x)=>!x.nullable && x.type!=InputTypes.Select && (!this.clone.get(x.name) || this.clone.get(x.name).length==0) )==null; //non-null is null
 		if( enable && this.original.id!=null )
 			enable = Object.keys( this.mods() ).length>0;
 		return enable;
@@ -121,6 +130,7 @@ export class GraphQLProperties implements OnInit, AfterViewInit
 	}
 	get InputTypes(){ return InputTypes; }
 	fields=new Array<PropertyField>();
+	boolFields=new Array<PropertyField>();
 	saving=false;
 	@Output() save = new EventEmitter<any>();
 	static noShowFields = ["id", "created", "attributes", "updated", "deleted"];
@@ -130,14 +140,10 @@ export class GraphQLProperties implements OnInit, AfterViewInit
 		this.#original = x ?? {};
 		this.componentPageTitle.detail = this.#original["name"] ?? "New";
 		let add = ( m )=>this.clone.set( m, this.#original[m] ?? '' );
-		add( "name" );
-		add( "target" );
-		for( let m in x )
-		{
-			if( x[m]===undefined && GraphQLProperties.noShowFields.indexOf(m)==-1 )
+		for( let m in x ){
+			if( x[m]!==undefined && GraphQLProperties.noShowFields.indexOf(m)==-1 )
 				this.clone.set( m, x[m] );
 		}
-		add( "description" );
 	} get original(){return this.#original; } #original:any;
 	@Input() type:string;
 	viewPromise:Promise<boolean>;
@@ -146,14 +152,15 @@ enum InputTypes
 {
 	Select=-1,
 	None=0,
-	Text
+	Text=1,
+	Bool=2
 }
 class PropertyField
 {
 	constructor( private field:Field, public options?:Array<IEnum> )
 	{}
 	get name(){ return this.field.name; }
-	get displayName(){ return this.field.name=="target" ? "Id" : StringUtils.capitalize( this.field.name ); }
+	get displayName(){ return this.field.name=="target" ? "Id" : StringUtils.idToDisplay( this.field.name ); }
 	get nullable(){ return this.field.type.kind!=FieldKind.NON_NULL; }
 	get type():InputTypes
 	{
@@ -162,6 +169,8 @@ class PropertyField
 			type = InputTypes.Select;
 		else if( this.name=="description" )
 			type = InputTypes.Text;
+		else if( this.name.startsWith("is") )
+			type = InputTypes.Bool;
 		return type;
 	}
 }

@@ -113,6 +113,7 @@ export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy
 	get objectColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.OBJECT ).map( (x)=>x.name ); }
 	get listColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.LIST ).map( (x)=>x.name ); }
 	get dateColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingName=="DateTime" ).map( (x)=>x.name ); }
+	get boolColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingName=="Boolean" ).map( (x)=>x.name ); }
 
 
 	viewPromise:Promise<boolean>;

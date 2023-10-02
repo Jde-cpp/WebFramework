@@ -2,12 +2,20 @@
 	<div>
 		<mat-form-field *ngFor="let field of fields; let tab = index" style="width: 100%;" appearance="fill">
 			<mat-label>{{field.displayName}}</mat-label>
-			<input #myInput matInput *ngIf="field.type==InputTypes.None" [attr.cdkFocusInitial]="field.name=='target' ? '' : null" [value]="clone.get(field.name)" [tabIndex]=tab+1 (focusout)="clone.set( field.name, $event.target['value'] )" >
-			<textarea matInput *ngIf="field.type==InputTypes.Text" [value]="clone.get(field.name)" [tabIndex]="tab+1" (focusout)="clone.set( field.name, $event.target['value'])"></textarea>
+			<input #myInput matInput [type]="field.name=='url' ? 'url' : 'text'" *ngIf="field.type==InputTypes.None" [attr.cdkFocusInitial]="field.name=='target' ? '' : null" [value]="clone.get(field.name) ?? ''" [tabIndex]=tab+1 (focusout)="clone.set( field.name, $event.target['value'] )" >
+			<textarea matInput *ngIf="field.type==InputTypes.Text" [value]="clone.get(field.name) ?? ''" [tabIndex]="tab+1" (focusout)="clone.set( field.name, $event.target['value'])"></textarea>
 			<mat-select *ngIf="field.type==InputTypes.Select" [tabIndex]="tab+1" (selectionChange)="clone.set( field.name, $event.value )" [value]="clone.get(field.name)">
 				<mat-option *ngFor="let option of field.options" [value]="option.id">{{option.name}}</mat-option>
 			</mat-select>
 		</mat-form-field>
+		<mat-form-field *ngIf="boolFields.length" style="width: 100%;" appearance=fill>
+			<mat-chip-grid #chipGrid aria-label="Attributes" [multiple]=true [selectable]=true>
+				<mat-chip-row *ngFor="let field of boolFields" [highlighted]="clone.get(field.name)!=0" [selected]="clone.get(field.name)" (click)="clone.set( field.name, !this.clone.get(field.name) );">{{field.displayName}}</mat-chip-row>
+			</mat-chip-grid>
+			<input hidden=true [matChipInputFor]="chipGrid">
+		</mat-form-field>
+		<!-- selected ? 'primary' : 'accent' -->
+
 	</div>
 	<div>
 		<span *ngIf="clone.size" style="margin-left: auto;" >

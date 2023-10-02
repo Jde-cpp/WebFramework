@@ -26,7 +26,8 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 	ngOnInit()
 	{
 		// @ts-ignore
-		this.router.events.pipe( filter(e=>e instanceof NavigationEnd) ).subscribe( this.onNavigationEnd );
+		//seems to be too much going on, component stays alive and continues to trigger this.
+		//this.router.events.pipe( filter(e=>e instanceof NavigationEnd) ).subscribe( this.onNavigationEnd );
 	}
 	async ngAfterViewInit()
 	{

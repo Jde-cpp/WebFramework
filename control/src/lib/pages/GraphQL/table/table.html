@@ -34,6 +34,10 @@
 		<mat-header-cell mat-header-cell *matHeaderCellDef> {{column}} </mat-header-cell>
 		<mat-cell *matCellDef="let element"> {{element[column] | date:'mediumDate'}} </mat-cell>
 	</ng-container>
+	<ng-container [matColumnDef]="column" *ngFor="let column of boolColumnNames">
+		<mat-header-cell mat-header-cell *matHeaderCellDef> {{column}} </mat-header-cell>
+		<mat-cell *matCellDef="let element"> {{element[column] ? '&#10003;' : '&#10005;'}} </mat-cell>
+	</ng-container>
 	<mat-header-row *matHeaderRowDef="displayedColumnNames; sticky: true"></mat-header-row>
 	<mat-row mat-row *matRowDef="let row; columns: displayedColumnNames;" (click)="cellClick(row)" [class.hidden]="!showDeleted && row.deleted" [class.highlight]="selection?.id==row.id"></mat-row>
 </mat-table>
