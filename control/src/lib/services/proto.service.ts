@@ -93,6 +93,7 @@ export abstract class ProtoService<Transmission,ResultMessage>
 		{
 			await this.InitWait();
 		}
+		if( this.log.restRequests )	console.log( target );
 		let headers = this.sessionId ? {sessionId:this.sessionId} : null;
 		let options = headers ? { headers: headers } : {};
 		let o = await firstValueFrom( this.http.get(this.target(target), options) );
