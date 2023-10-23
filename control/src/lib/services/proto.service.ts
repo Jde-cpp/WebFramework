@@ -10,11 +10,11 @@ import { Instance } from './app/app.service.types';
 interface IStringRequest<T>{ requestId:number; type:T; value:string; }
 interface IStringResult{ id:number; value:string; }
 interface IMessageUnion{ stringResult:IStringResult }
-export interface IError{ requestId:number; message: string; }
+export interface IError{ requestId?:number; message: string; sc?:number; }
 
 type TransformInput = (x:any)=>any;
 type Resolve = (x:any)=>void;
-type Reject = (x:IError)=>void;
+type Reject = ( e:{error:IError} )=>void;
 
 class RequestPromise<ResultMessage>
 {
@@ -211,7 +211,7 @@ export abstract class ProtoService<Transmission,ResultMessage>
 		if( handled )
 		{
 			let p:RequestPromise<ResultMessage> = this._callbacks.get( id );
-			p.reject( e );
+			p.reject( {error:e} );
 			this._callbacks.delete( id );
 		}
 		return handled;
@@ -233,7 +233,7 @@ export abstract class ProtoService<Transmission,ResultMessage>
 			if( x.length )
 				callback.resolve();
 			else
-				callback.reject( {requestId:0,message:"no server instances found."} );
+				callback.reject( {error:{sc:0,message:"no server instances found."}} );
 		}
 	} #instances:Instance[];
 	#initCallbacks:{resolve:()=>void, reject:Reject}[]=[];
