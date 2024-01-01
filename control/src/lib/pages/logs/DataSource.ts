@@ -4,8 +4,7 @@ import { TraceEntry } from './TraceEntry';
 import { Subject } from 'rxjs';
 import {EventEmitter} from '@angular/core';
 
-import * as AppFromServer from 'jde-cpp/FromServer';
-import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import * as AppFromServer from 'jde-cpp/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
 export class PageStats{ constructor( public length?:number, public startIndex?:number ){} };
 
 export class DataSource

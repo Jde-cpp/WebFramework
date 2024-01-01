@@ -1,6 +1,6 @@
 import { ProtoUtilities } from '../../utilities/protoUtilities';
 
-import * as AppFromServer from 'jde-cpp/FromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import * as AppFromServer from 'jde-cpp/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
 import {ApplicationStrings} from './Application';
 
 export class TraceEntry

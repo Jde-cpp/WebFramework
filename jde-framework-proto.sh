@@ -1,9 +1,13 @@
 #!/bin/bash
 clean=${1:-0};
 baseDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-jdeRoot=$baseDir/../..;
+webDir=$(dirname $(readlink -e $baseDir));
+jdeRoot=$(dirname $(readlink -e $webDir));
+jdeBash=$jdeRoot;
 source $jdeRoot/Framework/common.sh;
-pushd `pwd` > /dev/null;
+frameworkDir=$baseDir;
+source $frameworkDir/scripts/common-proto.sh;
+
 if [ ! -d node_modules ]; then echo run from workspace dir.; exit 1; fi;
 npm list | grep protobufjs &> /dev/null;
 if [ $? -ne 0 ]; then
@@ -13,17 +17,20 @@ if [ $? -ne 0 ]; then
 fi;
 cd node_modules;
 moveToDir jde-cpp;
-mklink FromClient.proto $jdeRoot/Public/jde/log/types/proto;
-mklink FromServer.proto $jdeRoot/Public/jde/log/types/proto;
-#mklink BaseFromServer.proto $jdeRoot/Public/src/io/proto;
+declare -A commonFiles;
+if [ ! -f FromServer.d.ts ] || [ $clean == 1 ]; then commonFiles[FromServer]=from_server_root; fi;
+create $jdeBash/Public/src/web/proto commonFiles;
+echo 'Created common proto files';
 
-npx pbjs -r app_from_client -t static-module -w es6 -o FromClient.js FromClient.proto;
-npx pbts -o FromClient.d.ts FromClient.js;
-npx pbjs -r app_from_server -t static-module -w es6 -o FromServer.js FromServer.proto;
-npx pbts -o FromServer.d.ts FromServer.js;
+declare -A appFiles;
+if [ ! -f AppFromClient.d.ts ] || [ $clean == 1 ]; then appFiles[AppFromClient]=app_from_client; fi;
+if [ ! -f AppFromServer.d.ts ] || [ $clean == 1 ]; then appFiles[AppFromServer]=app_from_server; fi;
+echo 'call create';
+create $jdeBash/Public/jde/appServer/proto appFiles;
+echo 'Created application proto files';
 
 #npx pbjs -r from_server -t static-module -w es6 -o BaseFromServer.js BaseFromServer.proto;
 #npx pbts -o BaseFromServer.d.ts BaseFromServer.js;
 
-popd > /dev/null;
+#popd > /dev/null;
 echo jde-framework-proto.sh complete.

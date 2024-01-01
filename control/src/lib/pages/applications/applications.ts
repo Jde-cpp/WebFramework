@@ -9,8 +9,8 @@ import {AppService} from '../../services/app/app.service';
 import {Observable, Subscription} from 'rxjs';
 import {Application} from '../../services/app/application';
 import {IErrorService} from '../../services/error/IErrorService';
-import * as AppFromServer from 'jde-cpp/FromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
-import * as AppFromClient from 'jde-cpp/FromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
+import * as AppFromServer from 'jde-cpp/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import * as AppFromClient from 'jde-cpp/AppFromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
 
 @Component({
   selector: 'applications',
@@ -23,31 +23,28 @@ export class Applications implements OnInit, OnDestroy
 	routeParamSubscription: Subscription;
 	_categoryListSummary: string;
 
-	constructor( public _componentPageTitle: ComponentPageTitle, private appService:AppService, private dialog:MatDialog, private matIconRegistry: MatIconRegistry, private domSanitizer: DomSanitizer, @Inject('IErrorService') private cnsl: IErrorService )
-	{
+	constructor( public _componentPageTitle: ComponentPageTitle, private appService:AppService, private dialog:MatDialog, private matIconRegistry: MatIconRegistry, private domSanitizer: DomSanitizer, @Inject('IErrorService') private cnsl: IErrorService ){
 		const url = this.domSanitizer.bypassSecurityTrustResourceUrl("../assets/download.svg");
 		this.matIconRegistry.addSvgIcon( "ib", "download.svg" );
 	}
-	async ngOnInit()
-	{
+
+	async ngOnInit(){
 		this._componentPageTitle.title = "Applications";
 		this.applications.length = 0;
-		try
-		{
+		try{
+			//await this.appService.custom( 99, new TextEncoder().encode("adsf") );
 			const applications = await this.appService.getApplications();
 			for( let app of applications )
 				this.applications.push( new Application(app) );
 			this.subscription = this.appService.statuses();
 			this.subscription.subscribe( apps => {this.onStatus(apps);} );
 		}
-		catch( e )
-		{
+		catch( e ){
 			this.cnsl.error( "Could not load applications", e );
 		}
 	}
 
-	onStatus = ( statuses:FromServer.IStatuses ):void =>
-	{
+	onStatus = ( statuses:FromServer.IStatuses ):void =>{
 		this.mainOn = true;
 		for( const status of statuses.values )
 		{
@@ -59,16 +56,14 @@ export class Applications implements OnInit, OnDestroy
 		}
 	}
 
-	ngOnDestroy()
-	{
+	ngOnDestroy(){
 		this.appService.statusUnsubscribe( this.subscription );
 	}
-	togglePower( app:Application )
-	{
+
+	togglePower( app:Application ){
 		if( app.on )
 			this.appService.request( app.instanceId, -2 );//FromClient.ERequest.Power | FromClient.ERequest.Negate
-		else
-		{
+		else{
 			this.cnsl.error( "applicationService.start failed", null );
 			/*this.applicationService.start( app.name ).subscribe(
 			{
@@ -77,8 +72,8 @@ export class Applications implements OnInit, OnDestroy
 			});*/
 		}
 	}
-	edit( app:Application )
-	{
+
+	edit( app:Application ){
 		const dialogRef = this.dialog.open(EditDialog, {
 			width: '600px',
 			data: {app: app}
@@ -89,32 +84,27 @@ export class Applications implements OnInit, OnDestroy
 	private subscription:Observable<FromServer.IStatuses>;
 }
 
-interface DialogData
-{
+interface DialogData{
 	app: Application;
 }
 
-interface LogOption
-{
+interface LogOption{
 	name:string;
 	value:FromServer.ELogLevel;
 }
 
 @Component( { selector: 'missing-dates-dialog',	templateUrl: 'edit-dialog.html'} )
-export class EditDialog
-{
-	constructor( public dialogRef:MatDialogRef<EditDialog>, @Inject(MAT_DIALOG_DATA) public data:DialogData, private appService:AppService )
-	{
+export class EditDialog{
+	constructor( public dialogRef:MatDialogRef<EditDialog>, @Inject(MAT_DIALOG_DATA) public data:DialogData, private appService:AppService ){
 		this.dbLevel = this.app.status?.dbLogLevel;
 		this.clientLevel = this.app.status?.fileLogLevel;
 	}
 
-	onCancelClick(): void
-	{
+	onCancelClick(): void{
 	  this.dialogRef.close();
 	}
-	onSaveClick():void
-	{
+
+	onSaveClick():void{
 		this.saving = true;
 		this.appService.updateLogLevel( this.app.instanceId, this.clientLevel, this.dbLevel );
 		this.dialogRef.close();

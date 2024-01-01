@@ -4,7 +4,6 @@ import { HttpClient } from '@angular/common/http';
 import { IAuth } from 'jde-material';
 import { Table, IGraphQL, Mutation } from './IGraphQL';
 
-import * as AppFromClient from 'jde-cpp/FromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
 import { Instance } from './app/app.service.types';
 
 interface IStringRequest<T>{ requestId:number; type:T; value:string; }
@@ -50,12 +49,14 @@ export abstract class ProtoService<Transmission,ResultMessage>
 		console.log( "No longer connected to Server.", err );
 		this.handleConnectionError( err );
 	}
-	sendTransmission( t:Transmission ){	this.#socket.next( this.encode(t).finish() ); }
-	send( request:any ):void
-	{
-		let t = new this.TCreator(); t["messages"].push( request );
-		if( !this.sessionId )
-		{
+	sendTransmission( t:Transmission ){
+		var toSend = this.encode(t).finish();
+		this.#socket.next( toSend );
+	}
+	send( request:any ):void{
+		let t = new this.TCreator();
+		t["messages"].push( request );
+		if( !this.sessionId || !this.#socket ){
 			this.backlog.push( t );
 			this.connect();
 		}

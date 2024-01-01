@@ -12,7 +12,7 @@ function create
 		echo npx pbjs -r ${files[$i]} -t static-module -w es6 -o $i.js $i.proto;
 		npx pbjs -r ${files[$i]} -t static-module -w es6 -o $i.js $i.proto;npx pbts -o $i.d.ts $i.js;
 	done;
-	for i in "${!files[@]}"; do
-		rm $i.proto;
-	done;
+#	for i in "${!files[@]}"; do
+#		rm $i.proto;
+#	done;
 }

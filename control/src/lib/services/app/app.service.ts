@@ -6,8 +6,8 @@ import {Instance} from './app.service.types'
 import { IErrorService } from '../error/IErrorService';
 
 import { ProtoService, IError } from '../proto.service';
-import * as AppFromServer from 'jde-cpp/FromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
-import * as AppFromClient from 'jde-cpp/FromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
+import * as AppFromServer from 'jde-cpp/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import * as AppFromClient from 'jde-cpp/AppFromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
 import { IAuth,IEnvironment } from 'jde-material';
 import { IGraphQL } from '../IGraphQL';
 
@@ -167,8 +167,7 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 	private sendRequest( x:FromClient.ERequest )
 	{
 		console.log( `requesting '${FromClient.ERequest[x]}'`)
-		//var request = new FromClient.Request(); request.value = x;
-		let msg = { Request: {Value:x} };
+		let msg = { request: {type:x} };
 		this.send( msg );
 	}
 
@@ -183,22 +182,12 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 		return p;
 	}
 
-/*	send<T>( request:T ):void
-	{
-		var transmission = new FromClient.Transmission();
-
-		transmission.Messages.push( request );
-		var writer = FromClient.Transmission.encode( transmission );
-		this.#socket.next( writer.finish() );
-	}*/
-
 	async googleLogin( token:string, authorizationService:IAuth ):Promise<void>
 	{
 //		return this.sendStringPromise<FromClient.ERequest,void>( FromClient.ERequest.GoogleLogin, token, null, FromClient.ERequest[FromClient.ERequest.GoogleLogin] );
 		let self = this;
-		if( this.log.restRequests )	console.log( `googleLogin( ${token} )` );
-		let o = await this.post<string>( 'GoogleLogin', {value:token} );
-		self.sessionId = o;
+		//if( this.log.restRequests )	console.log( `googleLogin( ${token} )` );
+		self.sessionId = await this.post<string>( 'GoogleLogin', {value:token} );
 		if( this.log.restResults )	console.log( `sessionId='${self.sessionId}'` );
 
 		self.authorizationService = authorizationService;
@@ -328,12 +317,12 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 					else
 						console.error( `no callback for '${message.stringValue.requestId}'` );
 				}
-				else if( message.error )
+				else if( message.exception )
 				{
-					if( message.error.requestId )
-						this.processError( <IError>message.error );
+					if( message.exception.requestId )
+						this.processError( <IError>message.exception );
 					else
-						console.error( message.error );
+						console.error( message.exception );
 				}
 				else
 					console.error( `unknown message type ${Object.keys(message)}` );
