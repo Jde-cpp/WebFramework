@@ -1,7 +1,7 @@
 import {Component, Inject, Input, Output, AfterViewInit, EventEmitter, ViewChild, ViewChildren, ElementRef, OnInit, OnDestroy, QueryList, ChangeDetectorRef} from '@angular/core';
 import { MatFormField } from '@angular/material/form-field';
 import { ActivatedRoute, Router } from '@angular/router';
-import { IErrorService } from 'jde-framework';
+import { IErrorService } from '../../../services/error/IErrorService';
 import { ComponentPageTitle } from 'jde-material';
 import { Field, FieldKind, IEnum, IGraphQL, IQueryResult } from '../../../services/IGraphQL';
 import { StringUtils } from '../../../utilities/StringUtils';

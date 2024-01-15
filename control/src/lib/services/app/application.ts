@@ -1,7 +1,7 @@
 import {ProtoUtilities} from '../../utilities/protoUtilities'
 import { DatePipe } from '@angular/common';
 
-import * as AppFromServer from 'jde-cpp/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import * as AppFromServer from '../../proto/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
 
 export class Application
 {

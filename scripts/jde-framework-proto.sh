@@ -1,10 +1,10 @@
 #!/bin/bash
 clean=${1:-0};
-baseDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+baseDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
 webDir=$(dirname $(readlink -e $baseDir));
 jdeRoot=$(dirname $(readlink -e $webDir));
 jdeBash=$jdeRoot;
-source $jdeRoot/Framework/common.sh;
+source $jdeRoot/Framework/scripts/common.sh;
 frameworkDir=$baseDir;
 source $frameworkDir/scripts/common-proto.sh;
 

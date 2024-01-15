@@ -1,10 +1,9 @@
 #!/bin/bash
 library=${1};  #jde-blockly
 dir=${2}; #WebBlockly
-if [ -z $baseDir ]; then baseDir=`pwd`/..; fi;
-if [ -z $commonBuild ]; then source $baseDir/../../Framework/common.sh; fi;
-controlDir=$(dirname $(readlink -e $baseDir/../$dir/control))/control;
-
+webRoot=$(dirname $(readlink -e ..)) #jde/web
+source $webRoot/../Framework/scripts/common.sh;
+controlDir=$webRoot/$dir/control;
 if [ ! -d projects/$library ]; then
 	t=`jq .projects.\"$library\".root angular.json`;
 	configPath=.compilerOptions.paths.\"$library\"
@@ -21,16 +20,16 @@ if [ ! -d projects/$library ]; then
 
 	ng analytics off;#should add to angular.json "cli": {"analytics": false},
 	ng g library $library --defaults; if [ $? -ne 0 ]; then echo `pwd`; echo ng g library $library --defaults; exit 1; fi;
-	configConent="[\"projects/$library/src/public-api\", \"dist/$library/$library\", \"dist/$library\"]";
+	configConent="[\"./projects/$library/src/public-api\", \"./dist/$library/$library\", \"./dist/$library\"]";
 	jq "$configPath = $configConent" tsconfig.json > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq \"$configPath = $configConent\" tsconfig.json; exit 1; fi;
 	mv temp.json tsconfig.json;
 fi;
 cd projects/$library;
 if [ -f $controlDir/package.json ]; then addHard package.json $controlDir; fi;
 if [ -f $controlDir/tsconfig.lib.json ]; then addHard tsconfig.lib.json $controlDir; fi;
+if [ -d $controlDir/environments ]; then addHardDir environments $controlDir; fi;
 cd src;
 addHard public-api.ts $controlDir/src;
-if [ -d environments ]; then addHardDir environments $controlDir/src; fi;
 cd lib;
 if [ -f $library.component.ts ]; then rm $library.component.*; fi;
 if [ -f $library.service.ts ]; then rm $library.service.*; fi;

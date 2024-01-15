@@ -9,8 +9,7 @@ import {AppService} from '../../services/app/app.service';
 import {Observable, Subscription} from 'rxjs';
 import {Application} from '../../services/app/application';
 import {IErrorService} from '../../services/error/IErrorService';
-import * as AppFromServer from 'jde-cpp/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
-import * as AppFromClient from 'jde-cpp/AppFromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
+import * as AppFromServer from '../../proto/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
 
 @Component({
   selector: 'applications',

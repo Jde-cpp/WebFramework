@@ -12,9 +12,9 @@ for i in "${!librariesText[@]}"; do if (( $i > 0 )); then t=${librariesText[$i]}
 echo create-workspace.sh workspace=$workspace librares=\"${libraryLog:1}\"
 
 scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-source $scriptDir/../../Framework/common.sh;
+source $scriptDir/../../../Framework/scripts/common.sh;
 baseDir=`pwd`;
-REPO_WEB=`readlink -f $scriptDir/..`;
+REPO_WEB=`readlink -f $scriptDir/../..`;
 findExecutable npm;
 if [ ! -x "$(which "ng" 2> /dev/null)" ]; then
 	cmd="npm install -g @angular/cli";
@@ -37,7 +37,7 @@ if [ ! -d $workspace ]; then
 	cd $workspace;
 	command="jq '.projects.\"$workspace\".architect.build.configurations.production.budgets[0].maximumError = \"5mb\"' angular.json"
 	eval $command > angular2.json; rm angular.json; mv angular2.json angular.json;
-	sed -i 's/"strict": true,/"strict": true,"strictPropertyInitialization": false, "strictNullChecks": false, "noImplicitAny": false, "noImplicitThis":false, "skipLibCheck": true, "allowSyntheticDefaultImports":true,/' tsconfig.json;
+	sed -i 's/"strict": true,/"strict": true, "strictPropertyInitialization": false, "strictNullChecks": false, "noImplicitAny": false, "noImplicitThis":false, "skipLibCheck": true, "allowSyntheticDefaultImports":true,/' tsconfig.json;
 	command="jq '.cli.analytics = false' angular.json"
 	eval $command > angular2.json; rm angular.json; mv angular2.json angular.json;
 	#ng analytics disable;
@@ -85,15 +85,15 @@ for librarySubDir in "${libraries[@]}"; do
 	library=$( basename $dest );
 	if [ $? -ne 0 ]; then echo $dest failed; exit 1; fi;
 	if [ ! -d projects/$library ]; then
-		$REPO_WEB/WebFramework/create-library.sh $library $librarySubDir; if [ $? -ne 0 ]; then echo `pwd`; echo $REPO_WEB/WebFramework/create-library.sh $library $librarySubDir; exit 1; fi;
+		$REPO_WEB/WebFramework/scripts/create-library.sh $library $librarySubDir; if [ $? -ne 0 ]; then echo `pwd`; echo $REPO_WEB/WebFramework/create-library.sh $library $librarySubDir; exit 1; fi;
 	fi;
 	cd $baseDir/$workspace/projects/$library/src;
 	if [ -d $libraryDir/control/src/lib ]; then addHardDir lib $libraryDir/control/src; fi;
 	if [ -d $libraryDir/control/src/assets ]; then addHardDir assets $libraryDir/control/src; fi;
 	if [ -d $libraryDir/control/src/styles ]; then addHardDir styles $libraryDir/control/src; fi;
 	cd $baseDir/$workspace;
-	execute $libraryDir/$library.sh;
-	execute $libraryDir/$library-proto.sh;
+	execute $libraryDir/scripts/$library.sh;
+	execute $libraryDir/scripts/$library-proto.sh;
 	#if release-mode then
 	#ng build $library; if [ $? -ne 0 ]; then echo `pwd`; echo ng build $library; exit 1; fi;
 	#cd dist/$library; npm pack;

@@ -2,7 +2,7 @@ import {Component,EventEmitter,Input,NgModule,Output} from '@angular/core';
 //import { BrowserModule } from '@angular/platform-browser'
 import { MatFormFieldModule } from '@angular/material/form-field';
 import {MatSelectModule} from '@angular/material/select';
-import * as AppFromServer from 'jde-cpp/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import * as AppFromServer from '../../proto/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
 
 @Component({ selector: 'severity-picker', templateUrl: './severity-picker.html' })
 export class SeverityPicker

@@ -15,8 +15,8 @@ import {IProfile} from '../../services/profile/IProfile';
 import {IErrorService} from '../../services/error/IErrorService';
 
 
-import * as AppFromServer from 'jde-cpp/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
-import * as AppFromClient from 'jde-cpp/AppFromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
+import * as AppFromServer from '../../proto/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import * as AppFromClient from '../../proto/AppFromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
 import { FormControl } from '@angular/forms';
 
 // Move levels to combo.

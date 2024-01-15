@@ -9,6 +9,7 @@ export * from './lib/pages/applications/applications';
 export * from './lib/pages/logs/logs';
 export * from './lib/pages/user-management/users/users';
 export * from './lib/pages/user-management/users/dialog/user-dialog';
+export * from './lib/proto/FromServer';
 export * from './lib/services/IGraphQL'
 export * from './lib/services/auth.service'
 export * from './lib/services/proto.service'

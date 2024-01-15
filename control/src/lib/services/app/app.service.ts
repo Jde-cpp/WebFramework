@@ -6,8 +6,8 @@ import {Instance} from './app.service.types'
 import { IErrorService } from '../error/IErrorService';
 
 import { ProtoService, IError } from '../proto.service';
-import * as AppFromServer from 'jde-cpp/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
-import * as AppFromClient from 'jde-cpp/AppFromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
+import * as AppFromServer from '../../proto/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import * as AppFromClient from '../../proto/AppFromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
 import { IAuth,IEnvironment } from 'jde-material';
 import { IGraphQL } from '../IGraphQL';
 
@@ -27,7 +27,12 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 	constructor( http: HttpClient, @Inject('IEnvironment') private environment: IEnvironment, @Inject('IErrorService') private cnsle: IErrorService )
 	{
 		super( FromClient.Transmission, http );
-		super.instances = [environment.get('applicationServer')];
+		let appServer = environment.get<Instance>( 'applicationServer' );
+		if( !appServer ){
+			console.log( "No Application Server set in environment" );
+			appServer = {restPort:1999, websocketPort:1967, host:"localhost"};
+		}
+		super.instances = [appServer];
 	}
 	ping():Promise<string>
 	{

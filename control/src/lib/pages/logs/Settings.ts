@@ -1,7 +1,7 @@
 import {Sort} from '@angular/material/sort';
 import { IAssignable } from '../../utilities/settings';
 
-import * as AppFromServer from 'jde-cpp/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import * as AppFromServer from '../../proto/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
 
 export class LogSettings implements IAssignable<LogSettings>
 {

@@ -1,7 +1,7 @@
 //import { LogEntry } from "./LogEntry";
 import { TraceEntry } from "./TraceEntry";
 
-import * as AppFromClient from 'jde-cpp/FromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
+import * as AppFromClient from '../../proto/AppFromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
 
 export class ApplicationStrings
 {

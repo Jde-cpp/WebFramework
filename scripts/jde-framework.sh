@@ -1,6 +1,6 @@
 #!/bin/bash
-scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-source $scriptDir/../../Framework/common.sh
+libRootDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
+source $libRootDir/../../Framework/scripts/common.sh
 pushd `pwd` > /dev/null;
 
 if [ ! -d node_modules/@material-ui/core ]; then npm install @material-ui/core --save; fi;
