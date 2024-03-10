@@ -1,11 +1,8 @@
 #!/bin/bash
-function create
-{
+function create {
 	dir=$1;
 	local -n files=$2;
 	for i in "${!files[@]}"; do
-		echo `pwd`;
-		echo ln -s $dir/$i.proto .;
 		ln -s $dir/$i.proto .;
 	done;
 	for i in "${!files[@]}"; do
