@@ -20,33 +20,28 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	{}
 
 	ngOnDestroy(){ this.profile.save(); }
-	ngOnInit()
-	{
+	ngOnInit(){
 		let paths = [];
 		for( let x = this.route; x.routeConfig?.data && x.routeConfig?.data["name"]; x = x.parent )
 			paths.push( x.routeConfig.data['name'] );
 
 		this.componentPageTitle.title = paths[0];//.join( " | " ); 	//this.componentPageTitle.title ? `${this.componentPageTitle.title} | ${title}` : title;
 	};
-	async ngAfterViewInit()
-	{
+	async ngAfterViewInit(){
 		this.profile = new Settings<PageSettings>( PageSettings, this.type, this.profileService );
 		await this.profile.loadedPromise;
-		try
-		{
+		try{
 			//await this.authorizationService.login();
 			const data = await this.graphQL.query<IQueryResult<any>>( `{ __type(name: "${this.type}") { fields { name type { name kind ofType{name kind} } } } }` );
 			this.schema = new Table( data.__type );
 			this.load();
 		}
-		catch( e )
-		{
+		catch( e ){
 			console.log( e );
 			this.cnsl.show( e );
 		}
 	}
-	async load()
-	{
+	async load(){
 		const order = ["name", "description","created", "updated", "deleted", "target"];
 		const sort = ( x:Field,y:Field )=>{const yIndex = order.indexOf( y.name )+1; const xIndex = order.indexOf( x.name )+1; return ( xIndex || order.length )-( yIndex || order.length ); }
 		this.displayedColumns = this.schema.fields.filter( (x)=>x.displayed ).sort( sort );
@@ -54,49 +49,42 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 		//let stringColumnNames = this.displayedColumns.filter( (x)=>(x.type.underlyingKind==FieldKind.SCALAR && x.type.underlyingName=="String") || x.type.underlyingKind==FieldKind.ENUM ).map( (x)=>x.name );
 		let columns = this.schema.fields.filter( (x)=>x.type.kind!=FieldKind.LIST ).map( (x)=>x.name ).join( " " );
 		let ql = `query{ ${this.fetchName} { ${columns} } }`;
-		try
-		{
+		try{
 			let d = await this.graphQL.query( ql );
 			this.data = d[this.fetchName];
 			this.viewPromise = Promise.resolve(true);
 		}
-		catch( e )
-		{
+		catch( e ){
 			this.cnsl.show( e );
 			debugger;
 		}
 	}
-	selectionChange( $event:any )
-	{
+	selectionChange( $event:any ){
 		this.selection = $event;
 	}
-	sortData( options:Sort )
-	{
+	sortData( options:Sort ){
 		const values = this.data.slice();
 		const multiplier = options.direction === 'asc' ? 1 : -1;
 		const name = options.active;
-		this.data = values.sort((a, b) =>
-		{
+		this.data = values.sort((a, b) =>{
 			let lessThan = a[name]<b[name];
 			return (lessThan ? -1 : 1)*multiplier;
 		});
-		debugger;
 		this._table.renderRows();
 	}
-	edit()
-	{
+
+	edit(){
 		if( this.selection.deleted )
 			this.graphQL.query( `{ mutation { restore${this.type}("id":${this.selection.id}) } }` ).then( ()=>this.selection.deleted=null ).catch( (e)=>console.log(e) );
 		else
 			this.router.navigate( ["settings", this.fetchName, this.selection.target] );
 	}
-	insert()
-	{
+
+	insert(){
 		this.router.navigate( ["settings", this.fetchName, '$new'] );
 	}
 
-	delete()
-	{
+	delete(){
 		const purge = this.selection.deleted!=null;
 		const type = purge ? "purge" : "delete";
 		const next = purge ? ()=>this.load() : ()=>
@@ -136,8 +124,7 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	}
 }
 
-class PageSettings
-{
+class PageSettings{
 	assign( value:PageSettings ){ this.sort = value.sort; this.showDeleted = value.showDeleted; }
 	sort:Sort = {active: "name", direction: "asc"};
 	showDeleted:boolean = false;
