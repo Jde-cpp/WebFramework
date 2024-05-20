@@ -95,8 +95,8 @@ export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy
 	@Input() dataSource:MatTableDataSource<any>;
 	@Input() selections:SelectionModel<any>;
 	@Input() displayedColumns:Field[]//{ return this.schema.fields.filter( (x)=>x.displayed ); }
-	@Input() set showDeleted(x)
-	{
+	@Input() set showDeleted(x){
+		let scn = this.stringColumnNames;
 		this.#showDeleted=x;
 		let field = this.displayedColumns.find( (c)=>c.name=="deleted" );
 		if( field )

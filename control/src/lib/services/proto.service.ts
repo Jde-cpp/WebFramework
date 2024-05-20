@@ -74,7 +74,6 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 	async InitWait():Promise<void>{
 		let p = new Promise<void>( (resolve,reject)=>this.#initCallbacks.push({resolve:resolve,reject:reject}) );
 		await p;
-		console.log("InitWait done");
 	}
 	target( suffix:string ){ return `${this.restUrl}/${suffix}` }
 
@@ -198,8 +197,8 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 
 	protected authorizationService:IAuth;
 	protected backlog:Transmission[] = [];
-	protected log = { requests:true, results:true, restRequests:true, restResults:true };
-	protected sessionId:string;
+	protected log = { requests:true, results:true, restRequests:false, restResults:false };
+	protected get sessionId(){ return localStorage.getItem("sessionId"); } protected set sessionId(x){ localStorage.setItem("sessionId",x); }
 	get instances(){return this.#instances;} set instances(x){
 		this.#instances = x;
 		for( let callback of this.#initCallbacks )

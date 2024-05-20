@@ -13,8 +13,12 @@ npm list | grep protobufjs &> /dev/null;
 if [ $? -ne 0 ]; then
 	echo installing protobufjs
 	npm install protobufjs
-	npm install protobufjs-cli
+else
+	echo protobufjs already installed
 fi;
+npm list | grep protobufjs-cli &> /dev/null;
+if [ $? -ne 0 ]; then npm install protobufjs-cli; fi;
+
 cd projects/jde-framework/src/lib;
 moveToDir proto;
 declare -A commonFiles;

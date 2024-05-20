@@ -20,7 +20,7 @@
 	</ng-container>
 	<ng-container [matColumnDef]="column" *ngFor="let column of objectColumnNames">
 		<mat-header-cell mat-header-cell *matHeaderCellDef> {{column}} </mat-header-cell>
-		<mat-cell *matCellDef="let element"> {{element[column].name}} </mat-cell>
+		<mat-cell *matCellDef="let element"> {{element[column]?.name}} </mat-cell>
 	</ng-container>
 	<ng-container [matColumnDef]="column" *ngFor="let column of listColumnNames">
 		<mat-header-cell mat-header-cell *matHeaderCellDef> {{column}} </mat-header-cell>

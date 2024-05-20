@@ -21,6 +21,8 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 
 	ngOnDestroy(){ this.profile.save(); }
 	ngOnInit(){
+		if( this.route.routeConfig?.data )
+			this.excludedColumns = this.route.routeConfig.data["excludedColumns"];
 		let paths = [];
 		for( let x = this.route; x.routeConfig?.data && x.routeConfig?.data["name"]; x = x.parent )
 			paths.push( x.routeConfig.data['name'] );
@@ -44,10 +46,10 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	async load(){
 		const order = ["name", "description","created", "updated", "deleted", "target"];
 		const sort = ( x:Field,y:Field )=>{const yIndex = order.indexOf( y.name )+1; const xIndex = order.indexOf( x.name )+1; return ( xIndex || order.length )-( yIndex || order.length ); }
-		this.displayedColumns = this.schema.fields.filter( (x)=>x.displayed ).sort( sort );
+		this.displayedColumns = this.schema.fields.filter( (x)=>x.displayed && !this.excludedColumns?.includes(x.name) ).sort( sort );
 		//let objectColumnNames = this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.OBJECT ).map( (x)=>x.name );
 		//let stringColumnNames = this.displayedColumns.filter( (x)=>(x.type.underlyingKind==FieldKind.SCALAR && x.type.underlyingName=="String") || x.type.underlyingKind==FieldKind.ENUM ).map( (x)=>x.name );
-		let columns = this.schema.fields.filter( (x)=>x.type.kind!=FieldKind.LIST ).map( (x)=>x.name ).join( " " );
+		let columns = this.schema.fields.filter( (x)=>x.type.kind!=FieldKind.LIST && !this.excludedColumns?.includes(x.name) ).map( (x)=>x.name ).join( " " );
 		let ql = `query{ ${this.fetchName} { ${columns} } }`;
 		try{
 			let d = await this.graphQL.query( ql );
@@ -105,6 +107,7 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	@ViewChild('mainTable',{static: false}) _table:MatTable<any>;
 
 	data;
+	excludedColumns:string[];
 	get name():string{ return this.routeConfig.data['name']; }
 	get fetchName():string{ return this.routeConfig.path; }
 	profile:Settings<PageSettings>;

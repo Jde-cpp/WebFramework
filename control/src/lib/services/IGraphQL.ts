@@ -1,16 +1,14 @@
 import { MetaObject } from "../utilities/JsonUtils";
 
 
-export interface IGraphQL
-{
+export interface IGraphQL{
 	query<T>( ql: string ):Promise<T>;
 	schema( names:string[] ):Promise<Table[]>;
 	mutations():Promise<Mutation[]>;
 }
 
 //https://graphql.org/learn/introspection/
-export enum FieldKind
-{
+export enum FieldKind{
 	SCALAR=0,
 	OBJECT=1,
 	INTERFACE=2,
@@ -20,40 +18,31 @@ export enum FieldKind
 	LIST=6,
 	NON_NULL=7
 }
-export class QLSchema
-{
-	constructor( j )
-	{
+export class QLSchema{
+	constructor( j ){
 		this.name = j.name;
 	}
 	name:string;
 }
-export class OfType extends QLSchema
-{
-	constructor( j )
-	{
+export class OfType extends QLSchema{
+	constructor( j ){
 		super( j );
-		this.kind = j.kind;
-		//this.kind = FieldKind.UNION;
+		this.kind = typeof j.kind==="string" ? FieldKind[j.kind] : j.kind;
 	}
 	kind:FieldKind;
 }
-export class FieldType extends OfType
-{
-	constructor( j )
-	{
+export class FieldType extends OfType{
+	constructor( j ){
 		super( j )
-		this.ofType = j.ofType;
+		this.ofType = j.ofType ? new OfType( j.ofType ) : null;
 	}
 	get underlyingKind():FieldKind{ return this.ofType?.kind ?? this.kind; }
 	get underlyingName():string{ return this.ofType?.name ?? this.name; }
 	get underlyingVariableName():string{ return this.underlyingName.charAt(0).toLowerCase()+this.underlyingName.slice(1) ; }
 	ofType:OfType;
 }
-export class Field extends QLSchema
-{
-	constructor( j )
-	{
+export class Field extends QLSchema{
+	constructor( j ){
 		super( j )
 		this.type = j.type ? new FieldType( j.type ) : undefined;
 	}
@@ -62,16 +51,13 @@ export class Field extends QLSchema
 
 	type:FieldType;
 }
-export class Table extends MetaObject
-{
-	constructor( j )
-	{
+export class Table extends MetaObject{
+	constructor( j ){
 		super( j.name );
 		//this.name = ty;
 		j.fields.forEach( (x)=>this.fields.push( new Field(x) ) );
 	}
-	get columns():string
-	{
+	get columns():string{
 		var result = '';
 		for( const column of this.nonListFields )
 			result += column.type.underlyingKind==FieldKind.OBJECT ? `${column.type.underlyingVariableName}{ id name } ` : `${column.name} `;
@@ -88,24 +74,20 @@ export class Table extends MetaObject
 	subType:MetaObject;
 }
 
-export class Arg
-{
+export class Arg{
 	name:string;
 	defaultValue:string;
 	type:OfType;
 }
 
-export class Mutation extends QLSchema
-{
+export class Mutation extends QLSchema{
 	args:Arg[];
 }
-export interface IEnum
-{
+export interface IEnum{
 	id:number;
 	name:string;
 }
 
-export interface IQueryResult<T>
-{
+export interface IQueryResult<T>{
 	__type:Array<T>;
 }

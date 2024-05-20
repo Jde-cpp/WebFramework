@@ -5,6 +5,7 @@ export * from './lib/pages/GraphQL/links/links';
 export * from './lib/pages/GraphQL/table/table';
 export * from './lib/pages/GraphQL/select-dialog/select-dialog';
 
+export * from './lib/pages/authorization/login-page/login-page';
 export * from './lib/pages/applications/applications';
 export * from './lib/pages/logs/logs';
 export * from './lib/pages/user-management/users/users';
