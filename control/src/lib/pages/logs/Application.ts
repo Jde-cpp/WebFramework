@@ -1,55 +1,45 @@
 //import { LogEntry } from "./LogEntry";
 import { TraceEntry } from "./TraceEntry";
 
-import * as AppFromClient from '../../proto/AppFromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
+import * as AppFromClient from '../../proto/App.FromServer'; import FromServer = AppFromClient.Jde.App.Proto.FromServer;
+import * as AppCommon from '../../proto/App'; import App = AppCommon.Jde.App.Proto;
 
-export class ApplicationStrings
-{
-	constructor( public id:number )
+export class ApplicationStrings{
+	constructor()
 	{}
-	requests( entry:TraceEntry ):FromClient.RequestStrings
+	requests( entry:TraceEntry ):App.StringPKs
 	{
-		var requests = new FromClient.RequestStrings();
-		if( !this.messages.has(entry.messageId) )
-		{
-			requests.values.push( new FromClient.RequestAppString({applicationId:this.id, value: entry.messageId, type:FromClient.EStringRequest.MessageString}) );
+		var request = new App.StringPKs();
+		if( !this.messages.has(entry.messageId) ){
+			request.messages.push( entry.messageId );
 			this.messages.set( entry.messageId, null );
 		}
-		if( entry.fileId && !this.files.has(entry.fileId) )
-		{
-			requests.values.push( new FromClient.RequestAppString({applicationId:this.id, value: entry.fileId, type:FromClient.EStringRequest.File}) );
+		if( entry.fileId && !this.files.has(entry.fileId) ){
+			request.files.push( entry.fileId );
 			this.files.set( entry.fileId, null );
 		}
-		if( entry.functionId && !this.functions.has(entry.functionId) )
-		{
-			requests.values.push( new FromClient.RequestAppString({applicationId:this.id, value: entry.functionId, type:FromClient.EStringRequest.Function}) );
+		if( entry.functionId && !this.functions.has(entry.functionId) ){
+			request.functions.push( entry.functionId );
 			this.functions.set( entry.functionId, null );
 		}
-		if( entry.userId && !this.users.has(entry.userId) )
-		{
-			requests.values.push( new FromClient.RequestAppString({applicationId:this.id, value: entry.userId, type:FromClient.EStringRequest.User}) );
+		if( entry.userId && !this.users.has(entry.userId) ){
+			request.userPKs.push( entry.userId );
 			this.users.set( entry.userId, null );
 		}
-		return requests;
+		return request;
 	}
 
-	set( type:FromClient.EStringRequest, id:number, value:string )
-	{
-		if( type==FromClient.EStringRequest.MessageString )
-			this.messages.set( id, value );
-		else if( type==FromClient.EStringRequest.File )
-			this.files.set( id, value );
-		else if( type==FromClient.EStringRequest.Function )
-			this.functions.set( id, value );
-		else if( type==FromClient.EStringRequest.User )
-			this.users.set( id, value );
+	set( strings:FromServer.Strings ){
+		Object.entries( strings.messages ).forEach( ([id,v])=>this.messages.set( Number(id), v ) );
+		Object.entries( strings.files ).forEach( ([id,v])=>this.files.set( Number(id), v ) );
+		Object.entries( strings.functions ).forEach( ([id,v])=>this.functions.set( Number(id), v ) );
+		Object.entries( strings.userTargets ).forEach( ([id,v])=>this.users.set( Number(id), v ) );
 	}
+
 	files:Map<number, string> = new Map<number, string>();
 	functions:Map<number, string> = new Map<number, string>();
 	messages:Map<number, string> = new Map<number, string>();
 	users:Map<number, string> = new Map<number, string>();
-
-	//static instances:Map<string,ApplicationString> = new Map<string,ApplicationString>();
 }
 /*
 export class ApplicationInstance

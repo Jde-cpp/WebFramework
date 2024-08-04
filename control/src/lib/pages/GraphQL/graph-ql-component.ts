@@ -10,13 +10,12 @@ import {IGraphQL, Table, FieldKind, Field, IQueryResult}  from '../../services/I
 import {Settings} from '../../utilities/settings'
 
 
-import { ComponentPageTitle, IAuth } from 'jde-material';
+import { ComponentPageTitle } from 'jde-material';
 import { Subject } from 'rxjs';
 
 @Component( {selector: 'graph-ql-component.main-content.mat-drawer-container.my-content', styleUrls: ['graph-ql-component.scss'], templateUrl: './graph-ql-component.html'} )
-export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
-{
-	constructor( private route: ActivatedRoute, private router:Router, private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsl: IErrorService, @Inject('IAuth') public authorizationService: IAuth )
+export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy{
+	constructor( private route: ActivatedRoute, private router:Router, private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsl: IErrorService )
 	{}
 
 	ngOnDestroy(){ this.profile.save(); }
@@ -34,7 +33,7 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 		await this.profile.loadedPromise;
 		try{
 			//await this.authorizationService.login();
-			const data = await this.graphQL.query<IQueryResult<any>>( `{ __type(name: "${this.type}") { fields { name type { name kind ofType{name kind} } } } }` );
+			const data = await this.graphQL.query<IQueryResult<any>>( `__type(name: "${this.type}") { fields { name type { name kind ofType{name kind} } } }` );
 			this.schema = new Table( data.__type );
 			this.load();
 		}
@@ -50,7 +49,7 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 		//let objectColumnNames = this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.OBJECT ).map( (x)=>x.name );
 		//let stringColumnNames = this.displayedColumns.filter( (x)=>(x.type.underlyingKind==FieldKind.SCALAR && x.type.underlyingName=="String") || x.type.underlyingKind==FieldKind.ENUM ).map( (x)=>x.name );
 		let columns = this.schema.fields.filter( (x)=>x.type.kind!=FieldKind.LIST && !this.excludedColumns?.includes(x.name) ).map( (x)=>x.name ).join( " " );
-		let ql = `query{ ${this.fetchName} { ${columns} } }`;
+		let ql = `${this.fetchName} { ${columns} }`;
 		try{
 			let d = await this.graphQL.query( ql );
 			this.data = d[this.fetchName];
@@ -77,7 +76,7 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 
 	edit(){
 		if( this.selection.deleted )
-			this.graphQL.query( `{ mutation { restore${this.type}("id":${this.selection.id}) } }` ).then( ()=>this.selection.deleted=null ).catch( (e)=>console.log(e) );
+			this.graphQL.mutation( `restore${this.type}("id":${this.selection.id})` ).then( ()=>this.selection.deleted=null ).catch( (e)=>console.log(e) );
 		else
 			this.router.navigate( ["settings", this.fetchName, this.selection.target] );
 	}
@@ -96,7 +95,7 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 				this.selection = null;
 		}
 
-		this.graphQL.query(`{ mutation { ${type}${this.type}(\"id\":${this.selection.id}) } }`).then( next ).catch( (e)=>{  this.cnsl.error(e.message); console.error( JSON.stringify(e) ); } );
+		this.graphQL.mutation(`${type}${this.type}(\"id\":${this.selection.id})`).then( next ).catch( (e)=>{  this.cnsl.error(e.message); console.error( JSON.stringify(e) ); } );
 	}
 
 	get haveSelection(){ return !!this.selection; }

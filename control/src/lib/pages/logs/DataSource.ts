@@ -4,7 +4,8 @@ import { TraceEntry } from './TraceEntry';
 import { Subject } from 'rxjs';
 import {EventEmitter} from '@angular/core';
 
-import * as AppFromServer from '../../proto/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import * as AppFromServer from '../../proto/App.FromServer'; import FromServer = AppFromServer.Jde.App.Proto.FromServer;
+import * as CommonProto from '../../proto/Common'; import Common = CommonProto.Jde.Proto;
 export class PageStats{ constructor( public length?:number, public startIndex?:number ){} };
 
 export class DataSource
@@ -158,7 +159,7 @@ export class DataSource
 		if( this.observable )
 			this.observable.next( values );
 	}
-	filterData( messageIds:number[], filter2:string, index:number, level:FromServer.ELogLevel ):PageStats
+	filterData( messageIds:number[], filter2:string, index:number, level:Common.ELogLevel ):PageStats
 	{
 		const filter = filter2 ? filter2.trim().toLowerCase() : null;
 		//let visibleData:TraceEntry[] = [];

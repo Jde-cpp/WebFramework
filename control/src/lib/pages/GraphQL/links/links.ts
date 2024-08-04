@@ -75,7 +75,7 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 	{
 		this.viewPromise = null;
 		const valueMember = this.schema.objectCollectionName;
-		let ql = `query{ ${this.parentSelect}(filter:{ id:{eq:${this.parent.id}}}){ ${valueMember}{${this.schema.columns}} } }`;
+		let ql = `${this.parentSelect}(filter:{ id:{eq:${this.parent.id}}}){ ${valueMember}{${this.schema.columns}} }`;
 		let data = await this.graphQL.query( ql );
 		this.parent[valueMember].length=0;
 		data[this.parentSelect][valueMember].forEach( x => {this.parent[valueMember].push(x);} );
@@ -111,15 +111,15 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 	}
 	removeLink()
 	{
-		let ql = `{mutation{remove${this.mutation}("input":{ "${this.parentTypeField}": ${this.parent.id}, `;
+		let ql = `{remove${this.mutation}("input":{ "${this.parentTypeField}": ${this.parent.id}, `;
 		if( this.selection.id )
-			ql+=`"${new MetaObject(this.schema.typeName).singular}Id": ${this.selection.id}} ) } }`;
+			ql+=`"${new MetaObject(this.schema.typeName).singular}Id": ${this.selection.id}} ) }`;
 		else if( this.selection.target )
-			ql+=`"target": "${this.selection.target}" })}}`;
+			ql+=`"target": "${this.selection.target}" })}`;
 		else
-			ql+=`"name": "${this.selection.name}" })}}`;
+			ql+=`"name": "${this.selection.name}" })}`;
 
-		this.graphQL.query( ql ).then( (x)=>
+		this.graphQL.mutation( ql ).then( (x)=>
 		{
 			this.selection = null;
 			this.load();

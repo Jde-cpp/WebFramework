@@ -23,7 +23,7 @@ import { GraphQLComponent } from './pages/GraphQL/graph-ql-component';
 import { GraphQLLinkComponent } from './pages/GraphQL/links/links';
 import { GraphQLProperties } from './pages/GraphQL/properties/properties';
 import { GraphQLTable } from './pages/GraphQL/table/table';
-import {EditDialog} from './pages/applications/applications'
+//import {EditDialog} from './pages/applications/applications'
 import {SelectDialog} from './pages/GraphQL/select-dialog/select-dialog';
 import { Applications } from './pages/applications/applications';
 import { LogsComponent } from './pages/logs/logs';
@@ -33,7 +33,7 @@ import { SeverityPickerModule } from './shared/severity-picker/severity-picker';
 
 @NgModule({
   	declarations: [
-		EditDialog, SelectDialog, Applications, LogsComponent,
+		/*EditDialog,*/ SelectDialog, Applications, LogsComponent,
 		GraphQLTable, GraphQLComponent, GraphQLDetailComponent, GraphQLLinkComponent, GraphQLProperties,
 		UserComponent, UserEntryDialog ],
   	imports: [CommonModule, SeverityPickerModule, MatAutocompleteModule,

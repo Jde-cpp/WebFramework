@@ -7,9 +7,9 @@ import { MatIconRegistry } from "@angular/material/icon";
 import { ComponentPageTitle } from 'jde-material';
 import {AppService} from '../../services/app/app.service';
 import {Observable, Subscription} from 'rxjs';
-import {Application} from '../../services/app/application';
+import {App, AppStatus} from '../../services/app/application';
 import {IErrorService} from '../../services/error/IErrorService';
-import * as AppFromServer from '../../proto/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import * as AppFromServer from '../../proto/App.FromServer'; import FromServer = AppFromServer.Jde.App.Proto.FromServer;
 
 @Component({
   selector: 'applications',
@@ -32,9 +32,9 @@ export class Applications implements OnInit, OnDestroy
 		this.applications.length = 0;
 		try{
 			//await this.appService.custom( 99, new TextEncoder().encode("adsf") );
-			const applications = await this.appService.getApplications();
+			const applications = await this.appService.queryArray<App>( "applications{id name dbLogLevel fileLogLevel}" );
 			for( let app of applications )
-				this.applications.push( new Application(app) );
+				this.applications.push( new AppStatus(app) );
 			this.subscription = this.appService.statuses();
 			this.subscription.subscribe( apps => {this.onStatus(apps);} );
 		}
@@ -43,74 +43,65 @@ export class Applications implements OnInit, OnDestroy
 		}
 	}
 
-	onStatus = ( statuses:FromServer.IStatuses ):void =>{
-		this.mainOn = true;
-		for( const status of statuses.values )
-		{
-			let existing = this.applications.find( app=>app.id==status.applicationId );
-			if( existing )
-				existing.status = status;
-			else
-			console.warn( `could not find app ${status.applicationId}` );
-		}
+	onStatus = ( status:FromServer.IStatus ):void =>{
+	this.mainOn = true;
+		let existing = this.applications.find( app=>app.id==status.applicationId );
+		if( existing )
+			existing.status = status;
+		else
+		console.warn( `could not find app ${status.applicationId}` );
 	}
 
 	ngOnDestroy(){
 		this.appService.statusUnsubscribe( this.subscription );
 	}
 
-	togglePower( app:Application ){
+	togglePower( app:AppStatus ){
 		if( app.on )
-			this.appService.request( app.instanceId, -2 );//FromClient.ERequest.Power | FromClient.ERequest.Negate
-		else{
+			this.appService.mutation( `stopApplicationInstance(id:${app.instanceId})` );
+		else
 			this.cnsl.error( "applicationService.start failed", null );
-			/*this.applicationService.start( app.name ).subscribe(
-			{
-				next:  response=>{console.log(`applicationService.start returned '${response}'`);},
-				error:  e=>{ this.cnsl.error("applicationService.start failed", e); }
-			});*/
-		}
 	}
 
-	edit( app:Application ){
+/*	edit( app:AppStatus ){
 		const dialogRef = this.dialog.open(EditDialog, {
 			width: '600px',
 			data: {app: app}
 		});
-	}
-	applications:Application[]=[];
+	}*/
+	applications:AppStatus[]=[];
 	mainOn:boolean=false;
-	private subscription:Observable<FromServer.IStatuses>;
+	private subscription:Observable<FromServer.IStatus>;
 }
 
-interface DialogData{
-	app: Application;
-}
+// interface DialogData{
+// 	app: Application;
+// }
 
-interface LogOption{
-	name:string;
-	value:FromServer.ELogLevel;
-}
+// interface LogOption{
+// 	name:string;
+// 	value:FromServer.ELogLevel;
+// }
 
-@Component( { selector: 'missing-dates-dialog',	templateUrl: 'edit-dialog.html'} )
-export class EditDialog{
-	constructor( public dialogRef:MatDialogRef<EditDialog>, @Inject(MAT_DIALOG_DATA) public data:DialogData, private appService:AppService ){
-		this.dbLevel = this.app.status?.dbLogLevel;
-		this.clientLevel = this.app.status?.fileLogLevel;
-	}
+// @Component( { selector: 'missing-dates-dialog',	templateUrl: 'edit-dialog.html'} )
+// export class EditDialog{
+// 	constructor( public dialogRef:MatDialogRef<EditDialog>, @Inject(MAT_DIALOG_DATA) public data:DialogData, private appService:AppService ){
+// 		this.dbLevel = this.app.status?.dbLogLevel;
+// 		this.clientLevel = this.app.status?.fileLogLevel;
+// 	}
 
-	onCancelClick(): void{
-	  this.dialogRef.close();
-	}
+// 	onCancelClick(): void{
+// 	  this.dialogRef.close();
+// 	}
 
-	onSaveClick():void{
-		this.saving = true;
-		this.appService.updateLogLevel( this.app.instanceId, this.clientLevel, this.dbLevel );
-		this.dialogRef.close();
-	}
-	dbLevel:FromServer.ELogLevel;
-	clientLevel:FromServer.ELogLevel;
-	options:LogOption[]=[{name:'Trace',value:FromServer.ELogLevel.Trace},{name:'Debug',value:FromServer.ELogLevel.Debug}, {name:'Info',value:FromServer.ELogLevel.Information},{name:'Warning',value:FromServer.ELogLevel.Warning},{name:'Error',value:FromServer.ELogLevel.Error},{name:'Critical',value:FromServer.ELogLevel.Critical},{name:'None',value:FromServer.ELogLevel.None}]
-	get app():Application{ return this.data.app; }
-	saving:boolean=false;
-}
+// 	onSaveClick():void{
+// 		this.saving = true;
+// 		this.appService.updateLogLevel( this.app.instanceId, this.clientLevel, this.dbLevel );
+// 		this.dialogRef.close();
+// 	}
+// 	dbLevel:FromServer.ELogLevel;
+// 	clientLevel:FromServer.ELogLevel;
+// 	options:LogOption[]=[{name:'Trace',value:FromServer.ELogLevel.Trace},{name:'Debug',value:FromServer.ELogLevel.Debug}, {name:'Info',value:FromServer.ELogLevel.Information},{name:'Warning',value:FromServer.ELogLevel.Warning},{name:'Error',value:FromServer.ELogLevel.Error},{name:'Critical',value:FromServer.ELogLevel.Critical},{name:'None',value:FromServer.ELogLevel.None}]
+// 	get app():Application{ return this.data.app; }
+// 	saving:boolean=false;
+// }

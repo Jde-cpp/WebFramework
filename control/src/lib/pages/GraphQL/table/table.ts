@@ -54,7 +54,7 @@ export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy
 			filter = "{id: {ne: 0}}";
 		else if( schema.fields.find((x)=>x.name=="deleted") )
 			filter = "{deleted: {eq:null}}";
-		return {query: `query{ ${query}(filter: ${filter}) {${selectFields.join(" ")}} }`, displayedColumns: displayedColumns };
+		return {query: `${query}(filter: ${filter}) {${selectFields.join(" ")}}`, displayedColumns: displayedColumns };
 	}
 	checkboxLabel( row?: any ): string
 	{

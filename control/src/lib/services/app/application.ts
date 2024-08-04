@@ -1,19 +1,31 @@
 import {ProtoUtilities} from '../../utilities/protoUtilities'
 import { DatePipe } from '@angular/common';
 
-import * as AppFromServer from '../../proto/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import * as AppFromServer from '../../proto/App.FromServer'; import FromServer = AppFromServer.Jde.App.Proto.FromServer;
+import * as CommonProto from '../../proto/Common'; import ELogLevel = CommonProto.Jde.Proto.ELogLevel;
 
-export class Application
-{
-	constructor( private app:FromServer.IApplication )
-	{}
+export interface App{
+	id:number;
+	name:string;
+	logLevelDefaultDb:ELogLevel;
+	logLevelDefaultFile:ELogLevel;
+}
+
+export class AppStatus{
+	constructor( app:App ){
+		this.id = app.id;
+		this.name = app.name;
+		this.logLevelDefaultDb = app.logLevelDefaultDb;
+		this.logLevelDefaultFile = app.logLevelDefaultFile;
+	}
+	id:number;
+	logLevelDefaultDb:ELogLevel;
+	logLevelDefaultFile:ELogLevel;
+	name:string;
 	status:FromServer.IStatus
-	get id():number{return this.app.id};
-	get name():string{return this.app.name};
 	get instanceId():number{ return ProtoUtilities.toNumber(this.status ? this.status.instanceId : 0); }
-	get startTime():Date|null{return !this.status || !this.status.startTime ? null : new Date(this.status.startTime*1000);}
-	get startTimeString():string
-	{
+	get startTime():Date|null{ return ProtoUtilities.toDate(this.status?.startTime); }
+	get startTimeString():string{
 		if( !this.startTime )
 			return "Stopped";
 		const startTime = this.startTime;
@@ -27,12 +39,10 @@ export class Application
 		return result;
 	}
 	get memory():number{ return this.status.memory ? ProtoUtilities.toNumber(this.status.memory) : 0; }
-	get memoryString():string
-	{
+	get memoryString():string{
 		var value = this.memory;
 		var suffix = "";
-		const test = function( boundry, boundrySuffix )
-		{
+		const test = function( boundry, boundrySuffix ){
 			const overBoundry = value>boundry;
 			if( overBoundry )
 			{
@@ -46,12 +56,9 @@ export class Application
 				test( Math.pow(2,10), "KB" );
 		return Math.round(value).toString()+suffix;
 	}
-	get dbLevel():string{return FromServer.ELogLevel[this.status.dbLogLevel];}
-	get clientLevel():string{return FromServer.ELogLevel[this.status.fileLogLevel];}
 	get description():string[]{return this.status.values;}
 	get on():boolean{return this.startTime!=null && this.startTime.getTime()!=0; }
-	get icon():string
-	{
+	get icon():string{
 		var icon="touch_app";
 		if( this.name=="Main" )
 			icon="domain";

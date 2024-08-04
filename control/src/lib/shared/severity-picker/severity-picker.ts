@@ -2,15 +2,15 @@ import {Component,EventEmitter,Input,NgModule,Output} from '@angular/core';
 //import { BrowserModule } from '@angular/platform-browser'
 import { MatFormFieldModule } from '@angular/material/form-field';
 import {MatSelectModule} from '@angular/material/select';
-import * as AppFromServer from '../../proto/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import * as AppFromServer from '../../proto/App.FromServer'; import FromServer = AppFromServer.Jde.App.Proto.FromServer;
+import * as CommonProto from '../../proto/Common'; import Common = CommonProto.Jde.Proto;
 
 @Component({ selector: 'severity-picker', templateUrl: './severity-picker.html' })
-export class SeverityPicker
-{
+export class SeverityPicker{
 	ngOnInit()
 	{
 	}
-	/*onSelectionChange( value:FromServer.ELogLevel )
+	/*onSelectionChange( value:Common.ELogLevel )
 	{
 		if( this.level!=value )
 		{
@@ -18,17 +18,17 @@ export class SeverityPicker
 			this.levelChange.emit( value );
 		}
 	}*/
-	get level(){ return this.#level; } @Input() set level(x){ let emit = this.#level!==undefined; this.#level=x; if( emit )this.levelChange.emit( x ); }   #level:FromServer.ELogLevel;
-	@Output() levelChange = new EventEmitter<FromServer.ELogLevel>();
+	get level(){ return this.#level; } @Input() set level(x){ let emit = this.#level!==undefined; this.#level=x; if( emit )this.levelChange.emit( x ); }   #level:Common.ELogLevel;
+	@Output() levelChange = new EventEmitter<Common.ELogLevel>();
 	@Input() isSelect:boolean=true;
 
-	options:LogOption[]=[{name:'Trace',value:FromServer.ELogLevel.Trace},{name:'Debug',value:FromServer.ELogLevel.Debug}, {name:'Info',value:FromServer.ELogLevel.Information},{name:'Warning',value:FromServer.ELogLevel.Warning},{name:'Error',value:FromServer.ELogLevel.Error},{name:'Critical',value:FromServer.ELogLevel.Critical},{name:'None',value:FromServer.ELogLevel.None}];
+	options:LogOption[]=[{name:'Trace',value:Common.ELogLevel.Trace},{name:'Debug',value:Common.ELogLevel.Debug}, {name:'Info',value:Common.ELogLevel.Information},{name:'Warning',value:Common.ELogLevel.Warning},{name:'Error',value:Common.ELogLevel.Error},{name:'Critical',value:Common.ELogLevel.Critical},{name:'None',value:Common.ELogLevel.NoLog}];
 }
 
 interface LogOption
 {
 	name:string;
-	value:FromServer.ELogLevel;
+	value:Common.ELogLevel;
 }
 
 @NgModule( {exports: [SeverityPicker], declarations: [SeverityPicker], imports:[/*BrowserModule,*/MatFormFieldModule,MatSelectModule]} )

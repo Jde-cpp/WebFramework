@@ -36,8 +36,8 @@ export class UserEntryDialog implements OnDestroy
 
 		if( Object.keys(input).length )
 		{
-			var ql = `{ mutation { ${cmd}User( ${idString} "input": ${JSON.stringify(input)} )${output} } }`;
-			this.graphQL.query( ql ).then( ()=>this.dialogRef.close(this.user) ).catch( (e)=>console.log(e.toString()) ).finally( ()=>this.saving=false );
+			var ql = `{ ${cmd}User( ${idString} "input": ${JSON.stringify(input)} )${output} }`;
+			this.graphQL.mutation( ql ).then( ()=>this.dialogRef.close(this.user) ).catch( (e)=>console.log(e.toString()) ).finally( ()=>this.saving=false );
 		}
 		else
 			this.dialogRef.close( null );

@@ -1,12 +1,11 @@
 import {Sort} from '@angular/material/sort';
 import { IAssignable } from '../../utilities/settings';
 
-import * as AppFromServer from '../../proto/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import * as AppFromServer from '../../proto/App.FromServer'; import FromServer = AppFromServer.Jde.App.Proto.FromServer;
+import * as CommonProto from '../../proto/Common'; import Common = CommonProto.Jde.Proto;
 
-export class LogSettings implements IAssignable<LogSettings>
-{
-	constructor( params:LogSettings=null )
-	{
+export class LogSettings implements IAssignable<LogSettings>{
+	constructor( params:LogSettings=null ){
 		if( !params )
 			return;
 		if( params.sort )
@@ -24,8 +23,7 @@ export class LogSettings implements IAssignable<LogSettings>
 		if( params.limit )
 			this.limit = params.limit;
 	}
-	assign( other: LogSettings )
-	{
+	assign( other: LogSettings ){
 		this.sort = other.sort;
 		this.autoScroll = other.autoScroll;
 		this.applicationId = other.applicationId;
@@ -38,7 +36,7 @@ export class LogSettings implements IAssignable<LogSettings>
 	sort:Sort = {active: "time", direction: "asc"};
 	autoScroll:boolean=true;
 	applicationId;
-	level:FromServer.ELogLevel=FromServer.ELogLevel.Information;
+	level:Common.ELogLevel=Common.ELogLevel.Information;
 	limit:number=5000;
 	hiddenMessages:number[]=[];
 	get start():Date{ return this._start || LogSettings.defaultDate; } set start( value:Date ){ this._start=value==LogSettings.defaultDate ? null : value;} private _start:Date;

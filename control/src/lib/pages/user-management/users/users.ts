@@ -68,7 +68,7 @@ export class UserComponent implements AfterViewInit, OnInit, OnDestroy
 	}
 	load()
 	{
-		this.graphQL.query( 'query{ authenticators{ id name }, users{ id name target description authenticatorId attributes created updated deleted } }' ).then( (data:any)=>
+		this.graphQL.query( 'authenticators{ id name }, users{ id name target description authenticatorId attributes created updated deleted }' ).then( (data:any)=>
 		{
 			for( var x of data.authenticators )
 				this.authenticators.set( x.id, x.name );
@@ -80,7 +80,7 @@ export class UserComponent implements AfterViewInit, OnInit, OnDestroy
 	edit()
 	{
 		if( this.selection.deleted )
-			this.graphQL.query( `{ mutation { restoreUser("id":${this.selection.id}) } }` ).then( ()=>this.selection.deleted=null ).catch( (e)=>console.log(e) );
+			this.graphQL.mutation( `{ restoreUser("id":${this.selection.id}) }` ).then( ()=>this.selection.deleted=null ).catch( (e)=>console.log(e) );
 		else
 			this.dialogOpen( this.selection );
 	}
@@ -106,7 +106,7 @@ export class UserComponent implements AfterViewInit, OnInit, OnDestroy
 		const type = purge ? "purge" : "delete";
 		const next = purge ? ()=>this.load() : ()=>this.selection.deleted = new Date();
 
-		this.graphQL.query(`{ mutation { ${type}User(\"id\":${this.selection.id}) } }`).then( next ).catch( (e)=>{ console.error(e.toString()); } );
+		this.graphQL.mutation(`{ ${type}User(\"id\":${this.selection.id}) }`).then( next ).catch( (e)=>{ console.error(e.toString()); } );
 	}
 
 	get haveSelection(){ return this.selection!==undefined; }

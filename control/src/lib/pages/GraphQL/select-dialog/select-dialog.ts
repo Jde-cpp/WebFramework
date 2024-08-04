@@ -75,7 +75,7 @@ export class SelectDialog implements OnDestroy, AfterViewInit
 	onCancelClick = ()=>this.dialogRef.close( null );
 	onSubmitClick()
 	{
-		var queries = [];
+		var mutations = [];
 		if( this.isFlags )
 		{
 			let names = [];
@@ -84,7 +84,7 @@ export class SelectDialog implements OnDestroy, AfterViewInit
 			//{ mutation{ updateRolePermission("roleId": 9, "permissionId": 1, "input":{"query{ rights(filter: {id: {ne: 0}}) {id name} }": ["Administer","Read","Write"]} ) } }
 			//{ mutation{ updateRolePermission("roleId":{}, "permissionId":{}, "input":{"rights": ["Administer", "Write"]}) } }" );
 			if( names.length!=this.data.selectedIds.length && names.sort().join()!==this.data.selectedIds.sort().join() )
-				queries.push( `{ mutation{ update${this.data.mutation}("${this.data.linkToField}": ${this.data.linkTo}, "${this.data.subToField}": ${this.data.subTo}, "input":{"${this.queryType}": ["${names.join('","')}"]} ) } }` );
+				mutations.push( `{ update${this.data.mutation}("${this.data.linkToField}": ${this.data.linkTo}, "${this.data.subToField}": ${this.data.subTo}, "input":{"${this.queryType}": ["${names.join('","')}"]} ) }` );
 		}
 		else
 		{
@@ -103,20 +103,20 @@ export class SelectDialog implements OnDestroy, AfterViewInit
 				{
 					var childId = this.data.isChildren ? item.id : this.data.linkTo;
 					var parentId = this.data.isChildren ? this.data.linkTo : item.id;
-					queries.push( `{ mutation{ ${op}${this.data.mutation}("input":{ "${this.data.linkToField}": ${this.data.linkTo}, "${this.fkField}": ${item.id}} ) } }` );
+					mutations.push( `{ ${op}${this.data.mutation}("input":{ "${this.data.linkToField}": ${this.data.linkTo}, "${this.fkField}": ${item.id}} ) }` );
 				}
 			}
 		}
-		if( queries.length )
+		if( mutations.length )
 		{
 			let index=0;
-			queries.forEach( async (ql)=>
+			mutations.forEach( async (mutation)=>
 			{
 				try
 				{
-					const y = await this.graphQL.query( ql );  //console.log( `index=${index+1}==${queries.length}` );
-					if( ++index==queries.length )
-						this.dialogRef.close( queries.length );
+					const y = await this.graphQL.mutation( mutation );  //console.log( `index=${index+1}==${queries.length}` );
+					if( ++index==mutations.length )
+						this.dialogRef.close( mutations.length );
 				}
 				catch( e )
 				{

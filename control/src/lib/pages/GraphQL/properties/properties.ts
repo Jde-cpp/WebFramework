@@ -22,7 +22,7 @@ export class GraphQLProperties implements OnInit, AfterViewInit, OnDestroy{
 			for( const field of schema[0].fields.filter((x)=>[FieldKind.OBJECT,FieldKind.LIST].indexOf(x.type.underlyingKind)==-1 && GraphQLProperties.noShowFields.indexOf(x.name)==-1) ){
 				let values:Array<IEnum>;
 				if( field.type.underlyingKind==FieldKind.ENUM ){
-					values = ( await this.graphQL.query<IQueryResult<IEnum>>(`query{ __type(name: "${field.type.name}") { enumValues { id name } } }`) ).__type["enumValues"];
+					values = ( await this.graphQL.query<IQueryResult<IEnum>>(` __type(name: "${field.type.name}") { enumValues { id name } }`) ).__type["enumValues"];
 					if( this.#original[field.name] ){
 						const v = values.find( (x)=>x.name==this.#original[field.name] )?.id;
 						this.clone.set( field.name, v );
@@ -78,7 +78,7 @@ export class GraphQLProperties implements OnInit, AfterViewInit, OnDestroy{
 		}
 		return input;
 	}
-	
+
 	get enableSubmit():boolean{
 		let enable = !this.saving
 			&& this.fields.find( (x)=>!x.nullable && x.type!=InputTypes.Select && (!this.clone.get(x.name) || this.clone.get(x.name).length==0) )==null; //non-null is null
@@ -86,7 +86,7 @@ export class GraphQLProperties implements OnInit, AfterViewInit, OnDestroy{
 			enable = Object.keys( this.mods() ).length>0;
 		return enable;
 	}
-	
+
 	async onSubmitClick(){
 		const update = this.original.id!=null;
 		let idString = update ? `"id":${this.original.id},` : "";
@@ -94,9 +94,9 @@ export class GraphQLProperties implements OnInit, AfterViewInit, OnDestroy{
 		let cmd = update ? "update" : "create";
 		const input = this.mods();
 		if( Object.keys(input).length ){
-			var ql = `{ mutation { ${cmd}${this.type}( ${idString} "input": ${JSON.stringify(input)} )${output} } }`;
+			var ql = `${cmd}${this.type}( ${idString} "input": ${JSON.stringify(input)} )${output}`;
 			try{
-				await this.graphQL.query( ql );
+				await this.graphQL.mutation( ql );
 				this.router.navigate( ['..'], { relativeTo: this.route } );
 				// if( update && this.original.target==this.clone["target"] )
 				// {

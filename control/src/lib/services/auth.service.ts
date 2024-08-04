@@ -1,11 +1,20 @@
 import { Injectable } from '@angular/core';
 import { IAuth } from 'jde-material';
 import { AppService } from './app/app.service';
+import { Observable, Subject } from 'rxjs';
 
 @Injectable()
 export class AuthService implements IAuth{
-	constructor( private app: AppService )
-	{}
+	constructor( private app: AppService ){
+		app.subscribeLoginName().subscribe({
+			next:(login: string) =>{
+				this.subscription.next( login );
+			},
+			error:(error: Error) =>{
+				console.log( error.message );
+				this.subscription.next( "" );
+		}});
+	}
 
 	get enabled():boolean{ return true; }
 
@@ -23,6 +32,10 @@ export class AuthService implements IAuth{
 		if( this.#promises.length==1 )
 			this.callServer( token );
 		return p;
+	}
+	async validateSessionId():Promise<void>{ 
+		const sessionInfo = await this.app.validateSessionId(); 
+		this.subscription.next( sessionInfo ? sessionInfo.domain ? `${sessionInfo.domain}/${sessionInfo.loginName}` : sessionInfo.loginName : "" );
 	}
 	async googleAuthClientId():Promise<string>{
 		if( this.#googleAuthClientId )
@@ -43,18 +56,28 @@ export class AuthService implements IAuth{
 	async callServer( token?:string ){
 		let self = this;
 		try{
-			await this.app.googleLogin( token, this );
+			await this.app.googleLogin( token );
 			this.#loggedIn = true;
 			this.#promises.forEach( x=>x[0]() );
-			this.#promises.length=0;
 		}
 		catch( e ){
-			for( var promise of self.#promises )
-				promise[1]( e );
+			self.#promises.forEach( x=>x[1](e) );
 		}
+		this.#promises.length=0;
 	}
+
+	subscribe():Observable<string>{
+		return this.subscription.asObservable();
+	}	
+	
 	get loggedIn(){return this.#loggedIn;} #loggedIn=false;
+//	get sessionId():string{ return localStorage.getItem("sessionId"); } 
+//	set sessionId(x:string){ 
+//		localStorage.setItem("sessionId",x); 
+//		this.#subscription.next(x);
+//	}
 	idToken:string;
+	protected subscription:Subject<string> = new Subject<string>();
 	#promises:[()=>void,(x:any)=>void][]=[];
 	#googleAuthClientId:string;
 }

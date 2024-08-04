@@ -1,23 +1,25 @@
 import { ProtoUtilities } from '../../utilities/protoUtilities';
-
-import * as AppFromServer from '../../proto/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
 import {ApplicationStrings} from './Application';
+
+import * as AppFromServer from '../../proto/App.FromServer'; import FromServer = AppFromServer.Jde.App.Proto.FromServer;
+import * as CommonProto from '../../proto/Common'; import ELogLevel = CommonProto.Jde.Proto.ELogLevel;
+
 
 export class TraceEntry
 {
-	constructor( trace:FromServer.ITraceMessage, private applicationStrings:ApplicationStrings )
+	constructor( trace:FromServer.ITrace, private applicationStrings:ApplicationStrings )
 	{
 		this.id = ProtoUtilities.toNumber( trace.id );
 		this.instanceId = ProtoUtilities.toNumber( trace.instanceId );
-		this.time = new Date( ProtoUtilities.toNumber(trace.time) );
+		this.time = new Date( ProtoUtilities.toDate(trace.time) );
 		this.level = trace.level;
 		this.messageId = trace.messageId;
 		this.fileId = trace.fileId;
 		this.functionId = trace.functionId;
-		this.lineNumber = trace.lineNumber;
-		this.userId = trace.userId;
+		this.lineNumber = trace.line;
+		this.userId = trace.userPk;
 		this.threadId = ProtoUtilities.toNumber(trace.threadId);
-		for( let variable of trace.variables )
+		for( let variable of trace.args )
 			this.variables.push( variable );
 	}
 	time:Date;
@@ -47,7 +49,7 @@ export class TraceEntry
 
 	id:number;
 	instanceId:number;
-	level:FromServer.ELogLevel;
+	level:ELogLevel;
 	messageId:number;
 	fileId:number;
 	functionId:number;

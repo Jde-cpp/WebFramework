@@ -21,16 +21,18 @@ if [ $? -ne 0 ]; then npm install protobufjs-cli; fi;
 
 cd projects/jde-framework/src/lib;
 moveToDir proto;
-declare -A commonFiles;
-if [ ! -f FromServer.d.ts ] || [ $clean == 1 ]; then commonFiles[FromServer]=from_server_root; fi;
-create $jdeBash/Public/src/web/proto commonFiles;
-echo 'Created common proto files';
+# declare -A commonFiles;
+# if [ ! -f FromServer.d.ts ] || [ $clean == 1 ]; then commonFiles[FromServer]=from_server_root; fi;
+# create $jdeBash/Public/src/web/proto commonFiles;
+# echo 'Created common proto files';
 
 declare -A appFiles;
-if [ ! -f AppFromClient.d.ts ] || [ $clean == 1 ]; then appFiles[AppFromClient]=app_from_client; fi;
-if [ ! -f AppFromServer.d.ts ] || [ $clean == 1 ]; then appFiles[AppFromServer]=app_from_server; fi;
+if [ ! -f App.FromClient.d.ts ] || [ $clean == 1 ]; then appFiles[App.FromClient]=app_from_client; fi;
+if [ ! -f App.FromServer.d.ts ] || [ $clean == 1 ]; then appFiles[App.FromServer]=app_from_server; fi;
+if [ ! -f App.d.ts ] || [ $clean == 1 ]; then appFiles[App]=app; fi;
+if [ ! -f Common.d.ts ] || [ $clean == 1 ]; then appFiles[Common]=common; fi;
 echo 'Creating application proto files';
-create $jdeBash/Public/jde/appServer/proto appFiles;
+create $jdeBash/Public/src/appClient/proto appFiles;
 echo 'Created application proto files';
 
 echo jde-framework-proto.sh complete.

@@ -11,6 +11,7 @@ import {IGraphQL, Table}  from '../../../services/IGraphQL';
 import {IProfile} from '../../../services/profile/IProfile';
 import {Settings} from '../../../utilities/settings';
 import { MetaObject } from '../../../utilities/JsonUtils';
+import { HttpErrorResponse } from '@angular/common/http';
 
 
 
@@ -44,7 +45,7 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 			if( !columns.includes(display) )
 				columns.push( display );
 			//TODO find out why we are querying 2x, this time only for name/target.
-			const ql = `query{ ${this.schema.objectCollectionName}(deleted:null){${columns.join(" ")}} }`;
+			const ql = `${this.schema.objectCollectionName}(deleted:null){${columns.join(" ")}}`;
 			const data = await this.graphQL.query( ql );
 			const results = data[this.schema.objectCollectionName];
 			const siblings = new Map<string,string>();
@@ -60,7 +61,7 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 				this.viewPromise = Promise.resolve( true );
 		}
 		catch( e ){
-			this.cnsle.error( e["message"], e["error"] );
+			this.cnsle.exception( e );
 		}
 	}
 	onNavigationEnd =( val:NavigationEnd )=>{///settings
@@ -86,7 +87,7 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 		if( this.target=="settings" )
 			debugger;
 		const fetch = async ( columns )=>{
-			const ql = `query{ ${this.fetchName}(filter:{target:{ eq:"${this.target}"}}){ ${columns} } }`;
+			const ql = `${this.fetchName}(filter:{target:{ eq:"${this.target}"}}){ ${columns} }`;
 			try{
 				const data = await this.graphQL.query( ql );
 				if( data==null )

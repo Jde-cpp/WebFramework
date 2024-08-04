@@ -1,51 +1,50 @@
 //get googleId on login.
-import { Subject,Observable,firstValueFrom } from 'rxjs';
+import { Subject,Observable,firstValueFrom, tap } from 'rxjs';
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {Instance} from './app.service.types'
 import { IErrorService } from '../error/IErrorService';
 
-import { ProtoService, IError } from '../proto.service';
-import * as AppFromServer from '../../proto/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
-import * as AppFromClient from '../../proto/AppFromClient'; import FromClient = AppFromClient.Jde.ApplicationServer.Web.FromClient;
-import { IAuth,IEnvironment } from 'jde-material';
+import { ETransport, IError, ProtoService, RequestId } from '../proto.service';
+import * as AppFromServer from '../../proto/App.FromServer'; import FromServer = AppFromServer.Jde.App.Proto.FromServer;
+import * as AppFromClient from '../../proto/App.FromClient'; import FromClient = AppFromClient.Jde.App.Proto.FromClient;
+import * as AppCommon from '../../proto/App'; import App = AppCommon.Jde.App.Proto;
+import * as CommonProto from '../../proto/Common'; import ELogLevel = CommonProto.Jde.Proto.ELogLevel; import IException = CommonProto.Jde.Proto.IException;
+import { IEnvironment } from 'jde-material';
 import { IGraphQL } from '../IGraphQL';
+import { P } from '@angular/cdk/keycodes';
 
-type StatusSubscription = (statuses:FromServer.IStatuses) => void;
-
+type StatusSubscription = (statuses:FromServer.IStatus) => void;
 type Resolve<T> = (value: T | PromiseLike<T>) => void;
 type Reject = (reason?: any) => void;
-class PromiseCallbacks<T>
-{
+type QLQuery = string;
+
+class PromiseCallbacks<T>{
 	constructor( public resolve:Resolve<T>, public reject:Reject )
 	{}
 }
 
 @Injectable( {providedIn: 'root'} )
-export class AppService extends ProtoService<FromClient.Transmission,FromServer.IMessageUnion> implements IGraphQL
-{
-	constructor( http: HttpClient, @Inject('IEnvironment') private environment: IEnvironment, @Inject('IErrorService') private cnsle: IErrorService )
-	{
-		super( FromClient.Transmission, http );
+export class AppService extends ProtoService<FromClient.Transmission,FromServer.IMessage> implements IGraphQL{
+	constructor( http: HttpClient, @Inject('IEnvironment') private environment: IEnvironment, @Inject('IErrorService') private cnsle: IErrorService ){
+		super( FromClient.Transmission, http, environment.get<ETransport>("httpTransport") );
 		let appServer = environment.get<Instance>( 'applicationServer' );
 		if( !appServer ){
 			console.log( "No Application Server set in environment" );
-			appServer = {restPort:1999, websocketPort:1967, host:"localhost"};
+			appServer = { port:1967, host:"localhost" };
 		}
 		super.instances = [appServer];
 	}
-	ping():Promise<string>
-	{
-		return this.sendSingularRequest( FromClient.ERequest.Ping );
-	}
-	async iotInstances():Promise<Instance[]>
-	{
-		if( this.log.restRequests )	console.log( '/IotWebSocket' );
+	// ping():Promise<string>{
+	// 	return this.sendSingularRequest( FromClient.ERequest.Ping );
+	// }
+
+	async iotInstances():Promise<Instance[]>{
 		const y = await this.get( "IotWebSocket" );
 		return y["servers"];
 	}
-	getApplications():Promise<FromServer.IApplication[]>
-	{
+
+/*	getApplications():Promise<FromServer.IApplication[]>{
 		return this.applications.length
 			? Promise.resolve( this.applications )
 			: new Promise<FromServer.IApplication[]>( (resolve,reject)=>
@@ -55,122 +54,60 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 					this.sendRequest( FromClient.ERequest.Applications );
 			});
 	};
-	statuses():Observable<FromServer.IStatuses>
-	{
-		var eventStream = new Subject<FromServer.IStatuses>();
+*/
+	statuses():Observable<FromServer.IStatus>{
+		var eventStream = new Subject<FromServer.IStatus>();
 		this.statusSubscriptions.push( eventStream );
-		if( this.statusSubscriptions.length==1 )
-			this.sendRequest( FromClient.ERequest.Statuses );
-
+		if( this.statusSubscriptions.length==1 ){
+			this.send( {subscribeStatus:true}, "Subscribe: statuses" );
+		}
 		return eventStream;
 	}
-	statusUnsubscribe( subscription:Observable<FromServer.IStatuses> )
-	{
-		const index = this.statusSubscriptions.indexOf( <Subject<FromServer.IStatuses>>subscription );
+	statusUnsubscribe( subscription:Observable<FromServer.IStatus> ){
+		const index = this.statusSubscriptions.indexOf( <Subject<FromServer.IStatus>>subscription );
 		if( index>-1 )
 			this.statusSubscriptions.splice( index, 1 );
 		if( !this.statusSubscriptions.length )
-			this.sendRequest( FromClient.ERequest.Statuses | FromClient.ERequest.Negate );
+			this.send( {subscribeStatus:false}, "UnSubscribe: statuses" );
 	};
 
-	logs( applicationId:number, value:FromServer.ELogLevel, start:Date, limit:number ):Observable<[number,FromServer.ITraceMessage]>
-	{
-		let subscriptions = this.logsSubscriptions.get( applicationId );
-		if( !subscriptions )
-			this.logsSubscriptions.set( applicationId, subscriptions=[] );
-
-		let minLevel = FromServer.ELogLevel.None;
-		for( const [level, _] of subscriptions )
-			minLevel = Math.min( minLevel, level );
-		let callback = new Subject<[number,FromServer.ITraceMessage]>();
-		subscriptions.push( [value, callback] );
-		if( value<minLevel )
-		{
-			var request = new FromClient.RequestLogs(); request.value = value; request.applicationId = applicationId; request.start = start ? start.getTime()/1000 : 0; request.limit = limit;
-			var msg = new FromClient.MessageUnion(); msg.requestLogs=request;
-			console.log( `AppService::RequestLogs applicationId='${applicationId}', level='${value}', date='${start ? start.toISOString() : "null"}'` );
-			this.send( msg );//todo set new structure to ApplicationId, fix server.
-		}
-		return callback;
+	logs( applicationId:number, level:ELogLevel, start:Date, limit:number ):Observable<FromServer.ITrace>{
+		const columns = "id instance_id time level message_id file_id function_id line user_pk thread_id args";
+		const q = `subscribe logs(applicationId:${applicationId}, limit:${limit}, filter:{ level:{gte:${level}}, {time:{gte:${start.toISOString()}}} }){ ${columns} }`;
+		const requestId = this.send( {graphQl:q}, q );
+		let callback:Subject<FromServer.ITrace> = new Subject<FromServer.ITrace>();
+		this.logsSubscriptions.set( requestId, callback );
+		return callback.pipe(
+			tap( {unsubscribe:()=>{this.logsUnsubscribe( requestId );}} )
+		);
 	}
-	logsUnsubscribe( instanceId:number, callback:Observable<[number,FromServer.ITraceMessage]> )
-	{
-		let subscriptions = this.logsSubscriptions.get( instanceId );
-		if( !subscriptions )
-		{
-			console.warn( `no log callbacks to unsubscribe ${instanceId}` );
-			return;
-		}
-
-		let index = -1; let removedLevel = FromServer.ELogLevel.None;
-		let minLevel = FromServer.ELogLevel.None;
-		for( let i = 0; i<subscriptions.length; ++i )
-		{
-			var [level,currentCallback] = subscriptions[i];
-			if( callback==currentCallback )
-			{
-				index = i;
-				level = removedLevel;
-			}
-			else
-				minLevel = Math.min( level, minLevel );
-		}
-		if( index>-1 )
-			subscriptions.splice( index, 1 );
-		if( subscriptions.length==0 )
-		{
-			this.logsSubscriptions.delete( instanceId );
-			console.log( `Unsubscribe from logs for application ${instanceId}` );
-			this.request( instanceId, -3 ); //FromClient.ERequest.logs | FromClient.ERequest.negate
-		}
-		else if( minLevel>removedLevel )
-		{
-			var request = new FromClient.RequestLogs(); request.value = minLevel; request.instanceId = instanceId;
-			var msg = new FromClient.MessageUnion(); msg.requestLogs=request;
-			this.send( msg );
-		}
+	logsUnsubscribe( requestId:RequestId ){
+		if( this.log.subRequest ) console.log( `[${requestId}]UnSubscribe: logs()` );
+		this.logsSubscriptions.delete( requestId );
+		this.sendWithId( {requestIdType:FromClient.ERequestIdType.UnsubscribeLogs}, requestId, "UnSubscribe: logs" );
 	};
 
-	updateLogLevel( instanceId:number, clientLevel:FromServer.ELogLevel, dbLevel:FromServer.ELogLevel )
-	{
-		var request = new FromClient.LogValues(); request.instanceId = instanceId; request.clientValue = clientLevel; request.dbValue = dbLevel;
-		var msg = new FromClient.MessageUnion(); msg.LogValues=request;
-		this.send( msg );
+	updateLogLevel( instanceId:number, defaultFileLevel:ELogLevel, defaultDBLevel:ELogLevel ):void{
+		const q = `{ mutation  LogApplicationInstances( id:${instanceId} dbLogLevel:${defaultDBLevel}, fileLogLevel:${defaultFileLevel} ){}`;
+		this.send( {graphQL:q}, q );
 	}
-	requestStrings( requests:FromClient.IRequestStrings ):Observable<[number,FromServer.IApplicationString]>
-	{
-		let message = new FromClient.MessageUnion();
-		message.requestStrings = requests;
-		let callback = new Subject<[number,FromServer.IApplicationString]>();
-		for( let request of requests.values )
-			this.stringRequests.set( request, callback );
-		console.log( `AppService::requestStrings count='${requests.values.length}'` );
-		this.send( message );
-		return callback;
+
+	requestStrings( strings:App.StringPKs ):Promise<FromServer.Strings>{
+		const requestId = this.send( {strings:strings}, `AppService::requestStrings count='${strings.files.length+strings.functions.length+strings.messages.length+strings.threads.length+strings.userPKs.length}'` );
+		return new Promise<FromServer.Strings>( (resolve,reject)=>{ this.stringRequests.set(requestId,{resolve:resolve,reject:reject})} );
 	}
-	request( instanceId:number, value:number )
-	{
+/*	request( instanceId:number, value:number ){
 		var request = new FromClient.RequestApp(); request.type = value; request.instanceId = instanceId;
 		var msg = new FromClient.MessageUnion(); msg.requestApp=request;
 		this.send( msg );
 	}
-
-	custom( applicationId:number, value:Uint8Array ):Observable<Uint8Array>
-	{
-		var custom = new FromClient.Custom();
-		custom.applicationId = applicationId;
-		custom.requestId = ++this._customRequestId;
-		custom.message = value;
-		var msg = new FromClient.MessageUnion; msg.custom=custom;
-		let callback = new Subject<Uint8Array>();
-		this.customCallbacks.set( custom.requestId, callback );
-		this.send( msg );
-
-		return callback;
+*/
+	custom( appPK:number, bytes:Uint8Array ):Promise<Uint8Array>{
+		const requestId = this.send( {forwardExecution:{appPK:appPK, executionTransmission:bytes}}, `custom appPK: ${appPK}, bytes: ${bytes.length}` );
+		return new Promise<Uint8Array>( (resolve,reject)=>{ this.customCallbacks.set(requestId,{resolve:resolve,reject:reject})} );
 	}
 
-	private sendRequest( x:FromClient.ERequest )
-	{
+/*	private sendRequest( x:FromClient.ERequest ){
 		console.log( `requesting '${FromClient.ERequest[x]}'`)
 		let msg = { request: {type:x} };
 		this.send( msg );
@@ -186,27 +123,25 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 		this.send( m );
 		return p;
 	}
-
-	async googleLogin( token:string, authorizationService:IAuth ):Promise<void>
-	{
+*/
+	async googleLogin( token:string ):Promise<void>{
 //		return this.sendStringPromise<FromClient.ERequest,void>( FromClient.ERequest.GoogleLogin, token, null, FromClient.ERequest[FromClient.ERequest.GoogleLogin] );
 		let self = this;
 		//if( this.log.restRequests )	console.log( `googleLogin( ${token} )` );
-		self.sessionId = await this.post<string>( 'GoogleLogin', {value:token} );
-		if( this.log.restResults )	console.log( `sessionId='${self.sessionId}'` );
+		const sessionId = await this.post<string>( 'GoogleLogin', {value:token}, true );
+		self.setAuthorization( sessionId, "loginName:  TODO" );
+		if( this.log.restResults )	console.log( `authorization='${self.authorization}'` );
 
-		self.authorizationService = authorizationService;
 		//let p = this.sendPromise<FromClient.IRequestValue,void>( "requestValue", {requestId: id, type: FromClient.ERequest.GoogleLogin, string: token } );
 
 		//return p;
 	}
-	async googleAuthClientId():Promise<string>
-	{
+	async googleAuthClientId():Promise<string>{
 //		try
 //		{
 			if( this.log.restRequests )	console.log( `googleAuthClientId()` );
 			//JSON.parse( "{'value': '445012155442-1v8ntaa22konm0boge6hj5mfs15o9lvd.apps.googleusercontent.com'}" );
-			let o = await firstValueFrom( this.http.get(`http://localhost:1999/GoogleAuthClientId`) );
+			let o = await firstValueFrom( this.http.get(`http://localhost:1999/GoogleAuthClientId`) );//TODO wrong url
 			return o["value"];
 //		}
 //		catch( e )
@@ -222,131 +157,111 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 		// //this.stringValuePromises.set( id, p );
 		// return p;
 	//}
-	private logsSubscriptions:Map<number,[FromServer.ELogLevel, Subject<[number,FromServer.ITraceMessage]>][]>= new Map<number,[FromServer.ELogLevel, Subject<[number,FromServer.ITraceMessage]>][]>();
+	private logsSubscriptions:Map<RequestId,Subject<FromServer.ITrace>>= new Map<RequestId,Subject<FromServer.ITrace>>();
 	//private addMessage( msg ):void{}
-	override handleConnectionError( err ):void
-	{
+	override handleConnectionError( err ):void{
 		this.statusSubscriptions.forEach( (x)=>x.error( err ) );
 		this.statusSubscriptions = [];
 	}
 	encode( t:FromClient.Transmission ){ return FromClient.Transmission.encode(t); }
-
-	private complete():void
-	{
+	public async validateSessionId():Promise<{domain:string,loginName:string}>{
+		if( !this.authorization )
+			return Promise.resolve( null );
+		const y = await this.query<{session:{domain:string,loginName:string}}>( `session(filter:{ id:{eq:${this.authorization}} }){ domain loginName }` );
+		return y.session;
+	}
+	private complete():void{
 		console.log( 'complete' );
 		for( const subscription of this.statusSubscriptions )
 			subscription.complete();
 	}
-
-	protected processMessage( bytearray:protobuf.Buffer )
-	{
-		try
-		{
-			const t = FromServer.Transmission.decode( bytearray );
-			for( const message of t.messages )
-			{
-				if( super.processCommonMessage(message) )
+	private async sendSessionId( socketId:number ):Promise<void>{
+		await super.sendPromise( {sessionId:Number(`0x${this.authorization}`)}, `SendAuthorization: ${this.authorization}` );
+		this.setSocketId( socketId );//release buffer.
+	}
+	protected processMessage( bytearray:protobuf.Buffer ){
+		try{
+			let t:FromServer.Transmission;
+			try{
+				t = FromServer.Transmission.decode( bytearray );
+			}
+			catch( e ){
+				throw `error decode ${bytearray.length} bytes, error: ${JSON.stringify(e)}`;
+			}
+			for( const message of t.messages ){
+				const requestId = message.requestId;
+				if( super.processCommonMessage(message, requestId) )
 					continue;
-				if( message.traces )
-				{
-					const applicationId = message.traces.applicationId;
-					var subscriptions = this.logsSubscriptions.get( applicationId );
-					if( !subscriptions )
-						continue;//todo end subscription
-					for( let trace of message.traces.values )
-					{
-						for( let [level,callback] of subscriptions )
-						{
-							if( trace.level>=level )
-								callback.next( [applicationId,trace] );
-						}
+				if( message.ack ){//first message after handshake
+					console.log( `[App.${requestId}]Connected to '${super.socketUrl}', socketId: ${message.ack}` );
+					let socketId = message.ack;
+					if( this.authorization )
+						this.sendSessionId( socketId );
+					else{
+						console.warn( `no authorization` );
+						this.setSocketId( socketId );
 					}
 				}
-				else if( message.strings )
-				{
-					var applicationId = message.strings.applicationId;
-					for( var string of message.strings.values )
-					{
-						for( let [request,callback] of this.stringRequests )
-						{
-							if( request.applicationId==applicationId && request.type==string.stringRequestType && request.value==string.id )
-							{
-								//console.log( `applicationId=${applicationId}, type=${string.StringRequestType}, value=${string.Id}, ${string.Value}` );
-								callback.next( [applicationId,string] );
-							}
-						}
-					}
-
+				else if( message.executeResponse ){
+					var promise = this.customCallbacks.get( requestId ); if( !promise ) throw `no promise for requestId=${requestId}`;
+					promise.resolve( message.executeResponse );
 				}
-				else if( message.statuses )
-				{
+				else if( message.status ){
+					if( this.log.subResults )	console.log( `[App.${requestId}]status appId:${message.status.applicationId}` );
 					for( const callback of this.statusSubscriptions )
-						callback.next( message.statuses );
+						callback.next( message.status );
 				}
-				else if( message.acknowledgement )
-				{
-					console.log( `(${message.acknowledgement.id})Connected to '${super.socketUrl}'` );
-					this.setSessionId( message.acknowledgement.id );
+				else if( message.strings ){
+					const x = message.strings;
+					if( this.log.sockResults ) console.log( `[App.${requestId}]strings messageCount: ${Object.keys(x.messages).length}` );
+					let promise = this.stringRequests.get( requestId ); if( !promise ) throw `no promise for requestId=${requestId}`;
+					promise.resolve( x );
 				}
-				else if( message.applications )
-				{
-					this.applications.length=0;
-					for( var application of message.applications.values )
-						this.applications.push( application );
-					for( let callback of this.applicationPromises )
-						callback.resolve( this.applications );
-					this.applicationPromises.length = 0;
+				else if( message.traces ){
+					if( this.log.subResults )	console.log( `[App.${requestId}]traces count:${message.traces.values.length}` );
+					let subject = this.logsSubscriptions.get( requestId ); if( !subject ) throw `no subscription for requestId=${requestId}`;
+					message.traces.values.forEach( x=>subject.next(x) );
 				}
-				else if( message.custom )
-				{
-					var callback = this.customCallbacks.get( message.custom.requestId );
-					if( callback )
-						callback.next( message.custom.message );
-					else
-						console.error( `no callback for '${message.custom.requestId}'` );
-				}
-				else if( message.message )
-				{
-					let p = this._callbacks.get( message.message.intValue );
-					if( p )
-						p.resolve( null );
-					else
-						console.error( `no callback for '${message.message.intValue}'` );
-				}
-				else if( message.stringValue )
-				{
-//					var p = this.stringValuePromises.get( message.stringValue.requestId );
-					let p = this._callbacks.get( message.stringValue.requestId );
-					if( p )
-						p.resolve( message.stringValue.value );
-					else
-						console.error( `no callback for '${message.stringValue.requestId}'` );
-				}
-				else if( message.exception )
-				{
-					if( message.exception.requestId )
-						this.processError( <IError>message.exception );
-					else
-						console.error( message.exception );
+				else if( message.exception ){
+					let processed = false;
+					if( requestId ){
+						processed = super.processError(message.exception, requestId)
+							|| this.iotProcessError(message.exception, requestId);
+					}
+					if( !processed )
+						throw `[App.${requestId}]Error:  (${message.exception.code.toString(16)})${message.exception.what}`;
 				}
 				else
-					console.error( `unknown message type ${Object.keys(message)}` );
+					throw `unknown message type ${Object.keys(message)}`
 			}
 		}
-		catch( e )
-		{
-			console.error( `error read ${bytearray.length} bytes`+e.toString() );
+		catch( e ){
+			console.error( e );
 		}
-		//var tokens = msg.data.split( '\0' );
 		return bytearray;
 	}
-	private applications:FromServer.IApplication[]=[];
-	private applicationPromises:PromiseCallbacks<FromServer.IApplication[]>[]=[];
-	private singularRequests = new Map<number,{resolve:any,reject:any}>;
-	private stringRequests:Map<FromClient.IRequestAppString,Subject<[number,FromServer.IApplicationString]>>= new Map<FromClient.IRequestAppString,Subject<[number,FromServer.IApplicationString]>>();
-	private statusSubscriptions:Subject<FromServer.IStatuses>[]=[];
-	private customCallbacks = new Map<number,Subject<Uint8Array>>();
+	iotProcessError( e:IException, requestId:RequestId ):boolean{
+		let processed = true;
+		if( this.stringRequests.has(requestId) ){
+			this.stringRequests.get( requestId ).reject( e );
+			this.stringRequests.delete( requestId );
+		}
+		else if( this.customCallbacks.has(requestId) ){
+			this.customCallbacks.get( requestId ).reject( e );
+			this.customCallbacks.delete( requestId );
+		}
+		else
+			processed = false;
+		return processed;
+	}
+	//private applications:FromServer.IApplication[]=[];
+	//private applicationPromises:PromiseCallbacks<FromServer.IApplication[]>[]=[];
+	//private singularRequests = new Map<number,{resolve:any,reject:any}>();
+	private stringRequests = new Map<number,{resolve:any,reject:any}>();
+	//private stringRequests:Map<FromClient.IRequestAppString,Subject<[number,FromServer.IApplicationString]>>= new Map<FromClient.IRequestAppString,Subject<[number,FromServer.IApplicationString]>>();
+	private statusSubscriptions:Subject<FromServer.IStatus>[]=[];
+	private customCallbacks = new Map<number,{resolve:any,reject:any}>();
 	//private stringValuePromises = new Map<number,Promise<string>>();
-	private _customRequestId:number=0;
+	//private _customRequestId:number=0;
 //	private static Url = environment.applicationServerUrl;// 'ws://localhost:1967';
 }

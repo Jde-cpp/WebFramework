@@ -1,14 +1,13 @@
-import * as AppFromServer from '../../proto/AppFromServer'; import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+import * as AppFromServer from '../../proto/App.FromServer'; import FromServer = AppFromServer.Jde.App.Proto.FromServer;
+import * as CommonProto from '../../proto/Common'; import ELogLevel = CommonProto.Jde.Proto.ELogLevel;
 
-export interface Instance
-{
+export interface Instance{
 	application?:string;
 	host:string;
 	pid?:number;
-	serverLogLevel?:FromServer.ELogLevel;
-	clientLogLevel?:FromServer.ELogLevel;
+	dbDefaultLogLevel?:ELogLevel;
+	fileDefaultLogLevel?:ELogLevel;
 	startTime?:Date;
-	restPort:number;
-	websocketPort?:number;
+	port?:number;
 	instanceName?:string;
 }

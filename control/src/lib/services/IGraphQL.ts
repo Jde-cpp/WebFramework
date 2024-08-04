@@ -4,7 +4,9 @@ import { MetaObject } from "../utilities/JsonUtils";
 export interface IGraphQL{
 	query<T>( ql: string ):Promise<T>;
 	schema( names:string[] ):Promise<Table[]>;
+	mutation( ql: string ):Promise<Mutation[]>;
 	mutations():Promise<Mutation[]>;
+	//graphQL<Y>( query: string ):Promise<Y>;
 }
 
 //https://graphql.org/learn/introspection/
