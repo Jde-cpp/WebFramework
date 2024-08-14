@@ -165,9 +165,10 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 	}
 	encode( t:FromClient.Transmission ){ return FromClient.Transmission.encode(t); }
 	public async validateSessionId():Promise<{domain:string,loginName:string}>{
+		console.log( `validateSessionId: ${this.authorization}` );
 		if( !this.authorization )
 			return Promise.resolve( null );
-		const y = await this.query<{session:{domain:string,loginName:string}}>( `session(filter:{ id:{eq:${this.authorization}} }){ domain loginName }` );
+		const y = await this.query<{session:{domain:string,loginName:string}}>( `session( id:"${this.authorization}" ){ domain loginName }` );
 		return y.session;
 	}
 	private complete():void{
@@ -175,10 +176,7 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 		for( const subscription of this.statusSubscriptions )
 			subscription.complete();
 	}
-	private async sendSessionId( socketId:number ):Promise<void>{
-		await super.sendPromise( {sessionId:Number(`0x${this.authorization}`)}, `SendAuthorization: ${this.authorization}` );
-		this.setSocketId( socketId );//release buffer.
-	}
+
 	protected processMessage( bytearray:protobuf.Buffer ){
 		try{
 			let t:FromServer.Transmission;
@@ -196,7 +194,7 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 					console.log( `[App.${requestId}]Connected to '${super.socketUrl}', socketId: ${message.ack}` );
 					let socketId = message.ack;
 					if( this.authorization )
-						this.sendSessionId( socketId );
+						super.sendAuthorization( socketId );
 					else{
 						console.warn( `no authorization` );
 						this.setSocketId( socketId );

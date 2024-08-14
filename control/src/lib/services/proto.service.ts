@@ -64,13 +64,11 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 			this.sendTransmission( t );
 	}
 
-/*	sendPromiseOld<TInput,TResult>( param:string, value:TInput, result?:(ResultMessage)=>any, transformInput?:TransformInput ):Promise<TResult>{
-		this.send( {[param]: value} ); //new Requests.MessageUnion( <Requests.IMessageUnion>{[param]: value}) );
-		return new Promise<TResult>( ( resolve, reject )=>{
-			this._callbacks.set( value["requestId"], new RequestPromise(result, resolve, reject, transformInput) );//todo also do a proper rejection
-		});
+	protected async sendAuthorization( socketId:number ):Promise<void>{
+		await this.sendPromise( {sessionId:Number(`0x${this.authorization}`)}, `sendAuthorization: ${this.authorization}` );
+		this.setSocketId( socketId );//release buffer.
 	}
-*/
+
 	sendPromise<TResult>( m:any, log:string ):Promise<TResult>{
 		const requestId = this.send( m, log );
 		return new Promise<TResult>( ( resolve, reject )=>{
@@ -78,14 +76,6 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		});
 	}
 
-/*	sendStringPromise<ERequest,TResult>( e: ERequest, value:string, transform:(string)=>any, what:string ):Promise<TResult>{
-		const id = this.getRequestId();
-		//if( this.log.results ) console.log( `(${id})${ERequest[q]}( ${value} )` );
-		if( this.log.requests )	console.log( `(${id})${what}( ${value} )` );
-
-		return this.sendPromise<IStringRequest<ERequest>,TResult>( "stringRequest", {requestId: id, type: e, value: value}, (x:ResultMessage)=>x["stringResult"], transform );
-	}
-*/
 	async InitWait():Promise<void>{
 		let p = new Promise<void>( (resolve,reject)=>this.#initCallbacks.push({resolve:resolve,reject:reject}) );
 		await p;
@@ -99,7 +89,7 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 	async get<Y>( target:string ):Promise<Y>{
 		if( !this.#instances )
 			await this.InitWait();
-		if( this.log.restRequests )	console.log( target );
+		if( this.log.restRequests )	console.log( target.substring(0,this.log.maxLength) );
 		let url = this.urlWithTarget(target);
 		let y:Y;
 		try{
@@ -124,26 +114,29 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		}
 		return y;
 	}
+	async postRaw<Y>( target:string, body:any, preferSecure:boolean=false ):Promise<Y>{
+		if( !this.#instances )
+			await this.InitWait();
+		const url = this.urlWithTarget( target, preferSecure );
+		let y:any;
+		if( this.authorization )
+			y =  await firstValueFrom( this.http.post(url, body) );
+		else{
+			let response:HttpResponse<Y> = await firstValueFrom( this.http.post<Y>(url, body, {observe: "response", transferCache:{includeHeaders:["Authorization"]}}) );
+			let authorization = response.headers.get( "Authorization" );
+			if( authorization )
+				this.setAuthorization( authorization, null );
+			y = response.body;
+		}
+		return y;
+	}
+	//TODO change to use postRaw
 	async post<Y>( target:string, body:any, preferSecure:boolean=false ):Promise<Y>{
-		try{
-			if( !this.#instances )
-				await this.InitWait();
-			let o =  await firstValueFrom( this.http.post(this.urlWithTarget(target, preferSecure), body) );
-			return o["value"];
-		}
-		catch( e ){
-			try{
-				throw e["error"] ? JSON.parse(e["error"]) : e;
-			}
-			catch( e2 ){
-				throw e["error"] ? e["error"] : e;
-			}
-		}
+		return await this.postRaw<Y>( target, body, preferSecure )[ "value" ];
 	}
 
 	private async graphQL<Y>( query: string ):Promise<Y>{
 		var target = `graphql?query={${query}}`;
-		if( this.log.restRequests )	console.log( target.substring(0,this.log.maxLength) );
 		const y = await this.get( target );
 		return y ? y["data"] : null;
 	}
@@ -204,6 +197,7 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 	getRequestId():RequestId{ return ++this.#requestId;} #requestId:RequestId=0;
 
 	protected setAuthorization( authorization:string, loginName:string ){
+		console.log( `setAuthorization( ${authorization}, ${loginName} )` );
 		if( authorization )
 			localStorage.setItem( "authorization", authorization );
 		else
@@ -231,8 +225,10 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		if( c ){
 			if( !m.Value )
 				c.resolve( null );
-			if( m["graphQl"] )
+			else if( m["graphQl"] )
 				c.resolve( c.transformInput(message["json"]) );
+			else
+				handled = false;
 		}
 		else
 			handled = false;
@@ -263,7 +259,7 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 
 	private anonymous:boolean=true;
 	protected backlog:Transmission[] = [];
-	protected log = { sockRequests:true, sockResults:true, restRequests:false, restResults:false, subRequest:true, subResults:true, maxLength:255 };
+	protected log = { sockRequests:true, sockResults:true, restRequests:true, restResults:false, subRequest:true, subResults:true, maxLength:255 };
 	#loginNameSubscription:Subject<string> = new Subject<string>();
 	protected get authorization():string{ return localStorage.getItem("authorization"); }
 	//Informational purposes only to match with server logs.
