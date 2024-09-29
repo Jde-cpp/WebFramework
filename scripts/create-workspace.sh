@@ -27,7 +27,6 @@ if [ ! -x "$(which "ng" 2> /dev/null)" ]; then
 	if [ $? -ne 0 ]; then echo `pwd`; echo $cmd; exit 1; fi;
 fi;
 ##################
-echo e;
 if [ ! -d $workspace ]; then
 	echo -------------------- create workspace start --------------------;
 	createApplication=true;

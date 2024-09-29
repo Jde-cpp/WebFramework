@@ -26,8 +26,9 @@ import { FormControl } from '@angular/forms';
 // Comment out statuses
 @Component({selector: 'logs.main-content.mat-drawer-container.my-content',templateUrl: './logs.html',styleUrls: ['./logs.css']})
 export class LogsComponent implements OnInit, OnDestroy{
-	constructor( public _componentPageTitle: ComponentPageTitle, private appService:AppService, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private errorService: IErrorService )
-	{}
+	constructor( public _componentPageTitle: ComponentPageTitle, private appService:AppService, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private errorService: IErrorService ){
+		this.settingsContainer = new Settings<LogSettings>( LogSettings, "LogComponent", this.profileService );
+	}
 
 	async ngOnInit(){
 		this._componentPageTitle.title = "Logs";
@@ -232,7 +233,7 @@ export class LogsComponent implements OnInit, OnDestroy{
 		this.filterData();
 	}
 	get sort(){return this.settings.sort;} set sort(value){ this.data.sort = this.settings.sort = value; }
-	settingsContainer:Settings<LogSettings> = new Settings<LogSettings>( LogSettings, "LogComponent", this.profileService );
+	settingsContainer:Settings<LogSettings>;
 	get settings(){ return this.settingsContainer.value;}
 
 

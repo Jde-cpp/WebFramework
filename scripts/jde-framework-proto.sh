@@ -32,7 +32,7 @@ if [ ! -f App.FromServer.d.ts ] || [ $clean == 1 ]; then appFiles[App.FromServer
 if [ ! -f App.d.ts ] || [ $clean == 1 ]; then appFiles[App]=app; fi;
 if [ ! -f Common.d.ts ] || [ $clean == 1 ]; then appFiles[Common]=common; fi;
 echo 'Creating application proto files';
-create $jdeBash/Public/src/appClient/proto appFiles;
+create $jdeBash/Public/src/app/shared/proto appFiles;
 echo 'Created application proto files';
 
 echo jde-framework-proto.sh complete.

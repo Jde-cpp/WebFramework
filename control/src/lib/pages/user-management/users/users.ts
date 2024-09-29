@@ -28,8 +28,9 @@ export interface IUser
 @Component( {selector: 'users', styleUrls: ['users.scss'], templateUrl: './users.html', encapsulation: ViewEncapsulation.None} )
 export class UserComponent implements AfterViewInit, OnInit, OnDestroy
 {
-	constructor( private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
-	{}
+	constructor( private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService ){
+		this.profile = new Settings<PageSettings>( PageSettings, "UserComponent", this.profileService );
+	}
 
 	ngOnInit()
 	{
@@ -118,7 +119,7 @@ export class UserComponent implements AfterViewInit, OnInit, OnDestroy
 
 	users:IUser[];
 	authenticators = new Map<number,string>();
-	profile = new Settings<PageSettings>( PageSettings, "UserComponent", this.profileService );
+	profile:Settings<PageSettings>;
 	get settings(){ return this.profile.value; }
 	get sort(){ return this.settings.sort; }
 	get showDeleted(){return this.settings.showDeleted;}
