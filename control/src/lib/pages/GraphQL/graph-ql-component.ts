@@ -1,4 +1,5 @@
 import { Component, AfterViewInit, OnInit, OnDestroy, Inject, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import {ActivatedRoute, Params, Router, RouterModule, Routes} from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import {Sort} from '@angular/material/sort';
@@ -8,28 +9,44 @@ import {IProfile} from '../../services/profile/IProfile'
 import {IErrorService} from '../../services/error/IErrorService'
 import {IGraphQL, Table, FieldKind, Field, IQueryResult}  from '../../services/IGraphQL'
 import {Settings} from '../../utilities/settings'
-
+import {PageSettings} from './model/PageSettings';
 
 import { ComponentPageTitle } from 'jde-material';
-import { Subject } from 'rxjs';
+import { map, Observable, Subject } from 'rxjs';
+import { MatIcon } from '@angular/material/icon';
+import { MatIconButton } from '@angular/material/button';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatToolbar } from '@angular/material/toolbar';
+import { GraphQLTable } from './table/table';
+import { StringUtils } from '../../utilities/StringUtils';
 
-@Component( {selector: 'graph-ql-component.main-content.mat-drawer-container.my-content', styleUrls: ['graph-ql-component.scss'], templateUrl: './graph-ql-component.html'} )
+@Component( {
+    selector: 'graph-ql-component.main-content.mat-drawer-container.my-content',
+    styleUrls: ['graph-ql-component.scss'],
+    templateUrl: './graph-ql-component.html',
+    imports: [CommonModule, MatCheckbox, MatIcon, MatIconButton, MatToolbar, GraphQLTable]
+})
 export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy{
-	constructor( private route: ActivatedRoute, private router:Router, private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsl: IErrorService )
+	constructor( private route: ActivatedRoute, private router:Router, private componentPageTitle:ComponentPageTitle,
+		@Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile,
+		@Inject('IErrorService') private cnsl: IErrorService )
 	{}
 
 	ngOnDestroy(){ this.profile.save(); }
 	ngOnInit(){
-		if( this.route.routeConfig?.data )
-			this.excludedColumns = this.route.routeConfig.data["excludedColumns"];
+		this.pageSettings$ = this.route.data.pipe( map(data => data["pageSettings"]) );
+		this.pageSettings$.subscribe( (x:PageSettings)=>{ this.pageSettings = x; } );
+
 		let paths = [];
 		for( let x = this.route; x.routeConfig?.data && x.routeConfig?.data["name"]; x = x.parent )
 			paths.push( x.routeConfig.data['name'] );
-
 		this.componentPageTitle.title = paths[0];//.join( " | " ); 	//this.componentPageTitle.title ? `${this.componentPageTitle.title} | ${title}` : title;
+
+		//if( this.route.routeConfig?.data )
+		//	this.excludedColumns = this.route.routeConfig.data["excludedColumns"];
 	};
 	async ngAfterViewInit(){
-		this.profile = new Settings<PageSettings>( PageSettings, this.type, this.profileService );
+		this.profile = new Settings<UserSettings>( UserSettings, this.type, this.profileService );
 		await this.profile.loadedPromise;
 		try{
 			//await this.authorizationService.login();
@@ -77,8 +94,15 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy{
 	edit(){
 		if( this.selection.deleted )
 			this.graphQL.mutation( `restore${this.type}("id":${this.selection.id})` ).then( ()=>this.selection.deleted=null ).catch( (e)=>console.log(e) );
-		else
-			this.router.navigate( ["settings", this.fetchName, this.selection.target] );
+		else{
+			let routes = this.router.routerState.snapshot.url.split('/');
+			routes.push( this.selection.target );
+			try{
+				this.router.navigate( routes );
+			}catch( e ){
+				this.cnsl.error( "Could not navigate to properties", e );
+			}
+		}
 	}
 
 	insert(){
@@ -95,7 +119,7 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy{
 				this.selection = null;
 		}
 
-		this.graphQL.mutation(`${type}${this.type}(\"id\":${this.selection.id})`).then( next ).catch( (e)=>{  this.cnsl.error(e.message); console.error( JSON.stringify(e) ); } );
+		this.graphQL.mutation(`${type}${StringUtils.capitalize(this.type)}(\"id\":${this.selection.id})`).then( next ).catch( (e)=>{  this.cnsl.error(e.message); console.error( JSON.stringify(e) ); } );
 	}
 
 	get haveSelection(){ return !!this.selection; }
@@ -104,12 +128,13 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy{
 	viewPromise:Promise<boolean>;
 	displayedColumns:Field[];
 	@ViewChild('mainTable',{static: false}) _table:MatTable<any>;
-
 	data;
-	excludedColumns:string[];
-	get name():string{ return this.routeConfig.data['name']; }
+	get excludedColumns():string[]{ return this.pageSettings.excludedColumns; }
+	pageSettings$: Observable<PageSettings>;//lesson$
+	pageSettings:PageSettings;
+	get name():string{ return <string>this.routeConfig.title; }
 	get fetchName():string{ return this.routeConfig.path; }
-	profile:Settings<PageSettings>;
+	profile:Settings<UserSettings>;
 	get routeConfig(){ return this.route.routeConfig;}
 	schema:Table;
 	get settings(){ return this.profile.value; }
@@ -117,7 +142,7 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy{
 	get showAdd():boolean{ return this.routeConfig.data['showAdd'] ?? true};
 	get showDeleted(){return this.settings.showDeleted;}
 	showDeletedSubject = new Subject<boolean>();
-	get type():string{ return this.name.substr(0,this.name.length-1); }
+	get type():string{ return this.pageSettings.type ?? StringUtils.plural(StringUtils.toJson(this.name)); }
 	toggleShowDeleted(){ this.settings.showDeleted = !this.settings.showDeleted; this.showDeletedSubject.next( this.settings.showDeleted ); }
 	eventsSubject: Subject<void> = new Subject<void>();
 
@@ -126,8 +151,12 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy{
 	}
 }
 
-class PageSettings{
-	assign( value:PageSettings ){ this.sort = value.sort; this.showDeleted = value.showDeleted; }
+class UserSettings{
+	assign( value:UserSettings ){ this.sort = value.sort; this.showDeleted = value.showDeleted; }
 	sort:Sort = {active: "name", direction: "asc"};
 	showDeleted:boolean = false;
+}
+
+function at(pageSettings$: Observable<PageSettings>) {
+	throw new Error('Function not implemented.');
 }

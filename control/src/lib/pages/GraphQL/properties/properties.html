@@ -1,26 +1,44 @@
-<ng-container *ngIf="viewPromise | async">
-	<div>
-		<mat-form-field *ngFor="let field of fields; let tab = index" style="width: 100%;" appearance="fill">
-			<mat-label>{{field.displayName}}</mat-label>
-			<input #myInput matInput [type]="field.name=='url' ? 'url' : 'text'" *ngIf="field.type==InputTypes.None" [attr.cdkFocusInitial]="field.name=='target' ? '' : null" [value]="clone.get(field.name) ?? ''" [tabIndex]=tab+1 (focusout)="clone.set( field.name, $event.target['value'] )" >
-			<textarea matInput *ngIf="field.type==InputTypes.Text" [value]="clone.get(field.name) ?? ''" [tabIndex]="tab+1" (focusout)="clone.set( field.name, $event.target['value'])"></textarea>
-			<mat-select *ngIf="field.type==InputTypes.Select" [tabIndex]="tab+1" (selectionChange)="clone.set( field.name, $event.value )" [value]="clone.get(field.name)">
-				<mat-option *ngFor="let option of field.options" [value]="option.id">{{option.name}}</mat-option>
-			</mat-select>
-		</mat-form-field>
-		<mat-form-field *ngIf="boolFields.length" style="width: 100%;" appearance=fill>
-			<mat-chip-grid #chipGrid aria-label="Attributes" [multiple]=true [selectable]=true>
-				<mat-chip-row *ngFor="let field of boolFields" [highlighted]="clone.get(field.name)!=0" [selected]="clone.get(field.name)" (click)="clone.set( field.name, !this.clone.get(field.name) );">{{field.displayName}}</mat-chip-row>
-			</mat-chip-grid>
-			<input hidden=true [matChipInputFor]="chipGrid">
-		</mat-form-field>
-		<!-- selected ? 'primary' : 'accent' -->
-
-	</div>
-	<div>
-		<span *ngIf="clone.size" style="margin-left: auto;" >
-			<button tabindex="100" mat-fab extended (click)="saving=true;onSubmitClick()" [disabled]="!enableSubmit"><mat-icon>done</mat-icon>Save</button>
-			<button tabindex="101" mat-fab extended (click)="onCancelClick()" style="margin-left:50px;margin-right:20px"><mat-icon>cancel</mat-icon>Cancel</button>
-		</span>
-	</div>
-</ng-container>
+@if( viewPromise | async ){
+	<ng-container>
+		<div>
+			@for( field of fields(); track field.name; let tab = $index ){
+				<mat-form-field style="width: 100%;" appearance="fill">
+					<mat-label>{{field.displayName}}</mat-label>
+					@if( field.type==InputTypes.None ){
+						<input #myInput matInput [type]="field.name=='url' ? 'url' : 'text'" [attr.cdkFocusInitial]="field.name=='target' ? '' : null" [value]="clone().get(field.name) ?? ''" [tabIndex]=tab+1 (focusout)="clone().set( field.name, $event.target['value'] )" >
+					}
+					@else if( field.type==InputTypes.Text ){
+						<textarea matInput [value]="clone().get(field.name) ?? ''" [tabIndex]="tab+1" (focusout)="clone().set( field.name, $event.target['value'])"></textarea>
+					}
+					@else if( field.type==InputTypes.Select ){
+						<mat-select [tabIndex]="tab+1" (selectionChange)="clone().set( field.name, $event.value )" [value]="clone().get(field.name)">
+							@for( option of field.options; track option.id ){
+								<mat-option [value]="option.id">{{option.name}}</mat-option>
+							}
+						</mat-select>
+					}
+				</mat-form-field>
+			}
+			@if( boolFields().length ){
+				<mat-form-field style="width: 100%;" appearance=fill>
+					<mat-chip-grid #chipGrid aria-label="Attributes" [multiple]=true [selectable]=true>
+						@for( field of boolFields(); track field.name ){
+							<mat-chip-row [selected]="clone().get(field.name)"
+							[highlighted]="clone().get(field.name)!=0" [selected]="clone().get(field.name)"
+							(click)="clone().set( field.name, !this.clone().get(field.name) );">{{field.displayName}}</mat-chip-row>
+						}
+					</mat-chip-grid>
+					<input hidden=true [matChipInputFor]="chipGrid">
+				</mat-form-field>
+			}
+		</div>
+		<!--<div>
+			@if( clone().size ){
+				<span style="margin-left: auto;" >
+					<button tabindex="100" mat-fab extended (click)="saving=true;onSubmitClick()" [disabled]="!enableSubmit"><mat-icon>done</mat-icon>Save</button>
+					<button tabindex="101" mat-fab extended (click)="onCancelClick()" style="margin-left:50px;margin-right:20px"><mat-icon>cancel</mat-icon>Cancel</button>
+				</span>
+			}
+		</div>-->
+	</ng-container>
+}

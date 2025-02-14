@@ -11,7 +11,7 @@ import { IAuth } from 'jde-material';
 //import { AuthService } from '../../../services/auth.service';
 import {IErrorService} from '../../../services/error/IErrorService';
 
-@Component({selector: 'app-login-page', templateUrl: './login-page.html', styleUrls: ['./login-page.scss'], standalone: true,
+@Component({selector: 'app-login-page', templateUrl: './login-page.html', styleUrls: ['./login-page.scss'],
 	imports: [MatButtonModule, MatCardModule, MatInputModule, MatFormFieldModule, ReactiveFormsModule, RouterModule]
 })
 export class LoginPageComponent implements OnInit {

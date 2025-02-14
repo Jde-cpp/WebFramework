@@ -1,4 +1,6 @@
+/*
 import { Component, AfterViewInit, OnInit, OnDestroy, Inject, ViewChild, ViewEncapsulation } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import {Sort} from '@angular/material/sort';
 import { MatTable } from '@angular/material/table';
@@ -6,7 +8,7 @@ import {IProfile} from '../../../services/profile/IProfile';
 import {IErrorService} from '../../../services/error/IErrorService';
 import {Settings} from '../../../utilities/settings';
 
-import { UserEntryDialog } from './dialog/user-dialog';
+//import { UserEntryDialog } from './dialog/user-dialog';
 
 //import * as um2 from 'src/app/proto/UserManagement'; import UM = um2.Jde.UM;
 import { ComponentPageTitle } from 'jde-material';
@@ -25,9 +27,14 @@ export interface IUser
 	deleted?:Date;
 }
 
-@Component( {selector: 'users', styleUrls: ['users.scss'], templateUrl: './users.html', encapsulation: ViewEncapsulation.None} )
-export class UserComponent implements AfterViewInit, OnInit, OnDestroy
-{
+@Component( {
+	selector: 'users',
+	styleUrls: ['users.scss'],
+	templateUrl: './users.html',
+	encapsulation: ViewEncapsulation.None,
+	imports: [CommonModule]
+})
+export class UserComponent implements AfterViewInit, OnInit, OnDestroy{
 	constructor( private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService ){
 		this.profile = new Settings<PageSettings>( PageSettings, "UserComponent", this.profileService );
 	}
@@ -89,7 +96,7 @@ export class UserComponent implements AfterViewInit, OnInit, OnDestroy
 
 	dialogOpen( user:IUser )
 	{
-		const dialogRef = this.dialog.open( UserEntryDialog,
+/*		const dialogRef = this.dialog.open( UserEntryDialog,
 		{
 			width: '600px',
 			height: '450px',
@@ -99,7 +106,7 @@ export class UserComponent implements AfterViewInit, OnInit, OnDestroy
 		{
 			if( result )
 				this.load();
-		});
+		});* /
 	}
 	delete()
 	{
@@ -135,3 +142,4 @@ class PageSettings
 	sort:Sort = {active: "name", direction: "asc"};
 	showDeleted:boolean = false;
 }
+*/

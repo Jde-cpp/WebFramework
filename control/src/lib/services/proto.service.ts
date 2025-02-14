@@ -142,12 +142,12 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 	}
 
 	async query<Y>( ql: string ):Promise<Y>{
-		return await this.graphQL( `query ${ql}` );
+		return await this.graphQL( ql );
 	}
 
 	async queryArray<Y>( ql: string ):Promise<Y[]>{
 		const member = ql.substring( 0, ql.indexOf('{') ).trim();
-		const y = await this.graphQL( `query ${ql}` );
+		const y = await this.graphQL( ql );
 		return y[member];
 	}
 

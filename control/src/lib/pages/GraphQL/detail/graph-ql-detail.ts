@@ -1,6 +1,7 @@
 import { Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { Component, ViewEncapsulation, OnInit, OnDestroy, Inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import {ActivatedRoute, NavigationEnd, Params, Router, RouterModule, Routes} from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 
@@ -12,10 +13,17 @@ import {IProfile} from '../../../services/profile/IProfile';
 import {Settings} from '../../../utilities/settings';
 import { MetaObject } from '../../../utilities/JsonUtils';
 import { HttpErrorResponse } from '@angular/common/http';
+import { MatTabsModule } from '@angular/material/tabs';
+import{ Properties } from '../properties/properties';
+import{ PageSettings } from '../model/PageSettings';
 
-
-
-@Component( { selector: 'graph-ql-detail', templateUrl: 'graph-ql-detail.html', styleUrls: ['./graph-ql-detail.scss'], encapsulation: ViewEncapsulation.None} )
+@Component( {
+    selector: 'graph-ql-detail',
+    templateUrl: 'graph-ql-detail.html',
+    styleUrls: ['./graph-ql-detail.scss'],
+    encapsulation: ViewEncapsulation.None,
+    imports: [CommonModule, MatTabsModule, Properties]
+})
 export class GraphQLDetailComponent implements OnDestroy, OnInit{
 	constructor( private route: ActivatedRoute, private router:Router, private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService ){
 		this.target = this.router.url.substring( this.router.url.lastIndexOf('/')+1 );
@@ -31,10 +39,11 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 		const grandParent = this.route.parent;
 		const parentUrl = this.route.routeConfig.path.substr( 0, this.route.routeConfig.path.length-4 );
 		const parent = grandParent.routeConfig.children.find( (x)=>x.path==parentUrl );
-		this.name = parent.data["name"];
-		const display = parent.data["display"] || "name";
-		this.componentPageTitle.title = parent.data["name"];
-		this.profile = new Settings<PageSettings>( PageSettings, `${this.type}-detail`, this.profileService );
+		let pageSettings = <PageSettings>parent.data["pageSettings"];
+		this.name = pageSettings["name"];
+		const display = pageSettings["display"] || "name";
+		this.componentPageTitle.title = pageSettings["name"];
+		this.profile = new Settings<UserSettings>( UserSettings, `${this.type}-detail`, this.profileService );
 		await this.profile.loadedPromise;
 		try{
 			let schemaData = ( await this.graphQL.schema( [this.type] ) )[0];
@@ -65,6 +74,7 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 		}
 	}
 	onNavigationEnd =( val:NavigationEnd )=>{///settings
+		debugger;
 		var parts = val.url.split( '/' ); parts.shift();
 		if( parts.length<3 )//users->portfolio=2
 			return;
@@ -75,8 +85,8 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 		if( this.target==parentUrl || !parts.find((x)=>x.toLowerCase()==parentUrl.toLowerCase()) )//going from groups to roles.
 			return;
 		const parent = grandParent.routeConfig.children.find( (x)=>x.path==parentUrl );
-		const paths = [this.target, parent.data["name"] ];
-		for( let x = grandParent; x.routeConfig?.data && x.routeConfig?.data["name"]; x = x.parent )
+		const paths = [this.target, this.pageSettings.name ];
+		for( let x = grandParent; x.routeConfig?.data && this.pageSettings.name; x = x.parent )
 			paths.push( x.routeConfig.data["name"] );
 		if( paths[0].toUpperCase()==paths[2].toUpperCase() )
 			return;
@@ -90,8 +100,7 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 			const ql = `${this.fetchName}(filter:{target:{ eq:"${this.target}"}}){ ${columns} }`;
 			try{
 				const data = await this.graphQL.query( ql );
-				if( data==null )
-				{
+				if( data==null ){
 					debugger;
 					throw "data==null";
 				}
@@ -119,22 +128,21 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 				if( this.target=='$new' )
 					this.viewPromise = Promise.resolve(true);
 				else
-					fetch( columns );//query {  role(target:"user_management") { id name attributes created deleted updated description target  groups{id name attributes created deleted updated description target } rolePermissions { rightId id name api{id name} }  }  }
+					fetch( columns );
 			});
 		}
 		else
 			fetch( columns );
 	}
-	onSave( newValue:any )
-	{}
 	tabIndexChanged( event ){
 		 this.settings.tabIndex=<number>event;
 	}
 	get fetchName():string{ return this.schema.objectReferenceName; }
+	data:any
 	name:string;
-	data:any;
+	pageSettings:PageSettings;
 	get settings(){ return this.profile.value;}
-	profile:Settings<PageSettings>;// = new Settings<PageSettings>( PageSettings, "UserComponent", this.profileService );
+	profile:Settings<UserSettings>;// = new Settings<PageSettings>( PageSettings, "UserComponent", this.profileService );
 	get propertiesName(){ return this.target=="$new" ? `New ${this.schema.typeName}` : "Properties"; }
 	schema:Table;
 	siblings: Subject<Map<string,string>> = new Subject<Map<string,string>>();
@@ -144,7 +152,7 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 	viewPromise:Promise<boolean>;
 }
 
-class PageSettings{
-	assign( value:PageSettings ){ this.tabIndex = value.tabIndex;  }
+class UserSettings{
+	assign( value:UserSettings ){ this.tabIndex = value.tabIndex;  }
 	tabIndex:number=0;
 }

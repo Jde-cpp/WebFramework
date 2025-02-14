@@ -1,4 +1,5 @@
 import {Component, AfterViewInit, Inject, OnDestroy} from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Sort } from '@angular/material/sort';
 import {MatTableDataSource} from '@angular/material/table';
@@ -9,16 +10,17 @@ import {IGraphQL, Table, Field}  from '../../../services/IGraphQL';
 import { GraphQLTable } from '../table/table';
 
 
-interface Item
-{
+interface Item{
 	id:number;
 	name:string;
 	description?:string;
 }
 
-@Component( {templateUrl: 'select-dialog.html'} )
-export class SelectDialog implements OnDestroy, AfterViewInit
-{
+@Component({
+    templateUrl: 'select-dialog.html',
+    imports: [CommonModule]
+})
+export class SelectDialog implements OnDestroy, AfterViewInit{
 	constructor( public dialogRef:MatDialogRef<SelectDialog>, @Inject(MAT_DIALOG_DATA) public data:{selectedIds:number[], /*columns:string[],*/ schema:Table, mutation:string, linkTo:number, linkToField:string, title:string,isChildren:boolean,includeDeleted:boolean,subToField:string, subTo:number, graphQL:IGraphQL}, @Inject('IErrorService') private cnsle: IErrorService )
 	{}
 
@@ -52,7 +54,7 @@ export class SelectDialog implements OnDestroy, AfterViewInit
 // 			filter = "{id: {ne: 0}}";
 // 		else if( this.schema.fields.find((x)=>x.name=="deleted") )
 // 			filter = "{deleted: {eq:null}}";
-// 		this.graphQL.query( `query{ ${this.query}(filter: ${filter}) {${columns.join(" ")}} }` ).then( (results:any)=>
+// 		this.graphQL.query( `${this.query}(filter: ${filter}) {${columns.join(" ")}}` ).then( (results:any)=>
 // 		{
 // 			debugger;
 // 			let items = results[this.query];

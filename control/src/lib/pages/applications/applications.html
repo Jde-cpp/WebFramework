@@ -4,13 +4,15 @@
 		<mat-card class="docs-component-category-list-card">
 			<mat-card-title-group><mat-card-title><mat-icon aria-hidden="false" style="padding-right:10px" aria-label="App Icon">{{application.icon}}</mat-icon>{{application.name}}</mat-card-title></mat-card-title-group>
 			<mat-card-content style="height:144px">
-				<div *ngIf="application.on">Start:  {{application.startTimeString}}</div>
-				<div *ngIf="application.on" >Memory:  {{application.memoryString}}</div>
-				<div *ngIf="application.on">Client Level:  {{application.clientLevel}}</div>
-				<div *ngIf="application.on">DB Level:  {{application.dbLevel}}</div>
-				<ng-container *ngIf="application.on" >
-					<div *ngFor="let desc of application.description">{{desc}}</div>
-				</ng-container>
+				@if( application.on ) {
+					<div>Start:  {{application.startTimeString}}</div>
+					<div>Memory:  {{application.memoryString}}</div>
+					<div>Client Level:  {{application.clientLevel}}</div>
+					<div>DB Level:  {{application.dbLevel}}</div>
+					<ng-container>
+						<div *ngFor="let desc of application.description">{{desc}}</div>
+					</ng-container>
+				}
 			</mat-card-content>
 			<!-- <mat-card-content class="docs-component-category-list-card-summary">{{application.summary}}</mat-card-content> -->
 			<mat-card-actions>

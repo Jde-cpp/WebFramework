@@ -1,49 +1,43 @@
 import { Observable, Subscription } from 'rxjs';
-import {Component, AfterViewInit, Inject, OnDestroy, Input, OnInit, Output, EventEmitter} from '@angular/core';
-import {SelectionModel} from '@angular/cdk/collections';
-//import {Remove} from '@material-ui/icons';
-import { MatTableDataSource } from '@angular/material/table';
+import { Component, AfterViewInit, Inject, OnDestroy, Input, OnInit, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { SelectionModel } from '@angular/cdk/collections';
+import { MatTableModule,MatTableDataSource } from '@angular/material/table';
 import { Sort } from '@angular/material/sort';
 import { IErrorService } from '../../../services/error/IErrorService';
 import { Field, FieldKind, IGraphQL, Table } from '../../../services/IGraphQL';
 
-
-
-
-@Component( { selector: 'graph-ql-table', styleUrls: ['table.scss'], templateUrl: 'table.html'} )
-export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy
-{
+@Component({
+    selector: 'graph-ql-table',
+    styleUrls: ['table.scss'],
+    templateUrl: 'table.html',
+    imports: [CommonModule, MatTableModule]
+})
+export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy{
 	constructor( @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IErrorService') private cnsle: IErrorService )
 	{}
-	ngOnInit()
-	{
-		this.showDeletedSub = this.showDeletedEvents?.subscribe( (x)=>
-		{
+	ngOnInit(){
+		this.showDeletedSub = this.showDeletedEvents?.subscribe( (x)=>{
 			this.showDeleted = x
 		} );
 	}
-	ngAfterViewInit():void
-	{
+	ngAfterViewInit():void{
 		this.viewPromise = Promise.resolve( true );
 	}
-	ngOnDestroy()
-	{
+	ngOnDestroy(){
 		this.showDeletedSub?.unsubscribe();
 	}
-	static query( graphQL: IGraphQL, schema:Table, query: string, showExtra:boolean, isFlags:boolean ):{query:string, displayedColumns:Field[]}
-	{
+	static query( graphQL: IGraphQL, schema:Table, query: string, showExtra:boolean, isFlags:boolean ):{query:string, displayedColumns:Field[]}{
+		debugger;
 		var selectFields:string[] = [], displayedColumns=[];
-		for( let field of schema.fields )
-		{
+		for( let field of schema.fields ){
 			if( !showExtra && (field.type.kind==FieldKind.LIST || ["created", "updated", "deleted", "target"].includes(field.name)) )
 				continue;
-			if( field.type.underlyingKind==FieldKind.SCALAR )
-			{
+			if( field.type.underlyingKind==FieldKind.SCALAR ){
 				displayedColumns.push( field );
 				selectFields.push( field.name );
 			}
-			else if( field.type.underlyingKind==FieldKind.OBJECT )
-			{
+			else if( field.type.underlyingKind==FieldKind.OBJECT ){
 				displayedColumns.push( field );
 				selectFields.push( `${field.name}{name}` );
 			}
@@ -54,16 +48,15 @@ export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy
 			filter = "{id: {ne: 0}}";
 		else if( schema.fields.find((x)=>x.name=="deleted") )
 			filter = "{deleted: {eq:null}}";
+		debugger;
 		return {query: `${query}(filter: ${filter}) {${selectFields.join(" ")}}`, displayedColumns: displayedColumns };
 	}
-	checkboxLabel( row?: any ): string
-	{
+	checkboxLabel( row?: any ): string{
 		return row
 			? `${this.selections.isSelected(row) ? 'deselect' : 'select'} row ${row.name}`
 			: `${this.isAllSelected() ? 'select' : 'deselect'} all`;
 	}
-	masterToggle()
-	{
+	masterToggle(){
 		if( this.isAllSelected() )
 			this.selections.deselect( ...this.dataSource.data );
 		else
@@ -72,15 +65,13 @@ export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy
 
 	cellClick( row:any ){  this.selection = this.selection == row ? null : row; this.selectionChange.emit( this.selection ); }
 
-	edit2( row?: any ): string
-	{
+	edit2( row?: any ): string{
 		return row
 			? `${this.selections.isSelected(row) ? 'deselect' : 'select'} row ${row.name}`
 			: `${this.isAllSelected() ? 'select' : 'deselect'} all`;
 	}
 
-	delete( row?: any ): string
-	{
+	delete( row?: any ): string{
 		return row
 			? `${this.selections.isSelected(row) ? 'deselect' : 'select'} row ${row.name}`
 			: `${this.isAllSelected() ? 'select' : 'deselect'} all`;
@@ -114,6 +105,7 @@ export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy
 	get listColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.LIST ).map( (x)=>x.name ); }
 	get dateColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingName=="DateTime" ).map( (x)=>x.name ); }
 	get boolColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingName=="Boolean" ).map( (x)=>x.name ); }
+	get uintColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingName=="UInt" ).map( (x)=>x.name ); }
 
 
 	viewPromise:Promise<boolean>;

@@ -12,9 +12,10 @@ import {IErrorService} from '../../services/error/IErrorService';
 import * as AppFromServer from '../../proto/App.FromServer'; import FromServer = AppFromServer.Jde.App.Proto.FromServer;
 
 @Component({
-  selector: 'applications',
-  templateUrl: './applications.html',
-  styleUrls: ['./applications.scss']
+    selector: 'applications',
+    templateUrl: './applications.html',
+    styleUrls: ['./applications.scss'],
+    standalone: false
 })
 export class Applications implements OnInit, OnDestroy
 {
@@ -32,7 +33,7 @@ export class Applications implements OnInit, OnDestroy
 		this.applications.length = 0;
 		try{
 			//await this.appService.custom( 99, new TextEncoder().encode("adsf") );
-			const applications = await this.appService.queryArray<App>( "applications{id name dbLogLevel fileLogLevel}" );
+			const applications = await this.appService.queryArray<App>( "apps{id name dbLogLevel fileLogLevel}" );
 			for( let app of applications )
 				this.applications.push( new AppStatus(app) );
 			this.subscription = this.appService.statuses();

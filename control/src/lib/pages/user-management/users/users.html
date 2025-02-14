@@ -1,36 +1,38 @@
-<ng-container *ngIf="viewPromise | async">
-	<mat-toolbar style="height:80px">
-		<span></span>
-		<button mat-icon-button color="primary" style="margin-left :20px; margin-right:10px" (click)="insert()"><mat-icon>add</mat-icon></button>
-		<button mat-icon-button color="primary" [disabled]="!haveSelection" style="margin-left :20px; margin-right:10px" (click)="edit()"><mat-icon>{{selection?.deleted ? "restore" : "edit_attributes"}}</mat-icon></button>
-		<button mat-icon-button color="primary" [disabled]="!haveSelection" style="margin-left :20px; margin-right:10px" (click)="delete()"><mat-icon>{{selection?.deleted ? "delete_forever" : "remove"}}</mat-icon></button>
-		<span></span>
-		<mat-checkbox [checked]="showDeleted" color="primary" (change)="toggleShowDeleted()">Show Deleted</mat-checkbox>
-	</mat-toolbar>
-	<div style="align-content: center; margin: auto;  text-align: center">
-		<mat-table #mainTable matSort [dataSource]="users" class="mat-elevation-z8" (matSortChange)="sortData($event)"  [matSortActive]="sort.active" [matSortDirection]="sort.direction">
-			<ng-container matColumnDef="name">
-				<mat-header-cell mat-sort-header class="idCell" *matHeaderCellDef> Name </mat-header-cell>
-				<mat-cell class="nameCell" *matCellDef="let element"> {{element.name}} </mat-cell>
-			</ng-container>
-			<ng-container matColumnDef="target">
-				<mat-header-cell mat-sort-header class="typeCell" *matHeaderCellDef> Target </mat-header-cell>
-				<mat-cell class="typeCell" *matCellDef="let element"> {{element.target}} </mat-cell>
-			</ng-container>
-			<ng-container matColumnDef="description">
-				<mat-header-cell mat-sort-header class="typeCell" *matHeaderCellDef> Description </mat-header-cell>
-				<mat-cell class="typeCell" *matCellDef="let element"> {{element.description}} </mat-cell>
-			</ng-container>
-			<ng-container matColumnDef="authenticator">
-				<mat-header-cell mat-sort-header class="typeCell" *matHeaderCellDef> Authenticator </mat-header-cell>
-				<mat-cell class="typeCell" *matCellDef="let element"> {{authenticators.get(element.authenticatorId)}} </mat-cell>
-			</ng-container>
-			<ng-container matColumnDef="deleted">
-				<mat-header-cell mat-sort-header class="booleanCell" *matHeaderCellDef> Deleted </mat-header-cell>
-				<mat-cell class="booleanCell" *matCellDef="let element"> {{element.deleted}} </mat-cell>
-			</ng-container>
-			<mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-			<mat-row mat-row *matRowDef="let row; columns: displayedColumns;" (click)="cellClick(row)" [class.hidden]="!showDeleted && row.deleted" [class.highlight]="selection?.id==row.id"></mat-row>
-		</mat-table>
-	</div>
-</ng-container>
+<!--@if( viewPromise | async ){
+	<ng-container>
+		<mat-toolbar style="height:80px">
+			<span></span>
+			<button mat-icon-button color="primary" style="margin-left :20px; margin-right:10px" (click)="insert()"><mat-icon>add</mat-icon></button>
+			<button mat-icon-button color="primary" [disabled]="!haveSelection" style="margin-left :20px; margin-right:10px" (click)="edit()"><mat-icon>{{selection?.deleted ? "restore" : "edit_attributes"}}</mat-icon></button>
+			<button mat-icon-button color="primary" [disabled]="!haveSelection" style="margin-left :20px; margin-right:10px" (click)="delete()"><mat-icon>{{selection?.deleted ? "delete_forever" : "remove"}}</mat-icon></button>
+			<span></span>
+			<mat-checkbox [checked]="showDeleted" color="primary" (change)="toggleShowDeleted()">Show Deleted</mat-checkbox>
+		</mat-toolbar>
+		<div style="align-content: center; margin: auto;  text-align: center">
+			<mat-table #mainTable matSort [dataSource]="users" class="mat-elevation-z8" (matSortChange)="sortData($event)"  [matSortActive]="sort.active" [matSortDirection]="sort.direction">
+				<ng-container matColumnDef="name">
+					<mat-header-cell mat-sort-header class="idCell" *matHeaderCellDef> Name </mat-header-cell>
+					<mat-cell class="nameCell" *matCellDef="let element"> {{element.name}} </mat-cell>
+				</ng-container>
+				<ng-container matColumnDef="target">
+					<mat-header-cell mat-sort-header class="typeCell" *matHeaderCellDef> Target </mat-header-cell>
+					<mat-cell class="typeCell" *matCellDef="let element"> {{element.target}} </mat-cell>
+				</ng-container>
+				<ng-container matColumnDef="description">
+					<mat-header-cell mat-sort-header class="typeCell" *matHeaderCellDef> Description </mat-header-cell>
+					<mat-cell class="typeCell" *matCellDef="let element"> {{element.description}} </mat-cell>
+				</ng-container>
+				<ng-container matColumnDef="authenticator">
+					<mat-header-cell mat-sort-header class="typeCell" *matHeaderCellDef> Authenticator </mat-header-cell>
+					<mat-cell class="typeCell" *matCellDef="let element"> {{authenticators.get(element.authenticatorId)}} </mat-cell>
+				</ng-container>
+				<ng-container matColumnDef="deleted">
+					<mat-header-cell mat-sort-header class="booleanCell" *matHeaderCellDef> Deleted </mat-header-cell>
+					<mat-cell class="booleanCell" *matCellDef="let element"> {{element.deleted}} </mat-cell>
+				</ng-container>
+				<mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+				<mat-row mat-row *matRowDef="let row; columns: displayedColumns;" (click)="cellClick(row)" [class.hidden]="!showDeleted && row.deleted" [class.highlight]="selection?.id==row.id"></mat-row>
+			</mat-table>
+		</div>
+	</ng-container>
+}-->

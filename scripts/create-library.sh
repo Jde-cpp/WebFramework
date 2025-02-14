@@ -1,9 +1,10 @@
 #!/bin/bash
 library=${1};  #jde-blockly
-dir=${2}; #WebBlockly
-webRoot=$(dirname $(readlink -e ..)) #jde/web
-source $webRoot/../Framework/scripts/common.sh;
-controlDir=$webRoot/$dir/control;
+dir=${2}; #/home/user/.../WebBlockly
+scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )";
+echo starting Library $library;
+source $scriptDir/../../../Framework/scripts/common.sh;
+controlDir=$dir/control;
 if [ \"$(head -c 2 tsconfig.json)\" == \"/*\" ]; then
 	echo "removing comments";
 	sed -i '1d' tsconfig.json;
@@ -12,12 +13,12 @@ if [ ! -d projects/$library ]; then #project not installed
 	configPath=.compilerOptions.paths.\"$library\"
 	angularConfig=`jq .projects.\"$library\".root angular.json`;
 	if [ ! -z "$angularConfig" ]; then
-	#if [ ! "$angularConfig" -eq "null" ]; then
 		echo removing from [angular][tsconfig].json;
 		cmd="del(.projects.\"$library\")"
 		jq $cmd angular.json > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq $cmd angular.json; exit 1; fi;
 		mv temp.json angular.json;
 		cmd="del($configPath)";
+		if [ \"$(head -c 2 tsconfig.json)\" == \"/*\" ]; then sed -i '1d' tsconfig.json; fi;
 		jq $cmd tsconfig.json > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq $cmd tsconfig.json; exit 1; fi;
 		mv temp.json tsconfig.json;
 	fi;

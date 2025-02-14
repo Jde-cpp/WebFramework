@@ -1,15 +1,18 @@
 import {Component, Input, Output, OnInit, EventEmitter, NgModule,ViewChild} from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
-import {MatChipsModule} from '@angular/material/chips';
-import {MatDatepickerInputEvent, MatDatepickerModule} from '@angular/material/datepicker';
-import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatChipListbox, MatChipOption, MatChipsModule} from '@angular/material/chips';
+import {MatDatepickerInputEvent, MatDatepickerModule, MatDatepickerToggle, MatDateRangeInput, MatDateRangePicker} from '@angular/material/datepicker';
+import {MatFormField, MatFormFieldModule, MatLabel} from '@angular/material/form-field';
 
 import { DateUtilities, Day } from '../../utilities/dateUtilities';
 import { IAssignable } from '../../utilities/settings';
 
 export enum TimeFrame{None=0, Week=7, Month=30, Quarter=90, Year=360, All=1000}
 
-@Component( {selector: 'date-range',templateUrl: 'date-range.html'} )
+@Component( {
+	selector: 'date-range',
+	templateUrl: 'date-range.html',
+	imports: [MatFormField, MatLabel, MatDateRangeInput, MatDatepickerToggle, MatDateRangePicker,MatChipListbox,MatChipOption]} )
 export class DateRange implements OnInit
 {
 	get startDate()
@@ -153,7 +156,8 @@ export class DateRangeSettings implements IAssignable<DateRangeSettings>
 
 	get start(){ return this.#start; } set start( x:Day ){ this.#start = x; }  #start:Day;
 }
-
+/*
 @NgModule( {exports: [DateRange], declarations: [DateRange], imports:[MatChipsModule,MatDatepickerModule,MatFormFieldModule]} )
 export class DateRangeModule
 {}
+*/

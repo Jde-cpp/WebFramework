@@ -8,8 +8,8 @@ export * from './lib/pages/GraphQL/select-dialog/select-dialog';
 export * from './lib/pages/authorization/login-page/login-page';
 export * from './lib/pages/applications/applications';
 export * from './lib/pages/logs/logs';
-export * from './lib/pages/user-management/users/users';
-export * from './lib/pages/user-management/users/dialog/user-dialog';
+//export * from './lib/pages/user-management/users/users';
+//export * from './lib/pages/user-management/users/dialog/user-dialog';
 //export * from './lib/proto/FromServer';
 export * from './lib/services/IGraphQL'
 export * from './lib/services/auth.service'
@@ -22,6 +22,7 @@ export * from './lib/services/error/IErrorService';
 export * from './lib/shared/date-range/date-range'
 export * from './lib/shared/link-select/link-select'
 export * from './lib/shared/paginator/paginator'
+export * from './lib/shared/pipes/enum-keys-pipe';
 export * from './lib/shared/severity-picker/severity-picker'
 export * from './lib/utilities/collections';
 export * from './lib/utilities/dateUtilities';
@@ -32,5 +33,4 @@ export * from './lib/utilities/protoUtilities';
 export * from './lib/utilities/settings';
 export * from './lib/utilities/stl';
 export * from './lib/jde-framework.module';
-
-
+export * from './lib/pages/GraphQL/model/PageSettings';

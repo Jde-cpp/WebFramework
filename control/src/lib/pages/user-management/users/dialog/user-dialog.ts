@@ -1,3 +1,4 @@
+/*
 import {Component, Inject, OnDestroy} from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import {IGraphQL}  from '../../../../services/IGraphQL'
@@ -49,3 +50,4 @@ export class UserEntryDialog implements OnDestroy
 	authenticators:Map<number,string>
 	saving=false;
 }
+*/

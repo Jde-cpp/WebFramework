@@ -5,7 +5,11 @@ import {MatSelectModule} from '@angular/material/select';
 import * as AppFromServer from '../../proto/App.FromServer'; import FromServer = AppFromServer.Jde.App.Proto.FromServer;
 import * as CommonProto from '../../proto/Common'; import Common = CommonProto.Jde.Proto;
 
-@Component({ selector: 'severity-picker', templateUrl: './severity-picker.html' })
+@Component({
+    selector: 'severity-picker',
+    templateUrl: './severity-picker.html',
+    imports: [MatFormFieldModule, MatSelectModule]
+})
 export class SeverityPicker{
 	ngOnInit()
 	{
@@ -30,6 +34,7 @@ interface LogOption
 	name:string;
 	value:Common.ELogLevel;
 }
-
-@NgModule( {exports: [SeverityPicker], declarations: [SeverityPicker], imports:[/*BrowserModule,*/MatFormFieldModule,MatSelectModule]} )
+/*
+@NgModule( {exports: [SeverityPicker], declarations: [SeverityPicker], imports:[MatFormFieldModule,MatSelectModule]} )
 export class SeverityPickerModule {}
+*/

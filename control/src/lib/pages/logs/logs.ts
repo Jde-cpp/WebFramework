@@ -1,4 +1,5 @@
 import { HostListener, Component, OnDestroy, OnInit, ViewChild, Inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatTable } from '@angular/material/table';
 import {Sort} from '@angular/material/sort';
 import {MatDatepickerInputEvent} from '@angular/material/datepicker';
@@ -24,7 +25,12 @@ import { FormControl } from '@angular/forms';
 // Add dates.
 // Fix pause button.
 // Comment out statuses
-@Component({selector: 'logs.main-content.mat-drawer-container.my-content',templateUrl: './logs.html',styleUrls: ['./logs.css']})
+@Component({
+	selector: 'logs.main-content.mat-drawer-container.my-content',
+	templateUrl: './logs.html',
+	styleUrls: ['./logs.css'],
+	imports: [CommonModule]
+})
 export class LogsComponent implements OnInit, OnDestroy{
 	constructor( public _componentPageTitle: ComponentPageTitle, private appService:AppService, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private errorService: IErrorService ){
 		this.settingsContainer = new Settings<LogSettings>( LogSettings, "LogComponent", this.profileService );

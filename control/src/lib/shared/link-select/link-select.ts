@@ -1,18 +1,17 @@
 import {Component, Input, Output, OnInit, EventEmitter, NgModule} from '@angular/core';
-import {MatChipsModule} from '@angular/material/chips';
-import {MatSelectModule} from '@angular/material/select';
+import {MatChipListbox, MatChipsModule} from '@angular/material/chips';
+import {MatSelect, MatSelectModule} from '@angular/material/select';
 import { IAssignable } from '../../utilities/settings';
 import { CircularBuffer } from '../../utilities/collections'
-import { CommonModule } from '@angular/common';
 
-@Component( {selector: 'link-select',templateUrl: 'link-select.html'} )
-export class LinkSelect<TOptionKey> implements OnInit
-{
+@Component( {
+	selector: 'link-select',
+	templateUrl: 'link-select.html',
+	imports:[MatChipListbox,MatSelect] })
+export class LinkSelect<TOptionKey> implements OnInit{
 	ngOnInit()
-	{
-	}
-	valueChange( selectedId )
-	{
+	{}
+	valueChange( selectedId ){
 		this.selected = selectedId;
 		this.selectChange.emit( selectedId );
 		this.links.unshift( selectedId );
@@ -70,6 +69,3 @@ export class LinkSelectOptions<TOptionKey> implements IAssignable<LinkSelectOpti
 	selected:TOptionKey;
 	links:CircularBuffer<TOptionKey>;
 }
-
-@NgModule( {exports: [LinkSelect], declarations: [LinkSelect], imports:[CommonModule,MatChipsModule,MatSelectModule]} )
-export class LinkSelectModule {}
