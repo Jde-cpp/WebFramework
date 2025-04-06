@@ -11,14 +11,14 @@
 						<mat-option (onSelectionChange)="onChangeApplication($event)" [value]="application.id">{{application.name}}</mat-option>
 					</ng-container>
 				</mat-select> -->
-				<mat-select [(ngModel)]="applicationId" name="applications" ngDefaultControl (selectionChange)="onChangeApplication($event.value)">
+				<mat-select name="applications" ngDefaultControl (selectionChange)="onChangeApplication($event.value)">
 					<mat-option *ngFor="let application of applications" [value]="application.id">{{application.name}}</mat-option>
 				</mat-select>
 			</mat-form-field>
 
 			<button mat-icon-button><mat-icon class="iconButton" (click)="paused=!paused">{{paused ? 'play_arrow' : 'pause'}}</mat-icon></button> <!-- -->
 			<div>|</div>
-			<severity-picker style="margin-left:15px;" (levelChange)="onLevelChange($event)" [level]="level"></severity-picker>
+			<!-- <severity-picker style="margin-left:15px;" (levelChange)="onLevelChange($event)" [level]="level"></severity-picker> -->
 			<div>|</div>
 			<!-- <mat-form-field>
 				<input matInput [matDatepicker]="dateId" placeholder="Date" [(formControl)]="start" (dateChange)="startChange($event)">

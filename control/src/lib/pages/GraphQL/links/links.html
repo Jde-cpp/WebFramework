@@ -6,7 +6,7 @@
 			<button mat-icon-button color="primary" [disabled]="!haveSelection" style="margin-left :20px; margin-right:10px" (click)="removeLink()"><mat-icon>link_off</mat-icon></button>
 		</mat-toolbar>
 		<div style="align-content: center; margin: auto;  text-align: center">
-			<mat-table #table matSort [dataSource]="items" class="mat-elevation-z8" (matSortChange)="sortData($event)"  [matSortActive]="sort.active" [matSortDirection]="sort.direction">
+			<mat-table #table matSort [dataSource]="items" class="mat-elevation-z8" (matSortChange)="sortData($event)" [matSortActive]="sort.active" [matSortDirection]="sort.direction">
 				<ng-container [matColumnDef]="column" *ngFor="let column of stringColumnNames">
 					<mat-header-cell mat-header-cell *matHeaderCellDef> {{column}} </mat-header-cell>
 					<mat-cell *matCellDef="let element"> {{element[column]}} </mat-cell>

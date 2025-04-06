@@ -3,19 +3,21 @@ import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dial
 import { SeverityPicker } from '../../shared/severity-picker/severity-picker'
 import { DomSanitizer } from "@angular/platform-browser";
 import {Params} from '@angular/router';
-import { MatIconRegistry } from "@angular/material/icon";
+import { MatIcon, MatIconRegistry } from "@angular/material/icon";
 import { ComponentPageTitle } from 'jde-material';
 import {AppService} from '../../services/app/app.service';
 import {Observable, Subscription} from 'rxjs';
 import {App, AppStatus} from '../../services/app/application';
 import {IErrorService} from '../../services/error/IErrorService';
 import * as AppFromServer from '../../proto/App.FromServer'; import FromServer = AppFromServer.Jde.App.Proto.FromServer;
+import { MatCardModule } from '@angular/material/card';
+import { MatTableModule } from '@angular/material/table';
 
 @Component({
     selector: 'applications',
     templateUrl: './applications.html',
     styleUrls: ['./applications.scss'],
-    standalone: false
+    imports: [MatCardModule, MatIcon, MatTableModule]
 })
 export class Applications implements OnInit, OnDestroy
 {

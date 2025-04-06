@@ -75,7 +75,7 @@ export class DateRange implements OnInit
 	{
 		return DateUtilities.toDays( new Date(time.getTime()-time.getTimezoneOffset()*60000) );
 	}
-	startChange( e:MatDatepickerInputEvent<Date> )
+	startChange( e:MatDatepickerInputEvent<Date>|any )
 	{
 		console.log( `startChange = ${e.value}  - start=${this.settings.start} - end=${this.settings.end ?? this.settings.max}, days=${this.settings.dayCount}` );
 		this.settings.timeFrame = null;
@@ -87,8 +87,7 @@ export class DateRange implements OnInit
 //		console.log( 'start='+this.range.controls['start'].value );
 //		console.log( 'end='+this.range.controls['end'].value );
 	}
-	endChange( e:MatDatepickerInputEvent<Date> )
-	{
+	endChange( e:MatDatepickerInputEvent<Date>|any ){
 		console.log( `endChange = ${e.value}  - start=${this.settings.start} - end=${this.settings.end ?? this.settings.max}, days=${this.settings.dayCount}` );
 		this.settings.end = e.value ? DateUtilities.toDays( e.value ) : null;
 		//console.log( 'start='+this.range.controls['start'].value );

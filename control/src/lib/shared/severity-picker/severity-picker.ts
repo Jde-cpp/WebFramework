@@ -1,27 +1,25 @@
-import {Component,EventEmitter,Input,NgModule,Output} from '@angular/core';
+import {Component,CUSTOM_ELEMENTS_SCHEMA,EventEmitter,Input,NgModule,Output} from '@angular/core';
 //import { BrowserModule } from '@angular/platform-browser'
 import { MatFormFieldModule } from '@angular/material/form-field';
 import {MatSelectModule} from '@angular/material/select';
 import * as AppFromServer from '../../proto/App.FromServer'; import FromServer = AppFromServer.Jde.App.Proto.FromServer;
 import * as CommonProto from '../../proto/Common'; import Common = CommonProto.Jde.Proto;
+import { NgFor } from '@angular/common';
+import { MatChip, MatChipListbox } from '@angular/material/chips';
 
 @Component({
     selector: 'severity-picker',
     templateUrl: './severity-picker.html',
-    imports: [MatFormFieldModule, MatSelectModule]
+    imports: [MatChip,MatChipListbox,MatFormFieldModule, MatSelectModule,NgFor],
+		schemas: [ CUSTOM_ELEMENTS_SCHEMA ]
 })
 export class SeverityPicker{
-	ngOnInit()
-	{
-	}
-	/*onSelectionChange( value:Common.ELogLevel )
-	{
-		if( this.level!=value )
-		{
+	onSelectionChange( value:Common.ELogLevel ){
+		if( this.level!=value ){
 			this.level=value;
 			this.levelChange.emit( value );
 		}
-	}*/
+	}
 	get level(){ return this.#level; } @Input() set level(x){ let emit = this.#level!==undefined; this.#level=x; if( emit )this.levelChange.emit( x ); }   #level:Common.ELogLevel;
 	@Output() levelChange = new EventEmitter<Common.ELogLevel>();
 	@Input() isSelect:boolean=true;
@@ -34,7 +32,3 @@ interface LogOption
 	name:string;
 	value:Common.ELogLevel;
 }
-/*
-@NgModule( {exports: [SeverityPicker], declarations: [SeverityPicker], imports:[MatFormFieldModule,MatSelectModule]} )
-export class SeverityPickerModule {}
-*/

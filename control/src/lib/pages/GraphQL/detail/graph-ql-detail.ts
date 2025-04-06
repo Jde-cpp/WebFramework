@@ -8,21 +8,23 @@ import { MatDialog } from '@angular/material/dialog';
 import { ComponentPageTitle } from 'jde-material';
 
 import {IErrorService} from '../../../services/error/IErrorService';
-import {IGraphQL, Table}  from '../../../services/IGraphQL';
+import {IEnum, IGraphQL}  from '../../../services/IGraphQL';
+import {TableSchema} from '../../../model/ql/schema/TableSchema'
+import { MetaObject } from '../../../model/ql/schema/MetaObject';
 import {IProfile} from '../../../services/profile/IProfile';
 import {Settings} from '../../../utilities/settings';
-import { MetaObject } from '../../../utilities/JsonUtils';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MatTabsModule } from '@angular/material/tabs';
 import{ Properties } from '../properties/properties';
 import{ PageSettings } from '../model/PageSettings';
+import { clone } from 'jde-framework';
 
 @Component( {
     selector: 'graph-ql-detail',
     templateUrl: 'graph-ql-detail.html',
     styleUrls: ['./graph-ql-detail.scss'],
     encapsulation: ViewEncapsulation.None,
-    imports: [CommonModule, MatTabsModule, Properties]
+    imports: [CommonModule, MatTabsModule/*, Properties*/]
 })
 export class GraphQLDetailComponent implements OnDestroy, OnInit{
 	constructor( private route: ActivatedRoute, private router:Router, private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService ){
@@ -54,9 +56,9 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 			if( !columns.includes(display) )
 				columns.push( display );
 			//TODO find out why we are querying 2x, this time only for name/target.
-			const ql = `${this.schema.objectCollectionName}(deleted:null){${columns.join(" ")}}`;
+			const ql = `${this.schema.collectionName}(deleted:null){${columns.join(" ")}}`;
 			const data = await this.graphQL.query( ql );
-			const results = data[this.schema.objectCollectionName];
+			const results = data[this.schema.collectionName];
 			const siblings = new Map<string,string>();
 			if( results ){
 				const parent = this.route.url["value"][0].path;
@@ -118,12 +120,12 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 		if( lists.length ){
 			this.graphQL.schema( lists ).then( (tables)=>{
 				for( const table of tables ){
-					if( table.typeName.startsWith(this.schema.typeName) )
-						table.subType = new MetaObject( table.typeName.substring(this.schema.typeName.length) );
-					else if( table.typeName.endsWith(this.schema.typeName) )
-						table.subType = new MetaObject( table.typeName.substring(0, table.typeName.length-this.schema.typeName.length) );
+					if( table.type.startsWith(this.schema.type) )
+						table.subType = new MetaObject( table.type.substring(this.schema.type.length) );
+					else if( table.type.endsWith(this.schema.type) )
+						table.subType = new MetaObject( table.type.substring(0, table.type.length-this.schema.type.length) );
 					this.tabs.push( table );
-					columns = columns.concat( ` ${table.objectCollectionName}{${table.columns}}` );
+					columns = columns.concat( ` ${table.collectionName}{${table.columns}}` );
 				}
 				if( this.target=='$new' )
 					this.viewPromise = Promise.resolve(true);
@@ -137,16 +139,17 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 	tabIndexChanged( event ){
 		 this.settings.tabIndex=<number>event;
 	}
-	get fetchName():string{ return this.schema.objectReferenceName; }
+	get fetchName():string{ return this.schema.singular; }
 	data:any
 	name:string;
+	copy( x:any ){ return clone(x); }
 	pageSettings:PageSettings;
 	get settings(){ return this.profile.value;}
 	profile:Settings<UserSettings>;// = new Settings<PageSettings>( PageSettings, "UserComponent", this.profileService );
-	get propertiesName(){ return this.target=="$new" ? `New ${this.schema.typeName}` : "Properties"; }
-	schema:Table;
+	get propertiesName(){ return this.target=="$new" ? `New ${this.schema.type}` : "Properties"; }
+	schema:TableSchema;
 	siblings: Subject<Map<string,string>> = new Subject<Map<string,string>>();
-	tabs = new Array<Table>();
+	tabs = new Array<TableSchema>();
 	target:string;
 	get type():string{ return this.name.substr( 0, this.name.length-1 ); }
 	viewPromise:Promise<boolean>;

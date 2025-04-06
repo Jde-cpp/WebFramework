@@ -5,7 +5,7 @@ import { Sort } from '@angular/material/sort';
 import {MatTableDataSource} from '@angular/material/table';
 import {SelectionModel} from '@angular/cdk/collections';
 import { IErrorService } from '../../../services/error/IErrorService';
-import {IGraphQL, Table, Field}  from '../../../services/IGraphQL';
+import {IGraphQL, TableSchema, Field}  from '../../../services/IGraphQL';
 
 import { GraphQLTable } from '../table/table';
 
@@ -21,7 +21,7 @@ interface Item{
     imports: [CommonModule]
 })
 export class SelectDialog implements OnDestroy, AfterViewInit{
-	constructor( public dialogRef:MatDialogRef<SelectDialog>, @Inject(MAT_DIALOG_DATA) public data:{selectedIds:number[], /*columns:string[],*/ schema:Table, mutation:string, linkTo:number, linkToField:string, title:string,isChildren:boolean,includeDeleted:boolean,subToField:string, subTo:number, graphQL:IGraphQL}, @Inject('IErrorService') private cnsle: IErrorService )
+	constructor( public dialogRef:MatDialogRef<SelectDialog>, @Inject(MAT_DIALOG_DATA) public data:{selectedIds:number[], /*columns:string[],*/ schema:TableSchema, mutation:string, linkTo:number, linkToField:string, title:string,isChildren:boolean,includeDeleted:boolean,subToField:string, subTo:number, graphQL:IGraphQL}, @Inject('IErrorService') private cnsle: IErrorService )
 	{}
 
 	ngAfterViewInit():void

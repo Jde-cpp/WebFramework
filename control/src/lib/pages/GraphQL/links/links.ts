@@ -3,22 +3,24 @@ import { Component, AfterViewInit, OnInit, OnDestroy, Inject, ViewChild, Input, 
 import { CommonModule } from '@angular/common';
 import {ActivatedRoute, NavigationEnd, Params, Router, RouterModule, Routes} from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { Sort } from '@angular/material/sort';
-import { MatTable } from '@angular/material/table';
+import { MatSortModule, Sort } from '@angular/material/sort';
+import { MatTable, MatTableModule } from '@angular/material/table';
 import { ComponentPageTitle } from 'jde-material';
 
 import {IErrorService} from '../../../services/error/IErrorService';
-import {IGraphQL, Table, Field, FieldKind}  from '../../../services/IGraphQL';
+import {IGraphQL, TableSchema, Field, FieldKind}  from '../../../services/IGraphQL';
 import {IProfile} from '../../../services/profile/IProfile';
 import {Settings} from '../../../utilities/settings';
 import {StringUtils} from '../../../utilities/StringUtils'
-import { SelectDialog } from '../select-dialog/select-dialog';
+//import { SelectDialog } from '../select-dialog/select-dialog';
 import { MetaObject } from '../../../utilities/JsonUtils';
+import { MatToolbar } from '@angular/material/toolbar';
+import { MatIcon } from '@angular/material/icon';
 
 @Component( {
     selector: 'graph-ql-links',
     templateUrl: 'links.html',
-    imports: [CommonModule]
+    imports: [CommonModule, MatIcon, MatTable, MatTableModule, MatSortModule, MatToolbar]
 })
 export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit{
 	constructor( private route: ActivatedRoute, private router:Router, private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
@@ -51,7 +53,7 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit{
 		this.viewPromise = Promise.resolve( true );
 	}
 	onNavigationEnd =( val:NavigationEnd )=>{}
-	edit( fieldName:string, element ){
+/*	edit( fieldName:string, element ){
 		var field = this.schema.fields.find( (x)=>x.name==fieldName );
 		this.graphQL.schema( [field.type.underlyingName] ).then( (x)=>{
 			const dialogRef = this.dialog.open( SelectDialog,{
@@ -64,7 +66,7 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit{
 					this.load();
 			});
 		}).catch( (e)=>console.error(e) );
-	}
+	}*/
 	async load(){
 		this.viewPromise = null;
 		const valueMember = this.schema.objectCollectionName;
@@ -76,7 +78,7 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit{
 	}
 	cellClick( row:any ){  this.selection = this.selection == row ? null : row; }
 	addLink(){
-		let show = (schema:Table)=>{
+		let show = (schema:TableSchema)=>{
 			let selectedIds = this.items.map( (x)=>x.id );
 			const dialogRef = this.dialog.open( SelectDialog,{
 				width: '600px',
@@ -115,7 +117,7 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit{
 
 	get haveSelection():boolean{ return !!this.selection; }
 	selection:any|null|undefined;
-	@Input() schema:Table;
+	@Input() schema:TableSchema;
 	@ViewChild(MatTable, {static: true}) table: MatTable<any>;
 	get items(){ return this.parent[this.schema.objectCollectionName]; }
 	@Input() parent:any;

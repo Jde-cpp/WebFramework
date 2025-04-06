@@ -3,7 +3,6 @@ import { Subject,Observable,firstValueFrom, tap } from 'rxjs';
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {Instance} from './app.service.types'
-import { IErrorService } from '../error/IErrorService';
 
 import { ETransport, IError, ProtoService, RequestId } from '../proto.service';
 import * as AppFromServer from '../../proto/App.FromServer'; import FromServer = AppFromServer.Jde.App.Proto.FromServer;
@@ -12,21 +11,21 @@ import * as AppCommon from '../../proto/App'; import App = AppCommon.Jde.App.Pro
 import * as CommonProto from '../../proto/Common'; import ELogLevel = CommonProto.Jde.Proto.ELogLevel; import IException = CommonProto.Jde.Proto.IException;
 import { IEnvironment } from 'jde-material';
 import { IGraphQL } from '../IGraphQL';
-import { P } from '@angular/cdk/keycodes';
+import { FieldKind, TableSchema } from 'jde-framework';
 
-type StatusSubscription = (statuses:FromServer.IStatus) => void;
 type Resolve<T> = (value: T | PromiseLike<T>) => void;
 type Reject = (reason?: any) => void;
-type QLQuery = string;
 
+/*
 class PromiseCallbacks<T>{
 	constructor( public resolve:Resolve<T>, public reject:Reject )
 	{}
 }
+*/
 
 @Injectable( {providedIn: 'root'} )
 export class AppService extends ProtoService<FromClient.Transmission,FromServer.IMessage> implements IGraphQL{
-	constructor( http: HttpClient, @Inject('IEnvironment') private environment: IEnvironment, @Inject('IErrorService') private cnsle: IErrorService ){
+	constructor( http: HttpClient, @Inject('IEnvironment') private environment: IEnvironment ){
 		super( FromClient.Transmission, http, environment.get<ETransport>("httpTransport") );
 		let appServer = environment.get<Instance>( 'applicationServer' );
 		if( !appServer ){
@@ -42,6 +41,28 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 	async iotInstances():Promise<Instance[]>{
 		const y = await this.get( "IotWebSocket" );
 		return y["servers"];
+	}
+
+	protected fieldColumns( schema: TableSchema, showDeleted:boolean ):string[]{
+		let columns = [];
+		let filtered = schema.fields.filter(
+			(x)=>!this.excludedColumns(schema.collectionName).includes(x.name) && (x.name!="deleted" || showDeleted) );
+		for( const field of filtered ){
+			if( field.type.underlyingKind==FieldKind.UNION )
+				columns.push( `${field.name}{id}` );
+			else if( field.type.underlyingKind==FieldKind.OBJECT )
+				columns.push( `${field.name}{id name}` );
+			else
+				columns.push( field.name );
+		}
+		return columns;
+	}
+	excludedColumns( tableName: string ): string[] { return []; }
+	targetQuery( schema: TableSchema, target: string, showDeleted:boolean ):string{
+		throw "noImpl";
+	}
+	subQueries( typeName: string, id: number ):string[]{
+		throw "noImpl";
 	}
 
 /*	getApplications():Promise<FromServer.IApplication[]>{

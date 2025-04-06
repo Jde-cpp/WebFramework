@@ -1,13 +1,14 @@
 import {Component, Input, Output, OnInit, EventEmitter, NgModule} from '@angular/core';
 import {MatChipListbox, MatChipsModule} from '@angular/material/chips';
-import {MatSelect, MatSelectModule} from '@angular/material/select';
+import {MatOption, MatSelect, MatSelectModule} from '@angular/material/select';
 import { IAssignable } from '../../utilities/settings';
 import { CircularBuffer } from '../../utilities/collections'
+import { KeyValuePipe,NgFor } from '@angular/common';
 
 @Component( {
 	selector: 'link-select',
 	templateUrl: 'link-select.html',
-	imports:[MatChipListbox,MatSelect] })
+	imports:[KeyValuePipe,MatChipListbox, MatChipsModule,MatOption,MatSelect,NgFor] })
 export class LinkSelect<TOptionKey> implements OnInit{
 	ngOnInit()
 	{}

@@ -1,10 +1,11 @@
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { firstValueFrom, Observable, Subject } from 'rxjs';
 import { HttpClient, HttpErrorResponse, HttpResponse } from '@angular/common/http';
-import { Table, Mutation } from './IGraphQL';
+import { FieldKind, IEnum, IQueryResult, MutationSchema, TableSchema } from 'jde-framework';
 import { Instance } from './app/app.service.types';
 import * as CommonProto from '../proto/Common'; import ELogLevel = CommonProto.Jde.Proto.ELogLevel; import IException = CommonProto.Jde.Proto.IException;
 import { J } from '@angular/cdk/keycodes';
+import { assert, Mutation, MutationType } from 'jde-framework';
 
 interface IStringRequest<T>{ requestId:number; type:T; value:string; }
 interface IStringResult{ id:number; value:string; }
@@ -112,6 +113,7 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 			else
 				throw e;
 		}
+		if( this.log.restResults ) console.log( JSON.stringify(y) );
 		return y;
 	}
 	async postRaw<Y>( target:string, body:any, preferSecure:boolean=false ):Promise<Y>{
@@ -144,6 +146,14 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 	async query<Y>( ql: string ):Promise<Y>{
 		return await this.graphQL( ql );
 	}
+	async querySingle<Y>( ql: string ):Promise<Y>{
+		const y = await this.query<any>( ql );
+		return y[Object.keys(y)[0]];
+	}
+	async queryObject<Y>( ql: string, cnstrctr: new(...args:any[]) => Y ):Promise<Y>{
+		const result = await this.query<any>( ql );
+		return new cnstrctr( result[Object.keys(result)[0]] );
+	}
 
 	async queryArray<Y>( ql: string ):Promise<Y[]>{
 		const member = ql.substring( 0, ql.indexOf('{') ).trim();
@@ -151,34 +161,51 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		return y[member];
 	}
 
-	async mutation<Y>( ql: string ):Promise<Y>{
-		return await this.graphQL( `mutation ${ql}` );
+	async mutation<Y>( ql: string|Mutation|Mutation[] ):Promise<Y>{
+		if( Array.isArray(ql) ){
+			let y = [];
+			for( let m of <Mutation[]>ql )
+				y.push( await this.mutation( m ) );
+			return <Y>y;
+		}
+		let query = ql instanceof Mutation ? ql.toString() : ql;
+		assert( query );
+		return await this.graphQL<Y>( `mutation ${query}` );
 	}
 
-	schema( names:string[] ):Promise<Table[]>{
-		return new Promise<Table[]>( (resolve, reject)=>{
-			let results = new Array<Table>();
-			let query =  new Array<string>();
-			names.forEach( (x)=>{ if( ProtoService.#tables.has(x) ) results.push(ProtoService.#tables.get(x)); else query.push(x); } );
-			if( !query.length )
-				resolve( results );
-			else{
-				for( let name of query ){
-					let ql = `__type(name: "${name}") { fields { name type { name kind ofType{name kind} } } }`;
-					this.query( ql ).then( ( data:any )=>
-					{
-						let table = new Table( data.__type );
-						ProtoService.#tables.set( name, table );
-						if( results.push( table )==names.length )
-							resolve( results );
-					}).catch( (e)=>reject(e) );
-				}
+	async schemaWithEnums( type:string ):Promise<TableSchema>{
+		let schema = ( await this.schema([type]) )[0];
+		if( !schema.enums ){
+			schema.enums = new Map<string, IEnum[]>();
+			for( const field of schema.fields.filter((x)=>x.type.underlyingKind==FieldKind.ENUM && !schema.enums.has(x.name)) ){
+				let values:Array<IEnum>;
+				values = ( await this.query<IQueryResult<IEnum>>(` __type(name: "${field.type.name}") { enumValues { id name } }`) ).__type["enumValues"];
+				schema.enums.set( field.type.name, values );
 			}
-		});
+		}
+		return schema;
 	}
-	mutations():Promise<Mutation[]>
-	{
-		return new Promise<Mutation[]>( (resolve, reject)=>{
+	async schema( types:string[] ):Promise<TableSchema[]>{
+		let results = new Array<TableSchema>();
+		let queries =  new Array<string>();
+		for( let type of types ){
+			if( this.#tables.has(type) )
+				results.push(this.#tables.get(type));
+			else
+				queries.push(type);
+		};
+		for( let type of queries ){
+			const ql = `__type(name: "${type}") { fields { name type { name kind ofType{name kind} } } }`;
+			const data = await this.query( ql );
+			const schema = new TableSchema( data["__type"] );
+			this.#tables.set( type, schema );
+			results.push( schema );
+		}
+		return results;
+	}
+
+	mutations():Promise<MutationSchema[]>{
+		return new Promise<MutationSchema[]>( (resolve, reject)=>{
 			if( ProtoService.#mutations )
 				resolve( ProtoService.#mutations );
 			else{
@@ -259,7 +286,7 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 
 	private anonymous:boolean=true;
 	protected backlog:Transmission[] = [];
-	protected log = { sockRequests:true, sockResults:true, restRequests:true, restResults:false, subRequest:true, subResults:true, maxLength:255 };
+	protected log = { sockRequests:true, sockResults:true, restRequests:true, restResults:true, subRequest:true, subResults:true, maxLength:255 };
 	#loginNameSubscription:Subject<string> = new Subject<string>();
 	protected get authorization():string{ return localStorage.getItem("authorization"); }
 	//Informational purposes only to match with server logs.
@@ -277,8 +304,8 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 	//abstract get queryId():number;
 	#socket:WebSocketSubject<protobuf.Buffer>;
 	protected _callbacks = new Map<number, RequestPromise<ResultMessage>>();
-	static #tables = new Map<string,Table>();
-	static #mutations:Array<Mutation>;
+	#tables = new Map<string,TableSchema>();
+	static #mutations:Array<MutationSchema>;
 	private get url(){
 		if( !this.instances?.length ) throw "no instances";
 		return `${this.instances[0].host}:${this.instances[0].port}`;

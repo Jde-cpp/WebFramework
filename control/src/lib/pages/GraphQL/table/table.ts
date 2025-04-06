@@ -1,112 +1,86 @@
-import { Observable, Subscription } from 'rxjs';
-import { Component, AfterViewInit, Inject, OnDestroy, Input, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, Inject, input, effect, model } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SelectionModel } from '@angular/cdk/collections';
-import { MatTableModule,MatTableDataSource } from '@angular/material/table';
-import { Sort } from '@angular/material/sort';
+import { MatTableModule } from '@angular/material/table';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { IErrorService } from '../../../services/error/IErrorService';
-import { Field, FieldKind, IGraphQL, Table } from '../../../services/IGraphQL';
+import { Field, FieldKind } from 'jde-framework';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatIcon } from '@angular/material/icon';
+import { StringUtils } from '../../../utilities/StringUtils';
 
 @Component({
-    selector: 'graph-ql-table',
+    selector: 'ql-table',
     styleUrls: ['table.scss'],
     templateUrl: 'table.html',
-    imports: [CommonModule, MatTableModule]
+    imports: [CommonModule, MatCheckbox, MatIcon, MatTableModule, MatSortModule]
 })
-export class GraphQLTable implements OnInit, AfterViewInit, OnDestroy{
-	constructor( @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IErrorService') private cnsle: IErrorService )
-	{}
-	ngOnInit(){
-		this.showDeletedSub = this.showDeletedEvents?.subscribe( (x)=>{
-			this.showDeleted = x
-		} );
+export class GraphQLTable{
+	constructor( @Inject('IErrorService') private cnsle: IErrorService ){
+		effect(() => {
+			let field = this.displayedFields().find( (c)=>c.name=="deleted" );
+			if( field )
+				field.displayed = this.showDeleted();
+		});
 	}
-	ngAfterViewInit():void{
-		this.viewPromise = Promise.resolve( true );
-	}
-	ngOnDestroy(){
-		this.showDeletedSub?.unsubscribe();
-	}
-	static query( graphQL: IGraphQL, schema:Table, query: string, showExtra:boolean, isFlags:boolean ):{query:string, displayedColumns:Field[]}{
-		debugger;
-		var selectFields:string[] = [], displayedColumns=[];
-		for( let field of schema.fields ){
-			if( !showExtra && (field.type.kind==FieldKind.LIST || ["created", "updated", "deleted", "target"].includes(field.name)) )
-				continue;
-			if( field.type.underlyingKind==FieldKind.SCALAR ){
-				displayedColumns.push( field );
-				selectFields.push( field.name );
-			}
-			else if( field.type.underlyingKind==FieldKind.OBJECT ){
-				displayedColumns.push( field );
-				selectFields.push( `${field.name}{name}` );
-			}
-		}
 
-		var filter = 'null';
-		if( isFlags )
-			filter = "{id: {ne: 0}}";
-		else if( schema.fields.find((x)=>x.name=="deleted") )
-			filter = "{deleted: {eq:null}}";
-		debugger;
-		return {query: `${query}(filter: ${filter}) {${selectFields.join(" ")}}`, displayedColumns: displayedColumns };
-	}
 	checkboxLabel( row?: any ): string{
 		return row
-			? `${this.selections.isSelected(row) ? 'deselect' : 'select'} row ${row.name}`
+			? `${this.selections().isSelected(row) ? 'deselect' : 'select'} row ${row.name}`
 			: `${this.isAllSelected() ? 'select' : 'deselect'} all`;
 	}
-	masterToggle(){
+	toggle( id ){
+		const newSelections = this.selections().isSelected(id) ? this.selections().selected.filter( (x)=>x!=id ) : this.selections().selected.concat( id );
+		console.log( `table set selections: ${newSelections}` );
+		this.selections.set( new SelectionModel<number>(this.selections().isMultipleSelection(), newSelections) );
+	}
+
+	toggleAll(){
 		if( this.isAllSelected() )
-			this.selections.deselect( ...this.dataSource.data );
+			this.selections.set( new SelectionModel<number>(this.selections().isMultipleSelection(), []) );
 		else
-			this.selections.select( ...this.dataSource.data );
+			this.selections.set( new SelectionModel<number>(this.selections().isMultipleSelection(), [...this.dataSource().map(x=>x.id)]) );
 	}
 
-	cellClick( row:any ){  this.selection = this.selection == row ? null : row; this.selectionChange.emit( this.selection ); }
+	cellClick( row:any ){
+		const isSelected = this.selections().isSelected( row );
+		const multi = this.selections().isMultipleSelection();
+		let selections = [];
+		if( multi )
+			selections = isSelected ? this.selections().selected.filter( (x)=>x!=row ) : this.selections().selected.concat( row );
+		else
+			selections = isSelected ? [] : [row];
+		this.selections.set( new SelectionModel<any>(multi, selections) );
+	}
 
-	edit2( row?: any ): string{
-		return row
-			? `${this.selections.isSelected(row) ? 'deselect' : 'select'} row ${row.name}`
-			: `${this.isAllSelected() ? 'select' : 'deselect'} all`;
+	edit( column:string, element: any ): void{
 	}
 
 	delete( row?: any ): string{
 		return row
-			? `${this.selections.isSelected(row) ? 'deselect' : 'select'} row ${row.name}`
+			? `${this.selections().isSelected(row) ? 'deselect' : 'select'} row ${row.name}`
 			: `${this.isAllSelected() ? 'select' : 'deselect'} all`;
 	}
 
-	isAllSelected(){ return this.selections.selected.length==this.dataSource.data.length; }
+	isAllSelected(){ return this.selections().selected.length==this.dataSource().length; }
+	isSelected( row:any ){ return this.selections().isSelected(row); }
 	sortData( event )
 	{}
-	edit( column, element )
-	{}
+	columnName( fieldName ){ return StringUtils.capitalize(fieldName); }
 
-	@Input() dataSource:MatTableDataSource<any>;
-	@Input() selections:SelectionModel<any>;
-	@Input() displayedColumns:Field[]//{ return this.schema.fields.filter( (x)=>x.displayed ); }
-	@Input() set showDeleted(x){
-		let scn = this.stringColumnNames;
-		this.#showDeleted=x;
-		let field = this.displayedColumns.find( (c)=>c.name=="deleted" );
-		if( field )
-			field.displayed = x;
-	} get showDeleted(){return this.#showDeleted;} #showDeleted:boolean;
-	@Input() showDeletedEvents:Observable<boolean>; private showDeletedSub: Subscription;
-	@Input() sort:Sort = { active:"name", direction: 'asc' };
-	@Input() selection:any;
-	@Output() selectionChange = new EventEmitter();
+	dataSource=input.required<any[]>();
+	displayedFields = input.required<Field[]>();
+	selections=model.required<SelectionModel<number>>();
+	showDeleted = input<boolean>( false );
+	sort = input<Sort>( {active:"name", direction: 'asc'} );
 
+	get displayedColumnNames(){ return (this.selections().isMultipleSelection() ? ["select"] : []).concat( this.displayedFields().filter((x)=>x.displayed).map((x)=>x.name) ); };
+	get stringColumnNames(){ return this.displayedFields().filter( (x)=>(x.type.underlyingKind==FieldKind.SCALAR && x.type.underlyingName=="String") || x.type.underlyingKind==FieldKind.ENUM ).map( (x)=>x.name ); }
+	get objectColumnNames(){ return this.displayedFields().filter( (x)=>x.type.underlyingKind==FieldKind.OBJECT ).map( (x)=>x.name ); }
+	get listColumnNames(){ return this.displayedFields().filter( (x)=>x.type.underlyingKind==FieldKind.LIST ).map( (x)=>x.name ); }
+	get dateColumnNames(){ return this.displayedFields().filter( (x)=>x.type.underlyingName=="DateTime" ).map( (x)=>x.name ); }
+	get boolColumnNames(){ return this.displayedFields().filter( (x)=>x.type.underlyingName=="Boolean" ).map( (x)=>x.name ); }
+	get uintColumnNames(){ return this.displayedFields().filter( (x)=>x.type.underlyingName=="UInt" ).map( (x)=>x.name ); }
 
-	get displayedColumnNames(){ return (this.selections ? ["select"/*,"icons"*/] : [/*"icons"*/]).concat( this.displayedColumns.filter((x)=>x.displayed).map((x)=>x.name) ); };
-	get stringColumnNames(){ return this.displayedColumns.filter( (x)=>(x.type.underlyingKind==FieldKind.SCALAR && x.type.underlyingName=="String") || x.type.underlyingKind==FieldKind.ENUM ).map( (x)=>x.name ); }
-	get objectColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.OBJECT ).map( (x)=>x.name ); }
-	get listColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.LIST ).map( (x)=>x.name ); }
-	get dateColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingName=="DateTime" ).map( (x)=>x.name ); }
-	get boolColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingName=="Boolean" ).map( (x)=>x.name ); }
-	get uintColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingName=="UInt" ).map( (x)=>x.name ); }
-
-
-	viewPromise:Promise<boolean>;
+	//viewPromise:Promise<boolean>;
 }
