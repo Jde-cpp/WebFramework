@@ -1,6 +1,6 @@
-export * from './lib/model/ql/row';
+export * from './lib/model/ql/Row';
 export * from './lib/model/ql/TargetRow';
-export * from './lib/model/ql/mutation';
+export * from './lib/model/ql/Mutation';
 export * from './lib/model/ql/schema/MetaObject';
 export * from './lib/model/ql/schema/MutationSchema';
 export * from './lib/model/ql/schema/TableSchema';
@@ -9,6 +9,7 @@ export * from './lib/pages/GraphQL/detail/graph-ql-detail';
 export * from './lib/pages/GraphQL/properties/properties';
 export * from './lib/pages/GraphQL/model/PageSettings';
 export * from './lib/pages/GraphQL/table/table';
+export * from './lib/pages/home/home';
 export * from './lib/pages/ql/list/ql-list';
 export * from './lib/pages/ql/selector/ql-selector';
 
@@ -24,7 +25,7 @@ export * from './lib/services/profile/localStorageProfile.service';
 export * from './lib/services/error/DefaultError.service';
 export * from './lib/services/error/IErrorService';
 export * from './lib/services/ql-list.resolver';
-export * from './lib/shared/common-inject';
+export * from './lib/services/detail.resolver';
 export * from './lib/shared/date-range/date-range'
 export * from './lib/shared/link-select/link-select'
 export * from './lib/shared/paginator/paginator'

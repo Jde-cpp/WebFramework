@@ -47,6 +47,7 @@ if [ ! -d $workspace ]; then
 	#ng analytics disable;
 	echo -------------------- npm install start --------------------;
 	npm install material-design-icons;
+	npm install @angular/animations;
 	echo -------------------- icons installed --------------------;
 	ng add @angular/material --defaults --skip-confirmation; #use skip-confirmation when interactive
 	echo -------------------- material installed --------------------;
@@ -103,6 +104,5 @@ for libraryDir in "${libraries[@]}"; do
 	cd $startDir
 done;
 echo -------------------- End Libraries --------------------;
-jq '.angularCompilerOptions["strictTemplates"] = 'false'' tsconfig.json  > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq '$cmd' tsconfig.json; exit 1; fi;
 mv temp.json tsconfig.json;
 echo create-workspace.sh success

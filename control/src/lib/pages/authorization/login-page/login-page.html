@@ -1,24 +1,43 @@
-<div
-  class="authentication-card-container"
-  fxLayout="column"
-  fxLayoutAlign="center"
->
-  <mat-card class="authentication-card">
-    <mat-card-header> <mat-card-title>Login</mat-card-title></mat-card-header>
-    <mat-card-content>
-      <form [formGroup]="loginForm" fxLayout="column" fxLayoutAlign="center stretch" >
-        <mat-form-field>
-          <mat-label>Username</mat-label>
-          <input matInput formControlName="username" autocomplete="username">
-        </mat-form-field>
-        <mat-form-field>
-          <mat-label>Password</mat-label>
-          <input matInput type="password" formControlName="password" />
-        </mat-form-field>
-      </form>
-    </mat-card-content>
-    <mat-card-actions>
-      <button mat-raised-button color="primary" (click)="onSubmit()">Login</button>
-    </mat-card-actions>
-  </mat-card>
-</div>
+<!-- @if( !providers.isLoading() ){ -->
+	<div class="login">
+
+		<div class="login-form">
+
+			<h3>Login</h3>
+
+			<form [formGroup]="form" fxLayout="column" fxLayoutAlign="center stretch" >
+				<mat-form-field>
+					<mat-label>Username</mat-label>
+					<input matInput formControlName="username" autocomplete="username">
+				</mat-form-field>
+
+				<mat-form-field>
+					<mat-label>Password</mat-label>
+					<input matInput type="password" formControlName="password" />
+				</mat-form-field>
+			</form>
+		</div>
+		<div class="form-actions">
+			<button mat-raised-button color="secondary" routerLink="/">Home</button>
+			<div class="g-signin2" id="google-button"></div>
+				<!-- <div class="g_id_signin"
+					data-type="standard"
+					data-shape="rectangular"
+					data-theme="outline"
+					data-text="signin_with"
+					data-size="large"
+					data-logo_alignment="left">
+				</div>
+				<div id="g_id_onload"
+				data-client_id="445012155442-1v8ntaa22konm0boge6hj5mfs15o9lvd.apps.googleusercontent.com"
+				data-context="signin"
+				data-ux_mode="popup"
+				data-callback="onGoogleLogin"
+				data-auto_select="true"
+				data-itp_support="true">
+			</div> -->
+			<button mat-raised-button color="primary" (click)=onLogin()>Login</button>
+		</div>
+
+	</div>
+<!-- } -->

@@ -20,7 +20,7 @@ import { MatButtonModule } from '@angular/material/button';
 export class Properties implements OnInit{
 	constructor( private route: ActivatedRoute, private router:Router, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, private cdr: ChangeDetectorRef, @Inject('IErrorService') private cnsl: IErrorService ){
 		effect( ()=>{
-			this.componentPageTitle.detail = this.record()["name"] ?? "New";
+			this.componentPageTitle.detail = this.record()["name"] ?? `New ${this.schema().type}`;
 		});
 	}
 

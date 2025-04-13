@@ -13,6 +13,7 @@ export interface IGraphQL{
 	targetQuery( schema:TableSchema, target: string, showDeleted:boolean ):string;
 	subQueries( typeName: string, id: number ):string[];
 	excludedColumns( tableName:string ):string[];
+	toCollectionName( collectionDisplay:string ):string;
 }
 
 export interface IEnum{
