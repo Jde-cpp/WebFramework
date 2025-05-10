@@ -1,17 +1,15 @@
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { firstValueFrom, Observable, Subject } from 'rxjs';
-import { HttpClient, HttpErrorResponse, HttpResponse } from '@angular/common/http';
-import { clone, FieldKind, fromIsoDuration, IEnum, IQueryResult, MutationSchema, TableSchema } from 'jde-framework';
+import { firstValueFrom } from 'rxjs';
+import { HttpClient, HttpResponse } from '@angular/common/http';
+import { FieldKind, fromIsoDuration, IEnum, IQueryResult, MutationSchema, TableSchema } from 'jde-framework';
 import { Instance } from './app/app.service.types';
 import * as CommonProto from '../proto/Common'; import ELogLevel = CommonProto.Jde.Proto.ELogLevel; import IException = CommonProto.Jde.Proto.IException;
-import { J } from '@angular/cdk/keycodes';
-import { assert, Mutation, MutationType } from 'jde-framework';
-import { computed, signal } from '@angular/core';
+import { AuthStore } from './auth.store';
+import { assert, Mutation } from 'jde-framework';
+import { computed, Signal } from '@angular/core';
 import { EProvider, LoggedInUser } from 'jde-material';
 
-interface IStringRequest<T>{ requestId:number; type:T; value:string; }
 interface IStringResult{ id:number; value:string; }
-interface IMessageUnion{ stringResult:IStringResult }
 export interface IError{ requestId?:number; message: string; sc?:number; }
 
 type TransformInput = (x:any)=>any;
@@ -25,13 +23,10 @@ class RequestPromise<ResultMessage>{
 	{}
 }
 
-const userStorageKey = 'user';
 export abstract class ProtoService<Transmission,ResultMessage>{
-	constructor( private TCreator: { new (): Transmission; }, protected http: HttpClient, public readonly transport:ETransport ){
-		const loggedInUser = localStorage.getItem(userStorageKey);
-		if(loggedInUser)
-			this.#userSignal.set( JSON.parse(loggedInUser) );
-	}
+	constructor( private TCreator: { new (): Transmission; }, protected http: HttpClient, public readonly transport:ETransport, protected authStore:AuthStore, private isAppServer:boolean=false )
+	{}
+
 	connect():void{
 		this.#socket = webSocket<protobuf.Buffer>( {url: this.socketUrl, deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
 		this.#socket.subscribe(
@@ -43,6 +38,29 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 	//should deserialize put into a constant variable or process in deserialization?
 	addMessage( msg )
 	{}
+
+	toCollectionName( collectionDisplay:string ):string{ return collectionDisplay; }
+	excludedColumns( tableName: string ): string[] { return []; }
+	subQueries( typeName: string, id: number ):string[]{ return []; }
+	targetQuery( schema: TableSchema, target: string, showDeleted:boolean ):string{
+		let fields = this.fieldColumns( schema, showDeleted );
+		return `${schema.singular}( target:"${target}" ){ ${fields.join(" ")} }`;
+	}
+	protected fieldColumns( schema: TableSchema, showDeleted:boolean ):string[]{
+		let columns = [];
+		let filtered = schema.fields.filter(
+			(x)=>!this.excludedColumns(schema.collectionName).includes(x.name) && (x.name!="deleted" || showDeleted) );
+		for( const field of filtered ){
+			if( field.type.underlyingKind==FieldKind.UNION )
+				columns.push( `${field.name}{id}` );
+			else if( field.type.underlyingKind==FieldKind.OBJECT )
+				columns.push( `${field.name}{id name}` );
+			else
+				columns.push( field.name );
+		}
+		return columns;
+	}
+
 	//
 	error( err ){
 		this.setSocketId( 0 );
@@ -83,10 +101,47 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		});
 	}
 
-	async InitWait():Promise<void>{
+	async initWait():Promise<void>{
 		let p = new Promise<void>( (resolve,reject)=>this.#initCallbacks.push({resolve:resolve,reject:reject}) );
 		await p;
 	}
+
+	async loginWait<Y>( target:string ):Promise<Y>{
+		let p = new Promise<Y>( (resolve,reject)=>{
+			this.#loginCallbacks.push( {target: target, resolve:resolve,reject:reject} );
+		});
+		if( this.#loginCallbacks.length==1 ){
+			let url = this.urlWithTarget( "serverSettings", true );
+			if( this.log.restRequests ) console.log( url );
+			let settings;
+			try{
+				let args = this.user()?.authorization ? {headers:{"Authorization":this.user().authorization}} : {};
+				const settings = await firstValueFrom(  this.http.get<any>(url, args) );
+				if( this.log.restResults ) console.log( JSON.stringify(settings) );
+				this.timeoutSeconds = fromIsoDuration( settings["restSessionTimeout"] );
+				let instance = parseInt( settings["serverInstance"] );
+				let active = settings["active"];
+				let timedout = this.lastRestCall && ( this.lastRestCall.getTime() < Date.now() - this.timeoutSeconds*1000 );
+				let previousInstanceIndex = this.user()?.serverInstances?.findIndex( x=>x.url==this.url ) ?? -1;
+				let previousInstance = previousInstanceIndex>=0 ? this.user().serverInstances[previousInstanceIndex].instance : 0;
+				if( !active || timedout || (this.isAppServer && instance!=previousInstance) )
+					this.authStore.reset( {url:this.url, instance:instance} );
+				else if( previousInstance!=instance )
+					this.authStore.setServerInstance( this.url, instance );
+				for( let callback of this.#loginCallbacks ){
+					let y = await this.authGet<any>( callback.target, this.user().authorization );
+					callback.resolve( y );
+				}
+			}
+			catch( e ){
+				for( let callback of this.#loginCallbacks )
+					callback.reject( e );
+			}
+			this.#loginCallbacks.length=0;
+		}
+		return p;
+	}
+
 	urlWithTarget( suffix:string, preferSecure:boolean=false ):string{
 		return preferSecure && this.transport==ETransport.Hybrid
 			? `${this.secureRestUrl}/${suffix}`
@@ -100,11 +155,11 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		if( authorization ){
 			try{
 				y = await firstValueFrom( this.http.get<Y>(url, {headers:{"Authorization":authorization}}) );
-				this.lastRestCall = new Date();
 			}
 			catch( e ){
 				if( e["status"]==401 ){
-					this.setAuthorization( null );
+					console.log( `(${e["status"]})${e["error"]} - ${e["url"]}` );
+					this.authStore.logout();
 					y = await this.authGet<Y>( target );
 				}
 				else
@@ -114,37 +169,29 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		else{
 			let response:HttpResponse<Y> = await firstValueFrom( this.http.get<Y>(url,
 				{observe: "response", transferCache:{includeHeaders:["Authorization"]}}) );
-			let authorization = response.headers.get( "Authorization" );
-			if( authorization )
-				this.setAuthorization( {authorization:authorization} );
+			let newAuth = response.headers.get( "Authorization" );
+			if( newAuth )
+				this.authStore.append( {authorization:newAuth} );
 			y = response.body;
 		}
 		if( this.log.restResults ) console.log( JSON.stringify(y) );
+		this.lastRestCall = new Date();
 		return y;
 	}
 
 	async get<Y>( target:string ):Promise<Y>{
 		if( !this.#instances )
-			await this.InitWait();
-		let y:Y;
-		let isActive = this.lastRestCall && (this.lastRestCall.getTime() > Date.now() - this.timeoutSeconds* 1000);
-		if( this.user()?.authorization && isActive )
-			y = await this.authGet<Y>( target, this.user().authorization );
-		else{
-			let settings = await this.authGet<any>( "serverSettings", null );
-			this.timeoutSeconds = fromIsoDuration( settings["restSessionTimeout"] );
-			let serverInstance = parseInt( settings["serverInstance"] );
-			let timedout = this.lastRestCall && (this.lastRestCall.getTime() < Date.now() - this.timeoutSeconds* 1000);
-			if( timedout || (this.user()?.authorization && this.user().serverInstance!=serverInstance) )
-				this.setAuthorization( {authorization:null, serverInstance:serverInstance} );
-			y = await this.authGet<Y>( target, this.user()?.authorization );
-		}
+			await this.initWait();
+		let isActive = this.lastRestCall && (this.lastRestCall.getTime() > Date.now() - this.timeoutSeconds*1000);
+		let y = !this.user()?.authorization || !isActive
+			? await this.loginWait<Y>( target )
+			: await this.authGet<Y>( target, this.user().authorization );
 		return y;
 	}
 
 	async postRaw<Y>( target:string, body:any, preferSecure:boolean=false ):Promise<Y>{
 		if( !this.#instances )
-			await this.InitWait();
+			await this.initWait();
 		const url = this.urlWithTarget( target, preferSecure );
 		let y:any;
 		if( this.user()?.authorization )
@@ -152,8 +199,9 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		else{
 			let response:HttpResponse<Y> = await firstValueFrom( this.http.post<Y>(url, body, {observe: "response", transferCache:{includeHeaders:["Authorization"]}}) );
 			let authorization = response.headers.get( "Authorization" );
+			console.assert( authorization!=null, "no authorization" );
 			if( authorization )
-				this.setAuthorization( {authorization:authorization} );
+				this.authStore.append( {authorization:authorization} );
 			y = response.body;
 		}
 		return y;
@@ -231,7 +279,6 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		let results = new Array<TableSchema>();
 		let queries =  new Array<string>();
 		console.log( `schema(${JSON.stringify(types)})` );
-		debugger;
 		for( let type of types ){
 			if( this.#tables.has(type) )
 				results.push(this.#tables.get(type));
@@ -267,21 +314,6 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 	//get nextRequestId():RequestId{ return this.#requestId+1; }  why?
 	getRequestId():RequestId{ return ++this.#requestId;} #requestId:RequestId=0;
 
-
-	protected setAuthorization( user:LoggedInUser | null ){
-		console.log( `setAuthorization( ${user ? user.id : "null"} )` );
-		if( user ){
-			const current = this.user();
-			let updated = current ? clone( current ) : user;
-			if( current ){
-				for( let key in user )
-					updated[key] = user[key];
-			}
-			localStorage.setItem( userStorageKey, JSON.stringify(updated) );
-		}else
-			localStorage.removeItem( userStorageKey );
-		this.#userSignal.set( user );
-	}
 	protected setSocketId( id:number ){
 		this.#socketId = id;
 		for( var m of this.backlog )
@@ -334,7 +366,7 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 	protected abstract encode( t:Transmission );
 
 	protected backlog:Transmission[] = [];
-	protected log = { sockRequests:true, sockResults:true, restRequests:true, restResults:true, subRequest:true, subResults:true, maxLength:255 };
+	protected log = { sockRequests:true, sockResults:true, restRequests:false, restResults:false, subRequest:true, subResults:true, maxLength:255 };
 	//Informational purposes only to match with server logs.
 	protected get socketId():number{ return this.#socketId; } #socketId:number;
 	get instances(){return this.#instances;} set instances(x){
@@ -347,6 +379,8 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		}
 	} #instances:Instance[];
 	#initCallbacks:{resolve:()=>void, reject:Reject}[]=[];
+	#loginCallbacks:{target:string, resolve:(result:any)=>void, reject:( e:any )=>void}[]=[];
+
 	//abstract get queryId():number;
 	#socket:WebSocketSubject<protobuf.Buffer>;
 	protected _callbacks = new Map<number, RequestPromise<ResultMessage>>();
@@ -360,9 +394,8 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 	private get restUrl(){return this.transport==ETransport.Secure ? this.secureRestUrl : `http://${this.url}`;}
 	private get secureRestUrl(){return `https://${this.url}`;}
 
-	isLoggedIn = computed(() => !!this.user());
-	#userSignal = signal<LoggedInUser | null>(null);
-	user = this.#userSignal.asReadonly();
+	isLoggedIn = computed( () => this.user()!= null );
+	get user():Signal<LoggedInUser>{return this.authStore.user; }
 	lastRestCall:Date = null;
 	timeoutSeconds:number;
 }

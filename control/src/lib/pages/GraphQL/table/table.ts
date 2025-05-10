@@ -1,4 +1,4 @@
-import { Component, Inject, input, effect, model } from '@angular/core';
+import { Component, Inject, input, effect, model, Signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatTableModule } from '@angular/material/table';
@@ -39,7 +39,7 @@ export class GraphQLTable{
 		if( this.isAllSelected() )
 			this.selections.set( new SelectionModel<number>(this.selections().isMultipleSelection(), []) );
 		else
-			this.selections.set( new SelectionModel<number>(this.selections().isMultipleSelection(), [...this.dataSource().map(x=>x.id)]) );
+			this.selections.set( new SelectionModel<number>(this.selections().isMultipleSelection(), [...this.dataSource()().map(x=>x.id)]) );
 	}
 
 	cellClick( row:any ){
@@ -62,13 +62,13 @@ export class GraphQLTable{
 			: `${this.isAllSelected() ? 'select' : 'deselect'} all`;
 	}
 
-	isAllSelected(){ return this.selections().selected.length==this.dataSource().length; }
+	isAllSelected(){ return this.selections().selected.length==this.dataSource()().length; }
 	isSelected( row:any ){ return this.selections().isSelected(row); }
 	sortData( event )
 	{}
 	columnName( fieldName ){ return StringUtils.capitalize(fieldName); }
 
-	dataSource=input.required<any[]>();
+	dataSource=input.required<Signal<any[]>>();
 	displayedFields = input.required<Field[]>();
 	selections=model.required<SelectionModel<number>>();
 	showDeleted = input<boolean>( false );
@@ -81,6 +81,4 @@ export class GraphQLTable{
 	get dateColumnNames(){ return this.displayedFields().filter( (x)=>x.type.underlyingName=="DateTime" ).map( (x)=>x.name ); }
 	get boolColumnNames(){ return this.displayedFields().filter( (x)=>x.type.underlyingName=="Boolean" ).map( (x)=>x.name ); }
 	get uintColumnNames(){ return this.displayedFields().filter( (x)=>x.type.underlyingName=="UInt" ).map( (x)=>x.name ); }
-
-	//viewPromise:Promise<boolean>;
 }

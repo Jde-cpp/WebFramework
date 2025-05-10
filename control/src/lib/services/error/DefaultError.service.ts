@@ -12,7 +12,13 @@ export class DefaultErrorService implements IErrorService
 	private showUser( message:string, panelClass:string ){
 		this.snackbar.open( message, null, {panelClass: [panelClass], duration: 2000} );
 	}
-	private showUserError( message:string ){ this.showUser( message, 'red-snackbar' ); }
+	private showUserError( message:string, log?:(string)=>void ){
+		this.showUser( message, 'red-snackbar' );
+		if( log )
+			log( message );
+		else
+			console.log( message );
+	}
 
 	assert( condition ):void{
 		this.showUserError( "assert failed" );
@@ -20,10 +26,8 @@ export class DefaultErrorService implements IErrorService
 			throw "assert failed";
 	}
 
-	error( message:string, error: any ){
-		//console.error(  );
-		//this.showUserError( isDevMode() && error ? `${message}:  ${error.toString()}` : message );
-		this.showUserError( error && typeof error=='object' ? `${message} - ${error["message"]}` : message );
+	error( message:string, error: any, log?:(string)=>void ){
+		this.showUserError( error && typeof error=='object' ? `${message} - ${error["message"]}` : message, log );
 	}
 
 	exception( e ):void{

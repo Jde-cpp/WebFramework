@@ -16,12 +16,15 @@ declare const google: any;
 export class LoginPageComponent{
 	constructor( @Inject('IAuth') private authService: IAuth, @Inject('IErrorService') private snackbar: IErrorService, @Inject('IEnvironment') private envService: IEnvironment ){
 		effect( async ()=>{
-			let y = this.providers?.value()?.includes( EProvider.Google );
-			if( y ){
-				let authId = await this.getGoogleAuthClientId();
-				this.showGoogleLogin( authId );
+			if( this.providers?.value()?.includes(EProvider.Google) && !this.showedGoogleLogin ){
+				this.showedGoogleLogin = true;
+				if( !google )
+					console.error( "google not defined" );
+				else{
+					let authId = await this.getGoogleAuthClientId();
+					this.showGoogleLogin( authId );
+				}
 			}
-			return y;
 		});
 
 	}
@@ -97,7 +100,6 @@ export class LoginPageComponent{
 		const y = await this.authService.googleAuthClientId();
 		return y;
 	}
-	//get googleLoginClientId(){ return "445012155442-1v8ntaa22konm0boge6hj5mfs15o9lvd.apps.googleusercontent.com";}//todo get from server or config
 	hasUserPassword = computed(() => { return !this.providers.isLoading() && this.providers.value().includes( EProvider.OpcServer ); });
 	providers = resource<EProvider[], {}>( {loader: async () =>await this.authService.providers()} );
 
@@ -125,6 +127,7 @@ export class LoginPageComponent{
 
 	fb = inject(FormBuilder);
 	private get googleCredential():string{return this.envService.get("googleCredential"); }
+	private showedGoogleLogin = false;
   form = this.fb.group({ username: [''], password: [''] });
 	router = inject(Router);
 	user = computed<LoggedInUser | null>( () => {

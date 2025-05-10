@@ -10,6 +10,7 @@ export * from './lib/pages/GraphQL/properties/properties';
 export * from './lib/pages/GraphQL/model/PageSettings';
 export * from './lib/pages/GraphQL/table/table';
 export * from './lib/pages/home/home';
+export * from './lib/pages/cards/cards';
 export * from './lib/pages/ql/list/ql-list';
 export * from './lib/pages/ql/selector/ql-selector';
 
@@ -17,7 +18,7 @@ export * from './lib/pages/authorization/login-page/login-page';
 export * from './lib/pages/applications/applications';
 export * from './lib/pages/logs/logs';
 export * from './lib/services/IGraphQL'
-export * from './lib/services/auth.service'
+export * from './lib/services/auth.store'
 export * from './lib/services/proto.service'
 export * from './lib/services/app/app.service';
 export * from './lib/services/profile/IProfile';

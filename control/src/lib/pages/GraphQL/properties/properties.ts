@@ -1,12 +1,12 @@
 import {Component, effect, Inject, input, output, AfterViewInit, EventEmitter, ViewChild, ViewChildren, ElementRef, OnInit, OnDestroy, QueryList, ChangeDetectorRef, computed, viewChildren, model, signal, CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {MatFormField, MatFormFieldModule, MatLabel} from '@angular/material/form-field';
+import { MatFormFieldModule, MatLabel } from '@angular/material/form-field';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IErrorService } from '../../../services/error/IErrorService';
 import { ComponentPageTitle } from 'jde-material';
 import { Field, FieldKind, IEnum, IGraphQL, TableSchema } from 'jde-framework';
 import { StringUtils } from '../../../utilities/StringUtils';
-import { MatSelect, MatSelectModule } from '@angular/material/select';
+import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatChipGrid, MatChipsModule } from '@angular/material/chips';
 import { MatButtonModule } from '@angular/material/button';
@@ -50,10 +50,11 @@ export class Properties implements OnInit{
 
 	fields = computed<PropertyField[]>( ()=>{
 		let y = [];
-		let filter = (x)=>
-			[FieldKind.OBJECT,FieldKind.LIST].indexOf(x.type.underlyingKind)==-1
-			&& Properties.noShowFields.indexOf(x.name)==-1
-			&& this.excludedColumns().indexOf(x.name)==-1;
+		let filter = (field)=>
+			[FieldKind.OBJECT,FieldKind.LIST,FieldKind.LIST].indexOf(field.type.underlyingKind)==-1
+			&& field.type.ofType?.name!='Boolean'
+			&& Properties.noShowFields.indexOf(field.name)==-1
+			&& this.excludedColumns().indexOf(field.name)==-1;
 		for( const field of this.schema().fields.filter(filter) ){
 			let values = field.type.underlyingKind==FieldKind.ENUM ? this.schema().enums.get(field.type.name) : undefined;
 			y.push( new PropertyField(field, values) );
@@ -61,7 +62,8 @@ export class Properties implements OnInit{
 		return y;
 	});
 	boolFields = computed<PropertyField[]>( ()=>{
-		return this.fields().filter( (x)=>x.type==InputTypes.Bool );
+		return [];
+		//return this.fields().filter( (x)=>x.type==InputTypes.Bool );
 	});
 	getEnumId( field:PropertyField ):number{
 		let stringValue = this.record()[field.name];

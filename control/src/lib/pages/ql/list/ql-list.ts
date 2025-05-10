@@ -1,6 +1,6 @@
-import { Component, OnInit, OnDestroy, Inject, ViewChild, input, signal, model, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, ViewChild, input, signal, model, computed, Injectable, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {ActivatedRoute, Router} from '@angular/router';
+import {ActivatedRoute, Route, Router, Routes, UrlSegment} from '@angular/router';
 import {Sort} from '@angular/material/sort';
 import { MatTable } from '@angular/material/table';
 import {IProfile} from '../../../services/profile/IProfile'
@@ -8,7 +8,7 @@ import {IErrorService} from '../../../services/error/IErrorService'
 import {IGraphQL, Field, IEnum, TableSchema, MetaObject}  from 'jde-framework'
 import {Settings} from '../../../utilities/settings'
 
-import { ComponentPageTitle } from 'jde-material';
+import { ComponentPageTitle, DocItem, IRouteService, RouteService } from 'jde-material';
 import { Subject } from 'rxjs';
 import { MatIcon } from '@angular/material/icon';
 import { MatIconButton } from '@angular/material/button';
@@ -17,6 +17,45 @@ import { MatToolbar } from '@angular/material/toolbar';
 import { GraphQLTable } from '../../GraphQL/table/table';
 import { QLListData, QLListResolver, UserSettings } from '../../../services/ql-list.resolver';
 import { SelectionModel } from '@angular/cdk/collections';
+import { RouteStore } from '../../../services/route.store';
+
+@Injectable( {providedIn: 'root'} )
+export class QLListRouteService extends RouteService implements IRouteService{
+	constructor( private router:Router, route: ActivatedRoute ){
+		super( route )
+	}
+	override children( urlSegments:UrlSegment[] ):Promise<Routes>{
+		let y:Routes = [];
+		let thisConfig = this.router.config.find( x=>x.path==urlSegments[urlSegments.length-1].path );
+		let childrenConfig = this.router.config.find( x=>x.path==thisConfig.path && x.children?.length );
+		for( let child of childrenConfig.children?.filter(x=> !x.path.endsWith(":target")) ){
+			if( child.path!=":collectionDisplay" )
+				y.push( child );
+			else{
+				for( let collection of child.data["collections"] ){
+					var route:Route;
+					if( typeof collection=='string' ){
+						route = {
+							title: collection.charAt( 0 ).toUpperCase()+collection.slice(1),
+							data: {id: child.path.replace(":collectionDisplay", collection), collectionName:collection},
+							path: collection };
+					}else{
+						const data = collection.data;
+						const path = collection.path ?? data.collectionName;
+						const upper = path.charAt( 0 ).toUpperCase()+path.slice( 1 );
+						route = {
+							title: collection.title ?? upper,
+							data: data,
+							path: child.path.replace(":collectionDisplay", path),
+						};
+					}
+					y.push( route );
+				}
+			}
+		}
+		return Promise.resolve( y );
+	}
+}
 
 @Component( {
 		selector: 'ql-list',//.main-content.mat-drawer-container.my-content
@@ -32,50 +71,25 @@ export class QLList implements OnInit, OnDestroy{
 	}
 	ngOnDestroy(){ this.profile.save(); }
 
-  subscribe( route: ActivatedRoute, who: string ){
-    route.title.subscribe( (x)=>{
-      console.log( `${who}.title: ${JSON.stringify(x)}` );
-    });
-    route.params.subscribe( (x)=>{
-      console.log( `${who}.params: ${JSON.stringify(x)}` );
-    });
-    route.queryParams.subscribe( (x)=>{
-      console.log( `${who}.queryParams: ${JSON.stringify(x)}` );
-    });
-    route.fragment.subscribe( (x)=>{
-      console.log( `${who}.fragment: ${JSON.stringify(x)}` );
-    });
-/*    route.data.subscribe( (x)=>{
-      console.log( `${who}.data: ${JSON.stringify(x)}` );
-    });*/
-    route.paramMap.subscribe( (x)=>{
-      console.log( `${who}.paramMap: ${JSON.stringify(x)}` );
-    });
-    route.queryParamMap.subscribe( (x)=>{
-      console.log( `${who}.queryParamMap: ${JSON.stringify(x)}` );
-    });
-    route.url.subscribe( (x)=>{
-      console.log( `${who}.url: ${JSON.stringify(x)}` );
-    });
-  }
-
 	async ngOnInit(){
-		this.subscribe( this.route, "QLList" );
-		this.route.data.subscribe( (x)=>{
+		this.route.data.subscribe( (data)=>{
 			if( this.resolvedData )
 				this.resolvedData.profile.save();
-			this.init( x );
+			this.init( data );
     });
 	}
 	init( resolvedValue ){
 		this.resolvedData = resolvedValue["data"];
+		this.data.set( this.resolvedData.data[this.collectionName] );
+		this.sideNav.set( this.resolvedData.routing );
+		this.resolvedData.data[this.collectionName] = null;
 		this.showDeleted = this.resolvedData.profile.value.showDeleted;
 		let paths = [];
 		for( let x = this.route; x.routeConfig?.data && x.routeConfig?.data["name"]; x = x.parent )
 			paths.push( x.routeConfig.data['name'] );
 		this.componentPageTitle.title = paths[0];//.join( " | " ); 	//this.componentPageTitle.title ? `${this.componentPageTitle.title} | ${title}` : title;
 
-		const order = ["name","created", "updated", "deleted", "target", "description"];
+		const order = ["name", "created", "updated", "deleted", "target", "description"];
 		this.displayedFields = Field.filterSort( this.schema.fields, order, [...this.excludedColumns, "description"], this.showDeleted );
 		if( !this.excludedColumns.find(x=>x=="description") )
 			this.displayedFields.push( this.schema.fields.find(x=>x.name=="description") );
@@ -83,14 +97,13 @@ export class QLList implements OnInit, OnDestroy{
 		this.isLoading.set( false );
 	};
 	sortData( options:Sort ){
-		const values = this.data.slice();
+		const values = this.data().slice();
 		const multiplier = options.direction === 'asc' ? 1 : -1;
 		const name = options.active;
-		this.data = values.sort((a, b) =>{
+		this.data.set( values.sort((a, b) =>{
 			let lessThan = a[name]<b[name];
 			return (lessThan ? -1 : 1)*multiplier;
-		});
-		this._table.renderRows();
+		}) );
 	}
 
 	edit(){
@@ -116,8 +129,13 @@ export class QLList implements OnInit, OnDestroy{
 			await this.ql.mutation(`${type}${this.type}(id:${this.selection().id})`)
 			if( !purge && this.showDeleted )
 				this.selection().deleted = new Date();
-			else
-				this.data.splice( this.data.indexOf(this.selection()), 1 );
+			else{
+				const values = this.data().slice();
+				const index = values.findIndex( (x)=>x["id"]==this.selection()["id"] );
+				values.splice( index, 1 );
+				this.selections.set( new SelectionModel<any>(false, []) );
+				this.data.set( values );
+			}
 		}
 		catch( e ){
 			this.snackbar.error(e["message"]);
@@ -129,10 +147,11 @@ export class QLList implements OnInit, OnDestroy{
 
 	async toggleShowDeleted(){
 		this.resolvedData.profile.value.showDeleted = !this.showDeleted;
-		let reload = await QLListResolver.load( this.ql, this.collectionName, this.profile, this.resolvedData.pageSettings );
+		let reload = await QLListResolver.load( this.ql, this.profile, this.resolvedData.pageSettings, this.resolvedData.routing, this.routeStore );
 		this.init( {data:reload} );
 	}
 
+	sideNav = model.required<DocItem>();
 	collectionDisplay = input.required<string>();
 
 	isLoading = signal<boolean>( true );
@@ -142,13 +161,14 @@ export class QLList implements OnInit, OnDestroy{
 	@ViewChild('mainTable',{static: false}) _table:MatTable<any>;
 	get canPurge():boolean{ return this.resolvedData.pageSettings.canPurge; }
 	private get collectionName():string{ return this.schema.collectionName; }
-	get data(){ return this.resolvedData.data[this.collectionName]; } set data(x){ this.resolvedData.data[this.collectionName] = x; }
+	data = signal<any[]>([]);
 	private get excludedColumns(){ return this.resolvedData.pageSettings.excludedColumns; }
 	get name():string{ return <string>this.routeConfig.title; }
 	get enums():Map<string, IEnum[]>{ return this.schema.enums; }
 	private get profile():Settings<UserSettings>{ return this.resolvedData.profile; }
 	resolvedData:QLListData;
 	get routeConfig(){ return this.route.routeConfig;}
+	routeStore = inject( RouteStore );
 	private get schema():TableSchema{ return this.resolvedData.schema; }
 	get settings(){ return this.profile.value; }
 	get sort(){ return this.settings.sort; }

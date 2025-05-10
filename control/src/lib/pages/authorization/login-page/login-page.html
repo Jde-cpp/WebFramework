@@ -13,31 +13,14 @@
 
 				<mat-form-field>
 					<mat-label>Password</mat-label>
-					<input matInput type="password" formControlName="password" />
+					<input matInput formControlName="password" type="password" />
 				</mat-form-field>
 			</form>
 		</div>
 		<div class="form-actions">
 			<button mat-raised-button color="secondary" routerLink="/">Home</button>
 			<div class="g-signin2" id="google-button"></div>
-				<!-- <div class="g_id_signin"
-					data-type="standard"
-					data-shape="rectangular"
-					data-theme="outline"
-					data-text="signin_with"
-					data-size="large"
-					data-logo_alignment="left">
-				</div>
-				<div id="g_id_onload"
-				data-client_id="445012155442-1v8ntaa22konm0boge6hj5mfs15o9lvd.apps.googleusercontent.com"
-				data-context="signin"
-				data-ux_mode="popup"
-				data-callback="onGoogleLogin"
-				data-auto_select="true"
-				data-itp_support="true">
-			</div> -->
 			<button mat-raised-button color="primary" (click)=onLogin()>Login</button>
 		</div>
 
 	</div>
-<!-- } -->

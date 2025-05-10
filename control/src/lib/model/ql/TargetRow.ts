@@ -77,9 +77,19 @@ export abstract class TargetRow<T extends TargetRow<T>> extends ITargetRow{
 		super(type, obj);
 	}
 
+	mutationArgs( original:T ){
+		let args = {};
+		if( this.target!=original?.target )
+			args["target"] = this.target;
+		if( this.name!=original?.name )
+			args["name"] = this.name;
+		if( this.description!=original?.description )
+			args["description"] = this.description;
+		return args;
+	}
 	mutation( original:T ):Mutation[]{
 		assert( this.canSave );
-		let args = {};
+		let args = this.mutationArgs( original );
 		if( this.target!=original?.target )
 			args["target"] = this.target;
 		if( this.name!=original?.name )

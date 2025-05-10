@@ -16,7 +16,7 @@
 			<mat-checkbox [checked]="showDeleted" color="primary" (change)="toggleShowDeleted()">Show Deleted</mat-checkbox>
 		</mat-toolbar>
 		<div style="align-content: center; margin: auto;  text-align: center">
-			<ql-table [dataSource]="data" [displayedFields]="displayedFields"  [sort]="sort" [showDeleted]="showDeleted" [(selections)]="selections"></ql-table>
+			<ql-table [dataSource]=data [displayedFields]=displayedFields  [sort]=sort [showDeleted]=showDeleted [(selections)]=selections></ql-table>
 		</div>
 	</ng-container>
 }

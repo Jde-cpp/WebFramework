@@ -1,4 +1,4 @@
-import { TargetRow } from "jde-framework";
+import { ActivatedRoute } from "@angular/router";
 
 export function arraysEqual(a, b) {
   if (a == b) return true;
@@ -69,4 +69,32 @@ export function fromIsoDuration( str:string ):number{
 		seconds += multiplier*value;
 	}
 	return seconds;
+}
+
+export function subscribe( route: ActivatedRoute, who: string ){
+	route.title.subscribe( (x)=>{
+		console.log( `${who}.title: ${JSON.stringify(x)}` );
+	});
+	route.params.subscribe( (x)=>{
+		console.log( `${who}.params: ${JSON.stringify(x)}` );
+	});
+	route.queryParams.subscribe( (x)=>{
+		console.log( `${who}.queryParams: ${JSON.stringify(x)}` );
+	});
+	route.fragment.subscribe( (x)=>{
+		console.log( `${who}.fragment: ${JSON.stringify(x)}` );
+	});
+	route.data.subscribe( (x)=>{
+		debugger;
+		console.log( `${who}.data: }` );
+	});
+	route.paramMap.subscribe( (x)=>{
+		console.log( `${who}.paramMap: ${JSON.stringify(x)}` );
+	});
+	route.queryParamMap.subscribe( (x)=>{
+		console.log( `${who}.queryParamMap: ${JSON.stringify(x)}` );
+	});
+	route.url.subscribe( (x)=>{
+		console.log( `${who}.url: ${JSON.stringify(x)}` );
+	});
 }

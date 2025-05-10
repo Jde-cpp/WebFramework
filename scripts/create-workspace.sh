@@ -70,8 +70,7 @@ else
 fi;
 pushd `pwd` > /dev/null;
 ##################
-function execute()
-{
+function execute() {
 	file=$1;
 	if [ -f  $file ];then
 		t=$(stat -c "%a %n" $file); if [[ ${t:0:1} != "7" ]] ; then chmod 7${t:1:2} $file; fi;

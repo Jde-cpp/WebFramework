@@ -1,32 +1,22 @@
 //get googleId on login.
-import { Subject,Observable,firstValueFrom, tap } from 'rxjs';
-import { Injectable, Inject, computed, inject, signal } from '@angular/core';
+import { Subject,Observable, tap } from 'rxjs';
+import { Injectable, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {Instance} from './app.service.types'
 
-import { ETransport, IError, ProtoService, RequestId } from '../proto.service';
+import { ETransport, ProtoService, RequestId } from '../proto.service';
 import * as AppFromServer from '../../proto/App.FromServer'; import FromServer = AppFromServer.Jde.App.Proto.FromServer;
 import * as AppFromClient from '../../proto/App.FromClient'; import FromClient = AppFromClient.Jde.App.Proto.FromClient;
 import * as AppCommon from '../../proto/App'; import App = AppCommon.Jde.App.Proto;
 import * as CommonProto from '../../proto/Common'; import ELogLevel = CommonProto.Jde.Proto.ELogLevel; import IException = CommonProto.Jde.Proto.IException;
 import { IAuth, IEnvironment, LoggedInUser } from 'jde-material';
 import { IGraphQL } from '../IGraphQL';
-import { FieldKind, TableSchema } from 'jde-framework';
-
-type Resolve<T> = (value: T | PromiseLike<T>) => void;
-type Reject = (reason?: any) => void;
-
-/*
-class PromiseCallbacks<T>{
-	constructor( public resolve:Resolve<T>, public reject:Reject )
-	{}
-}
-*/
+import { AuthStore } from 'jde-framework';
 
 @Injectable( {providedIn: 'root'} )
 export class AppService extends ProtoService<FromClient.Transmission,FromServer.IMessage> implements IGraphQL, IAuth{
-	constructor( http: HttpClient, @Inject('IEnvironment') private environment: IEnvironment ){
-		super( FromClient.Transmission, http, environment.get<ETransport>("httpTransport") );
+	constructor( http: HttpClient, @Inject('IEnvironment') private environment: IEnvironment, @Inject("AuthStore") authStore:AuthStore ){
+		super( FromClient.Transmission, http, environment.get<ETransport>("httpTransport"), authStore, true );
 		let appServer = environment.get<Instance>( 'applicationServer' );
 		if( !appServer ){
 			console.log( "No Application Server set in environment" );
@@ -40,31 +30,10 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 	// }
 
 	async iotInstances():Promise<Instance[]>{
-		const y = await this.get( "IotWebSocket" );
+		const y = await this.get( "opcGateways" );
 		return y["servers"];
 	}
 
-	protected fieldColumns( schema: TableSchema, showDeleted:boolean ):string[]{
-		let columns = [];
-		let filtered = schema.fields.filter(
-			(x)=>!this.excludedColumns(schema.collectionName).includes(x.name) && (x.name!="deleted" || showDeleted) );
-		for( const field of filtered ){
-			if( field.type.underlyingKind==FieldKind.UNION )
-				columns.push( `${field.name}{id}` );
-			else if( field.type.underlyingKind==FieldKind.OBJECT )
-				columns.push( `${field.name}{id name}` );
-			else
-				columns.push( field.name );
-		}
-		return columns;
-	}
-	excludedColumns( tableName: string ): string[] { return []; }
-	targetQuery( schema: TableSchema, target: string, showDeleted:boolean ):string{
-		throw "noImpl";
-	}
-	subQueries( typeName: string, id: number ):string[]{
-		throw "noImpl";
-	}
 
 /*	getApplications():Promise<FromServer.IApplication[]>{
 		return this.applications.length
@@ -150,7 +119,7 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 		let self = this;
 		//if( this.log.restRequests )	console.log( `googleLogin( ${user.credential} )` );
 		user.authorization = await this.post<string>( 'loginGoogle', {value:user.credential}, true );
-		self.setAuthorization( user );
+		self.authStore.append( user );
 		//if( this.log.restResults )	console.log( `authorization='${self.authorization}'` );
 	}
 	loginPassword( username:string, password:string, authenticator:string ):Promise<void>{
@@ -160,7 +129,7 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 		let self = this;
 		if( this.log.restRequests )	console.log( `logout()` );
 		const sessionId = await this.post<string>( 'logout', {} );
-		self.setAuthorization( null );
+		self.authStore.logout();
 		if( this.log.restResults ) console.log( `authorization='null'` );
 	}
 
@@ -262,9 +231,6 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 		else
 			processed = false;
 		return processed;
-	}
-	toCollectionName( collectionDisplay:string ):string{
-		return collectionDisplay;
 	}
 	//private applications:FromServer.IApplication[]=[];
 	//private applicationPromises:PromiseCallbacks<FromServer.IApplication[]>[]=[];

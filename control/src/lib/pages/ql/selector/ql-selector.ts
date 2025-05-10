@@ -23,21 +23,16 @@ import { SelectionModel } from '@angular/cdk/collections';
 		imports: [CommonModule, GraphQLTable]
 })
 export class QLSelector implements OnInit{
-	constructor( private route: ActivatedRoute, private router:Router, private componentPageTitle:ComponentPageTitle, @Inject('IErrorService') private snackbar: IErrorService ){
-/*		effect(() => {
-			if( this.selectionsTable() && !arraysEqual(this.selections()?.selected, this.selectionsTable()?.selected) )
-				this.selections.set( new SelectionModel<number>(true, this.selectionsTable().selected) );
-		});*/
-	}
+	constructor( private route: ActivatedRoute, private router:Router, private componentPageTitle:ComponentPageTitle, @Inject('IErrorService') private snackbar: IErrorService )
+	{}
 
 	async ngOnInit(){
 		try{
 			const columns = ["id", "name", "description"];
 			const input = this.excludedIds().length  ? `(id: {notIn: ${JSON.stringify(this.excludedIds())}})` : "";
-			this.data = ( await this.ql().query(`${this.collectionName()}${input}{${columns.join(" ")}}`) )[this.collectionName()];
+			this.data.set( (await this.ql().query(`${this.collectionName()}${input}{${columns.join(" ")}}`))[this.collectionName()] );
 			if( !this.schemaInput() )
 				this.#schema = await this.ql().schemaWithEnums( this.collectionName() );
-			//this.selectionsTable.set( new SelectionModel<number>(true, this.selections().selected) );
 			this.displayedFields = Field.filterSort( this.schema.fields.filter((x)=>columns.includes(x.name)), columns, this.excludedColumnsInput() );
 			this.isLoading.set( false );
 		}
@@ -46,26 +41,25 @@ export class QLSelector implements OnInit{
 		}
 	};
 	sortData( options:Sort ){
-		const values = this.data.slice();
+		const values = [ ...this.data() ];
 		const multiplier = options.direction === 'asc' ? 1 : -1;
 		const name = options.active;
-		this.data = values.sort((a, b) =>{
+		this.data.set( values.sort((a, b) =>{
 			let lessThan = a[name]<b[name];
 			return (lessThan ? -1 : 1)*multiplier;
-		});
+		}) );
 		this._table.renderRows();
 	}
 
 	type = input.required<string>();
 
-	//selectionsTable = signal<SelectionModel<number>>( null );
 	selections = model.required<SelectionModel<number>>();
 	isLoading = signal<boolean>( true );
 	collectionName = computed<string>( ()=> MetaObject.toCollectionName(this.type()) );
 	displayedFields:Field[];
 	excludedIds = input<number[]>( [] );
 	@ViewChild('mainTable',{static: false}) _table:MatTable<any>;
-	data;
+	data=signal<any[]>( null );
 	excludedColumnsInput = input<string[]>([]);
 	get name():string{ return <string>this.routeConfig.title; }
 	get routeConfig(){ return this.route.routeConfig;}

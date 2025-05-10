@@ -1,45 +1,86 @@
 import {ActivatedRoute, ActivatedRouteSnapshot, Resolve, Router, RouterStateSnapshot} from '@angular/router';
-import {Inject, Injectable} from '@angular/core';
-import {FieldKind, IEnum, IErrorService, IProfile, IQueryResult, Settings, TargetRow, TableSchema, IGraphQL, PageSettings, StringUtils, Field, MetaObject} from 'jde-framework';
+import {inject, Inject, Injectable} from '@angular/core';
+import {IErrorService, IProfile, Settings, TableSchema, IGraphQL, PageSettings, StringUtils, Field, MetaObject } from 'jde-framework';
 import { Sort } from '@angular/material/sort';
-import { filter } from 'rxjs';
 import { DocItem } from 'jde-material';
+import { RouteStore } from './route.store';
+
+type CollectionItem = string | { path:string, title?:string, data?:{summary:string, collectionName:string, canPurge:boolean} };
+export class ListRoute implements DocItem{
+	constructor( collection:string|CollectionItem ){
+		if( typeof collection=='string' )
+			collection = {path:collection, title:StringUtils.capitalize(collection)};
+		this.path = collection.path;
+		this.collectionName = collection.data?.collectionName ?? this.path;
+		//this.excludedColumns = collection.data ? collection.data["excludedColumns"] : undefined;
+		this.summary = collection?.data?.summary;
+		this.title = collection.title ?? StringUtils.capitalize( this.path );
+	}
+	static find( target:string, collections:CollectionItem[] ):ListRoute{
+		let collection:CollectionItem = collections.find( c=>((typeof c =="string") && c==target) || c["path"]==target );
+		return new ListRoute( collection );
+	}
+
+	path: string; ///routerLink relative to parent ie groups
+	collectionName: string;
+	excludedColumns?:string[];
+	parent?:DocItem;
+	siblings:ListRoute[]; //includes this.
+	summary?: string;
+	title: string; //Groups
+}
 
 export type QLListData = {
 	profile:Settings<UserSettings>;
 	pageSettings:PageSettings;
 	schema: TableSchema;
-	data: any[];
+	data: any; //{users:ITargetRow[]};
+	routing:ListRoute;
 };
+
 @Injectable()
 export class QLListResolver implements Resolve<QLListData> {
 	constructor( private route: ActivatedRoute, private router:Router, @Inject('IGraphQL') private ql: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsl: IErrorService ){}
 
 	resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot):Promise<QLListData>{
 		const collectionDisplay = route.paramMap.get( "collectionDisplay" );
-		let data = route.data["collections"].filter( x=> typeof x=="string" ? x==collectionDisplay : x["id"]==collectionDisplay )[0];
-		let routerData:DocItem = typeof data=="string" ?  {id:data,name:StringUtils.capitalize(data)} : data;
-		return this.load( routerData );
+		//let parent = { path: route.parent.url.map(seg=>seg.path).join("/"), title: route.parent.title ?? StringUtils.capitalize(route.parent.url[route.parent.url.length-1].path) };
+		let routing:ListRoute;
+		const siblings:ListRoute[] = [];
+		for( let collection of route.data["collections"] ){
+			const sibling = new ListRoute( collection );
+			siblings.push( sibling );
+			if( sibling.path==collectionDisplay )
+				routing = sibling;
+		}
+		routing.siblings = siblings;
+		//routing.parent = parent;
+		return this.load( routing );
 	}
 
-	async load( pageData:DocItem ):Promise<QLListData>{
-		const profile = new Settings<UserSettings>( UserSettings, `${pageData.id}-list`, this.profileService );
+	private async load( routing:ListRoute ):Promise<QLListData>{
+		const profile = new Settings<UserSettings>( UserSettings, `${routing.collectionName}`, this.profileService );
 		await profile.loadedPromise;
-		pageData.excludedColumns = this.ql.excludedColumns( pageData.id );
-		return QLListResolver.load( this.ql, pageData.collectionName ?? pageData.id, profile, new PageSettings(pageData) );
+		routing.excludedColumns = this.ql.excludedColumns( routing.collectionName );
+		return QLListResolver.load( this.ql, profile, new PageSettings(routing), routing, this.routeStore );
 	}
-	static async load( ql:IGraphQL, collectionName:string, profile:Settings<UserSettings>, pageSettings:PageSettings ):Promise<QLListData>{
+	static async load( ql:IGraphQL, profile:Settings<UserSettings>, pageSettings:PageSettings, routing:ListRoute, routeStore:RouteStore ):Promise<QLListData>{
+		const collectionName = routing.collectionName;
 		const schema = await ql.schemaWithEnums( MetaObject.toTypeFromCollection(collectionName) );
 		let columns = Field.filter( schema.fields, pageSettings.excludedColumns, profile.value.showDeleted ).map( x=>x.name );
 		let query = `${collectionName}{ ${columns.join(" ")} }`;
-		const rows = await ql.query( query );
+		const data = await ql.query<any>( query );
+		routeStore.setSiblings( routing.path, data[schema.collectionName].map( r=>{return {title:r.name, path:`${routing.path}/${r.target}`};}) );
+
 		return {
 			profile: profile,
 			pageSettings: pageSettings,
 			schema: schema,
-			data: <any[]>rows
+			data: data,
+			routing: routing
 		};
 	}
+	routeStore = inject( RouteStore );
 }
 export class UserSettings{
 	assign( value:UserSettings ){
