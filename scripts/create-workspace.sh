@@ -13,7 +13,6 @@ echo create-workspace.sh workspace=$workspace librares=\"${libraryLog:1}\";
 
 scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )";
 echo $scriptDir;
-echo source $scriptDir/../../../Framework/scripts/common.sh;
 source $scriptDir/../../../Framework/scripts/common.sh;
 baseDir=`pwd`;
 echo $baseDir;

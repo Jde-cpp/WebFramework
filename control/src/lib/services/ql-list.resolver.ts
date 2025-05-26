@@ -5,7 +5,7 @@ import { Sort } from '@angular/material/sort';
 import { DocItem } from 'jde-material';
 import { RouteStore } from './route.store';
 
-type CollectionItem = string | { path:string, title?:string, data?:{summary:string, collectionName:string, canPurge:boolean} };
+type CollectionItem = string | { path:string, title?:string, data?:{summary:string, collectionName:string, canPurge:boolean,showAdd:boolean} };
 export class ListRoute implements DocItem{
 	constructor( collection:string|CollectionItem ){
 		if( typeof collection=='string' )
@@ -13,6 +13,8 @@ export class ListRoute implements DocItem{
 		this.path = collection.path;
 		this.collectionName = collection.data?.collectionName ?? this.path;
 		//this.excludedColumns = collection.data ? collection.data["excludedColumns"] : undefined;
+		this.canPurge = collection.data?.canPurge ?? true;
+		this.showAdd = collection.data?.showAdd ?? true;
 		this.summary = collection?.data?.summary;
 		this.title = collection.title ?? StringUtils.capitalize( this.path );
 	}
@@ -22,10 +24,12 @@ export class ListRoute implements DocItem{
 	}
 
 	path: string; ///routerLink relative to parent ie groups
+	canPurge?: boolean; //if true, the user can purge deleted items.
 	collectionName: string;
 	excludedColumns?:string[];
 	parent?:DocItem;
 	siblings:ListRoute[]; //includes this.
+	showAdd?: boolean; //if true, the user can add new items.
 	summary?: string;
 	title: string; //Groups
 }

@@ -1,15 +1,17 @@
 #!/bin/bash
 library=${1};  #jde-blockly
 dir=${2}; #/home/user/.../WebBlockly
+overwrite=${3:-0}; #true
 scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )";
 echo starting Library $library;
 source $scriptDir/../../../Framework/scripts/common.sh;
 controlDir=$dir/control;
-if [ \"$(head -c 2 tsconfig.json)\" == \"/*\" ]; then
-	echo "removing comments";
-	sed -i '1d' tsconfig.json;
+echo controlDir=$controlDir;
+echo pwd=`pwd`;
+if [ $overwrite != 0 ]; then
+	rm -rf projects/$library;
 fi;
-if [ ! -d projects/$library ]; then #project not installed
+if [ ! -d projects/$library ]; then
 	configPath=.compilerOptions.paths.\"$library\"
 	angularConfig=`jq .projects.\"$library\".root angular.json`;
 	if [ ! -z "$angularConfig" ]; then
@@ -18,7 +20,6 @@ if [ ! -d projects/$library ]; then #project not installed
 		jq $cmd angular.json > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq $cmd angular.json; exit 1; fi;
 		mv temp.json angular.json;
 		cmd="del($configPath)";
-		if [ \"$(head -c 2 tsconfig.json)\" == \"/*\" ]; then sed -i '1d' tsconfig.json; fi;
 		jq $cmd tsconfig.json > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq $cmd tsconfig.json; exit 1; fi;
 		mv temp.json tsconfig.json;
 	fi;
@@ -31,8 +32,8 @@ if [ ! -d projects/$library ]; then #project not installed
 	mv temp.json tsconfig.json;
 fi;
 cd projects/$library;
-if [ -f $controlDir/package.json ]; then addHard package.json $controlDir; fi;
-if [ -f $controlDir/tsconfig.lib.json ]; then addHard tsconfig.lib.json $controlDir; fi;
+#if [ -f $controlDir/package.json ]; then addHard package.json $controlDir; fi;
+#if [ -f $controlDir/tsconfig.lib.json ]; then addHard tsconfig.lib.json $controlDir; fi;
 #if [ -d $controlDir/environments ]; then addHardDir environments $controlDir; fi;
 #if [ -d $controlDir/styles ]; then addHardDir styles $controlDir; fi;
 cd src;

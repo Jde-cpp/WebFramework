@@ -167,13 +167,13 @@ export class QLList implements OnInit, OnDestroy{
 	get enums():Map<string, IEnum[]>{ return this.schema.enums; }
 	private get profile():Settings<UserSettings>{ return this.resolvedData.profile; }
 	resolvedData:QLListData;
-	get routeConfig(){ return this.route.routeConfig;}
+	get routeConfig(){ return this.route.routeConfig; }
 	routeStore = inject( RouteStore );
 	private get schema():TableSchema{ return this.resolvedData.schema; }
 	get settings(){ return this.profile.value; }
 	get sort(){ return this.settings.sort; }
 	showDeleted = false;
-	get showAdd():boolean{ return this.routeConfig.data['showAdd'] ?? true};
+	get showAdd():boolean{ return this.resolvedData.pageSettings.showAdd ?? true };
 	showDeletedSubject = new Subject<boolean>();
 	get type(){ return MetaObject.toTypeFromCollection(this.collectionName);}
 }

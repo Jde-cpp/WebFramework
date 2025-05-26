@@ -1,4 +1,4 @@
-<mat-table matSort style="flex-basis: 100%;" [dataSource]="dataSource()()" class="mat-elevation-z8" (matSortChange)="sortData($event)"  [matSortActive]="sort().active" [matSortDirection]="sort().direction">
+<mat-table matSort style="flex-basis: 100%;" [dataSource]="dataSource()()" class="mat-elevation-z8" (matSortChange)="sortData($event)"  [matSortActive]="sort()?.active" [matSortDirection]="sort()?.direction">
 	@if( selections().isMultipleSelection() ){
 		<ng-container matColumnDef="select">
 			<mat-header-cell *matHeaderCellDef>

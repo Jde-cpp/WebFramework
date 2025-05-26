@@ -50,7 +50,7 @@ export class DetailResolver<T> implements Resolve<DetailResolverData<T>> {
 		await profile.loadedPromise;
 
 		let siblings = this.routeStore.getSiblings( collectionDisplay );
-		const routing = new DetailRoute( target, siblings.find(s=>s.path.endsWith('/'+target)).title, siblings,
+		const routing = new DetailRoute( target, siblings.find(s=>s.path.endsWith('/'+target))?.title, siblings,
 			ListRoute.find(collectionDisplay, route.parent.routeConfig.children.find(x=>x.path==":collectionDisplay").data["collections"]) );
 		try{
 			return DetailResolver.load<T>( this.ql, this.ql.toCollectionName(collectionDisplay), target, profile, routing );

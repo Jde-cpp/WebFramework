@@ -278,7 +278,6 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 	async schema( types:string[] ):Promise<TableSchema[]>{
 		let results = new Array<TableSchema>();
 		let queries =  new Array<string>();
-		console.log( `schema(${JSON.stringify(types)})` );
 		for( let type of types ){
 			if( this.#tables.has(type) )
 				results.push(this.#tables.get(type));
