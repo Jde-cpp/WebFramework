@@ -27,12 +27,13 @@ moveToDir proto;
 # echo 'Created common proto files';
 
 declare -A appFiles;
+if [ ! -f Web.FromServer.d.ts ] || [ $clean == 1 ]; then appFiles[Web.FromServer]=web_from_server; fi;
 if [ ! -f App.FromClient.d.ts ] || [ $clean == 1 ]; then appFiles[App.FromClient]=app_from_client; fi;
 if [ ! -f App.FromServer.d.ts ] || [ $clean == 1 ]; then appFiles[App.FromServer]=app_from_server; fi;
 if [ ! -f App.d.ts ] || [ $clean == 1 ]; then appFiles[App]=app; fi;
 if [ ! -f Common.d.ts ] || [ $clean == 1 ]; then appFiles[Common]=common; fi;
 echo 'Creating application proto files';
-create $jdeBash/Public/src/app/shared/proto appFiles;
+create $jdeBash/Public/libs/app/shared/proto appFiles;
 echo 'Created application proto files';
 
 echo jde-framework-proto.sh complete.

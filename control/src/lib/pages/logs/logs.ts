@@ -1,6 +1,7 @@
 import { HostListener, Component, OnDestroy, OnInit, ViewChild, Inject } from '@angular/core';
-import { MatTable } from '@angular/material/table';
-import {Sort} from '@angular/material/sort';
+import { CommonModule } from '@angular/common';
+import { MatTable, MatTableModule } from '@angular/material/table';
+import {MatSortModule, Sort} from '@angular/material/sort';
 import {MatDatepickerInputEvent} from '@angular/material/datepicker';
 import { Observable, Subject, Unsubscribable } from 'rxjs';
 import { TraceEntry } from './TraceEntry';
@@ -19,12 +20,22 @@ import * as AppFromServer from '../../proto/App.FromServer'; import FromServer =
 import * as AppFromClient from '../../proto/App.FromClient'; import FromClient = AppFromClient.Jde.App.Proto.FromClient;
 import * as CommonProto from '../../proto/Common'; import ELogLevel = CommonProto.Jde.Proto.ELogLevel;
 import { FormControl } from '@angular/forms';
+import { MatToolbar } from '@angular/material/toolbar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatOption, MatSelect } from '@angular/material/select';
+import { MatIcon } from '@angular/material/icon';
+import { Paginator } from 'jde-framework';
 
 // Move levels to combo.
 // Add dates.
 // Fix pause button.
 // Comment out statuses
-@Component({selector: 'logs.main-content.mat-drawer-container.my-content',templateUrl: './logs.html',styleUrls: ['./logs.css']})
+@Component({
+	selector: 'logs.main-content.mat-drawer-container.my-content',
+	templateUrl: './logs.html',
+	styleUrls: ['./logs.css'],
+	imports: [CommonModule, MatIcon, MatTableModule, MatToolbar, MatFormFieldModule, MatSelect, MatSortModule, MatOption, Paginator]
+})
 export class LogsComponent implements OnInit, OnDestroy{
 	constructor( public _componentPageTitle: ComponentPageTitle, private appService:AppService, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private errorService: IErrorService ){
 		this.settingsContainer = new Settings<LogSettings>( LogSettings, "LogComponent", this.profileService );
@@ -171,7 +182,7 @@ export class LogsComponent implements OnInit, OnDestroy{
 		this.subscribe( this.applicationId, logLevel );
 	}
 	//@ViewChild("table-body") configuration:ConfigureTableComponent;
-	sortData(sort: Sort){
+	sortData(sort: Sort|any){
 		this.data.sortData( sort );
 		this.sort = sort;
 		this.settingsContainer.save();

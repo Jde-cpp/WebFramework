@@ -1,21 +1,31 @@
 import { Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { Component, ViewEncapsulation, OnInit, OnDestroy, Inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import {ActivatedRoute, NavigationEnd, Params, Router, RouterModule, Routes} from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 
 import { ComponentPageTitle } from 'jde-material';
 
 import {IErrorService} from '../../../services/error/IErrorService';
-import {IGraphQL, Table}  from '../../../services/IGraphQL';
+import {IEnum, IGraphQL}  from '../../../services/IGraphQL';
+import {TableSchema} from '../../../model/ql/schema/TableSchema'
+import { MetaObject } from '../../../model/ql/schema/MetaObject';
 import {IProfile} from '../../../services/profile/IProfile';
 import {Settings} from '../../../utilities/settings';
-import { MetaObject } from '../../../utilities/JsonUtils';
 import { HttpErrorResponse } from '@angular/common/http';
+import { MatTabsModule } from '@angular/material/tabs';
+import{ Properties } from '../properties/properties';
+import{ PageSettings } from '../model/PageSettings';
+import { clone } from 'jde-framework';
 
-
-
-@Component( { selector: 'graph-ql-detail', templateUrl: 'graph-ql-detail.html', styleUrls: ['./graph-ql-detail.scss'], encapsulation: ViewEncapsulation.None} )
+@Component( {
+    selector: 'graph-ql-detail',
+    templateUrl: 'graph-ql-detail.html',
+    styleUrls: ['./graph-ql-detail.scss'],
+    encapsulation: ViewEncapsulation.None,
+    imports: [CommonModule, MatTabsModule/*, Properties*/]
+})
 export class GraphQLDetailComponent implements OnDestroy, OnInit{
 	constructor( private route: ActivatedRoute, private router:Router, private dialog : MatDialog, private componentPageTitle:ComponentPageTitle, @Inject('IGraphQL') private graphQL: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService ){
 		this.target = this.router.url.substring( this.router.url.lastIndexOf('/')+1 );
@@ -31,10 +41,11 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 		const grandParent = this.route.parent;
 		const parentUrl = this.route.routeConfig.path.substr( 0, this.route.routeConfig.path.length-4 );
 		const parent = grandParent.routeConfig.children.find( (x)=>x.path==parentUrl );
-		this.name = parent.data["name"];
-		const display = parent.data["display"] || "name";
-		this.componentPageTitle.title = parent.data["name"];
-		this.profile = new Settings<PageSettings>( PageSettings, `${this.type}-detail`, this.profileService );
+		let pageSettings = <PageSettings>parent.data["pageSettings"];
+		this.name = pageSettings["name"];
+		const display = pageSettings["display"] || "name";
+		this.componentPageTitle.title = pageSettings["name"];
+		this.profile = new Settings<UserSettings>( UserSettings, `${this.type}-detail`, this.profileService );
 		await this.profile.loadedPromise;
 		try{
 			let schemaData = ( await this.graphQL.schema( [this.type] ) )[0];
@@ -45,9 +56,9 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 			if( !columns.includes(display) )
 				columns.push( display );
 			//TODO find out why we are querying 2x, this time only for name/target.
-			const ql = `${this.schema.objectCollectionName}(deleted:null){${columns.join(" ")}}`;
+			const ql = `${this.schema.collectionName}(deleted:null){${columns.join(" ")}}`;
 			const data = await this.graphQL.query( ql );
-			const results = data[this.schema.objectCollectionName];
+			const results = data[this.schema.collectionName];
 			const siblings = new Map<string,string>();
 			if( results ){
 				const parent = this.route.url["value"][0].path;
@@ -65,6 +76,7 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 		}
 	}
 	onNavigationEnd =( val:NavigationEnd )=>{///settings
+		debugger;
 		var parts = val.url.split( '/' ); parts.shift();
 		if( parts.length<3 )//users->portfolio=2
 			return;
@@ -75,8 +87,8 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 		if( this.target==parentUrl || !parts.find((x)=>x.toLowerCase()==parentUrl.toLowerCase()) )//going from groups to roles.
 			return;
 		const parent = grandParent.routeConfig.children.find( (x)=>x.path==parentUrl );
-		const paths = [this.target, parent.data["name"] ];
-		for( let x = grandParent; x.routeConfig?.data && x.routeConfig?.data["name"]; x = x.parent )
+		const paths = [this.target, this.pageSettings.name ];
+		for( let x = grandParent; x.routeConfig?.data && this.pageSettings.name; x = x.parent )
 			paths.push( x.routeConfig.data["name"] );
 		if( paths[0].toUpperCase()==paths[2].toUpperCase() )
 			return;
@@ -90,8 +102,7 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 			const ql = `${this.fetchName}(filter:{target:{ eq:"${this.target}"}}){ ${columns} }`;
 			try{
 				const data = await this.graphQL.query( ql );
-				if( data==null )
-				{
+				if( data==null ){
 					debugger;
 					throw "data==null";
 				}
@@ -109,42 +120,42 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 		if( lists.length ){
 			this.graphQL.schema( lists ).then( (tables)=>{
 				for( const table of tables ){
-					if( table.typeName.startsWith(this.schema.typeName) )
-						table.subType = new MetaObject( table.typeName.substring(this.schema.typeName.length) );
-					else if( table.typeName.endsWith(this.schema.typeName) )
-						table.subType = new MetaObject( table.typeName.substring(0, table.typeName.length-this.schema.typeName.length) );
+					if( table.type.startsWith(this.schema.type) )
+						table.subType = new MetaObject( table.type.substring(this.schema.type.length) );
+					else if( table.type.endsWith(this.schema.type) )
+						table.subType = new MetaObject( table.type.substring(0, table.type.length-this.schema.type.length) );
 					this.tabs.push( table );
-					columns = columns.concat( ` ${table.objectCollectionName}{${table.columns}}` );
+					columns = columns.concat( ` ${table.collectionName}{${table.columns}}` );
 				}
 				if( this.target=='$new' )
 					this.viewPromise = Promise.resolve(true);
 				else
-					fetch( columns );//query {  role(target:"user_management") { id name attributes created deleted updated description target  groups{id name attributes created deleted updated description target } rolePermissions { rightId id name api{id name} }  }  }
+					fetch( columns );
 			});
 		}
 		else
 			fetch( columns );
 	}
-	onSave( newValue:any )
-	{}
 	tabIndexChanged( event ){
 		 this.settings.tabIndex=<number>event;
 	}
-	get fetchName():string{ return this.schema.objectReferenceName; }
+	get fetchName():string{ return this.schema.singular; }
+	data:any
 	name:string;
-	data:any;
+	copy( x:any ){ return clone(x); }
+	pageSettings:PageSettings;
 	get settings(){ return this.profile.value;}
-	profile:Settings<PageSettings>;// = new Settings<PageSettings>( PageSettings, "UserComponent", this.profileService );
-	get propertiesName(){ return this.target=="$new" ? `New ${this.schema.typeName}` : "Properties"; }
-	schema:Table;
+	profile:Settings<UserSettings>;// = new Settings<PageSettings>( PageSettings, "UserComponent", this.profileService );
+	get propertiesName(){ return this.target=="$new" ? `New ${this.schema.type}` : "Properties"; }
+	schema:TableSchema;
 	siblings: Subject<Map<string,string>> = new Subject<Map<string,string>>();
-	tabs = new Array<Table>();
+	tabs = new Array<TableSchema>();
 	target:string;
 	get type():string{ return this.name.substr( 0, this.name.length-1 ); }
 	viewPromise:Promise<boolean>;
 }
 
-class PageSettings{
-	assign( value:PageSettings ){ this.tabIndex = value.tabIndex;  }
+class UserSettings{
+	assign( value:UserSettings ){ this.tabIndex = value.tabIndex;  }
 	tabIndex:number=0;
 }

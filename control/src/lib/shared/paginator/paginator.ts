@@ -7,16 +7,19 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Observable, Subscription } from 'rxjs';
 
-export class PageEvent
-{
+export class PageEvent{
 	constructor(){this.startIndex=0; this.pageLength=50;}
 	startIndex:number;
 	pageLength: number;
 }
 
-@Component({ selector: 'paginator', templateUrl: './paginator.html' })
-export class Paginator implements OnInit, OnDestroy
-{
+@Component({
+	selector: 'paginator',
+	templateUrl: './paginator.html',
+	imports:[MatIconModule, MatButtonModule, CommonModule, /*BrowserModule,*/ MatInputModule, FormsModule]
+
+})
+export class Paginator implements OnInit, OnDestroy{
 	constructor( private cdr: ChangeDetectorRef )
 	{}
 	ngOnInit()
@@ -102,6 +105,3 @@ export class Paginator implements OnInit, OnDestroy
 	get onFirstPage(){ return this.startIndex==0; }
 	get onLastPage(){ return this.endIndex==this.length-1; }
 }
-
-@NgModule( {exports: [Paginator], declarations: [Paginator], imports:[MatIconModule, MatButtonModule, CommonModule, /*BrowserModule,*/ MatInputModule, FormsModule]} )
-export class PaginatorModule {}

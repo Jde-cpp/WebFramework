@@ -9,12 +9,14 @@ workspace=${1:-my-workspace};
 librariesText=( "$@" );
 declare -a libraries=();
 for i in "${!librariesText[@]}"; do if (( $i > 0 )); then t=${librariesText[$i]}; libraries+=($t); libraryLog="$libraryLog $t";  fi; done;
-echo create-workspace.sh workspace=$workspace librares=\"${libraryLog:1}\"
+echo create-workspace.sh workspace=$workspace librares=\"${libraryLog:1}\";
 
-scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )";
+echo $scriptDir;
 source $scriptDir/../../../Framework/scripts/common.sh;
 baseDir=`pwd`;
-REPO_WEB=`readlink -f $scriptDir/../..`;
+echo $baseDir;
+#REPO_WEB=`readlink -f $scriptDir/../..`;
 findExecutable npm;
 if [ ! -x "$(which "ng" 2> /dev/null)" ]; then
 	cmd="npm install -g @angular/cli";
@@ -34,14 +36,17 @@ if [ ! -d $workspace ]; then
 	$cmd; if [ $? -ne 0 ]; then echo $cmd; exit 1; fi;
 	echo -------------------- create workspace complete --------------------;
 	cd $workspace;
-	command="jq '.projects.\"$workspace\".architect.build.configurations.production.budgets[0].maximumError = \"5mb\"' angular.json"
+	command="jq '.projects.\"$workspace\".architect.build.configurations.production.budgets[0].maximumError = \"2mb\"' angular.json"
 	eval $command > angular2.json; rm angular.json; mv angular2.json angular.json;
-	sed -i 's/"strict": true,/"strict": true, "strictPropertyInitialization": false, "strictNullChecks": false, "noImplicitAny": false, "noImplicitThis":false, "skipLibCheck": true, "allowSyntheticDefaultImports":true,/' tsconfig.json;
+	command="jq '.projects.\"$workspace\".architect.build.configurations.production.budgets[0].maximumWarning = \"1mb\"' angular.json"
+	eval $command > angular2.json; rm angular.json; mv angular2.json angular.json;
+		sed -i 's/"strict": true,/"strict": true, "strictPropertyInitialization": false, "strictNullChecks": false, "noImplicitAny": false, "noImplicitThis":false, "allowSyntheticDefaultImports":true,/' tsconfig.json;
 	command="jq '.cli.analytics = false' angular.json"
 	eval $command > angular2.json; rm angular.json; mv angular2.json angular.json;
 	#ng analytics disable;
 	echo -------------------- npm install start --------------------;
 	npm install material-design-icons;
+	npm install @angular/animations;
 	echo -------------------- icons installed --------------------;
 	ng add @angular/material --defaults --skip-confirmation; #use skip-confirmation when interactive
 	echo -------------------- material installed --------------------;
@@ -64,8 +69,7 @@ else
 fi;
 pushd `pwd` > /dev/null;
 ##################
-function execute()
-{
+function execute() {
 	file=$1;
 	if [ -f  $file ];then
 		t=$(stat -c "%a %n" $file); if [[ ${t:0:1} != "7" ]] ; then chmod 7${t:1:2} $file; fi;
@@ -75,16 +79,15 @@ function execute()
 ##################
 startDir=`pwd`;
 echo -------------------- Start Libraries --------------------;
-for librarySubDir in "${libraries[@]}"; do
-	echo $librarySubDir - processing;
-	libraryDir=$REPO_WEB/$librarySubDir;
+for libraryDir in "${libraries[@]}"; do
+	echo $libraryDir - processing;
 	#findExecutable jq
 	dest=`jq -r .name $libraryDir/control/package.json`
 	#dest=`perl -MJSON -e '$/ = undef; my $data = <>; for my $hash (new JSON->incr_parse($data)) { print $hash->{name}; }' < $libraryDir/control/package.json`;
 	library=$( basename $dest );
 	if [ $? -ne 0 ]; then echo $dest failed; exit 1; fi;
 	if [ ! -d projects/$library ]; then
-		$REPO_WEB/WebFramework/scripts/create-library.sh $library $librarySubDir; if [ $? -ne 0 ]; then echo `pwd`; echo $REPO_WEB/WebFramework/create-library.sh $library $librarySubDir; exit 1; fi;
+		$scriptDir/create-library.sh $library $libraryDir; if [ $? -ne 0 ]; then echo `pwd`; echo $scriptDir/WebFramework/create-library.sh $library $libraryDir; exit 1; fi;
 	fi;
 	cd $baseDir/$workspace/projects/$library/src;
 	if [ -d $libraryDir/control/src/lib ]; then addHardDir lib $libraryDir/control/src; fi;
@@ -99,6 +102,5 @@ for librarySubDir in "${libraries[@]}"; do
 	cd $startDir
 done;
 echo -------------------- End Libraries --------------------;
-jq '.angularCompilerOptions["strictTemplates"] = 'false'' tsconfig.json  > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq '$cmd' tsconfig.json; exit 1; fi;
 mv temp.json tsconfig.json;
 echo create-workspace.sh success

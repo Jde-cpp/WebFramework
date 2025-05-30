@@ -1,9 +1,16 @@
 
-export class StringUtils
-{
-	static capitalize( value:string )//https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html
-	{
-		let y = value.charAt(0).toUpperCase()+value.slice(1);
+export class StringUtils{
+	static capitalize( value:string ):string{
+		return value.charAt(0).toUpperCase()+value.slice(1);
+	}
+	static toJson( value:string ):string{
+		return value[0].toLowerCase() + value.substring(1);
+	}
+	static plural( value:string ):string{
+		return value.endsWith('s') ? value : value+'s';
+	}
+	static singular( value:string ):string{
+		return value.endsWith('s') ? value.slice(0,-1) : value;
 	}
 	static idToDisplay( id:string ){
 		let y=''

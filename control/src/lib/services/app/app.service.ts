@@ -1,38 +1,28 @@
 //get googleId on login.
-import { Subject,Observable,firstValueFrom, tap } from 'rxjs';
+import { Subject,Observable, tap } from 'rxjs';
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {Instance} from './app.service.types'
-import { IErrorService } from '../error/IErrorService';
 
-import { ETransport, IError, ProtoService, RequestId } from '../proto.service';
+import { ETransport, ProtoService, RequestId } from '../proto.service';
 import * as AppFromServer from '../../proto/App.FromServer'; import FromServer = AppFromServer.Jde.App.Proto.FromServer;
 import * as AppFromClient from '../../proto/App.FromClient'; import FromClient = AppFromClient.Jde.App.Proto.FromClient;
 import * as AppCommon from '../../proto/App'; import App = AppCommon.Jde.App.Proto;
 import * as CommonProto from '../../proto/Common'; import ELogLevel = CommonProto.Jde.Proto.ELogLevel; import IException = CommonProto.Jde.Proto.IException;
-import { IEnvironment } from 'jde-material';
+import { IAuth, IEnvironment, LoggedInUser } from 'jde-material';
 import { IGraphQL } from '../IGraphQL';
-import { P } from '@angular/cdk/keycodes';
-
-type StatusSubscription = (statuses:FromServer.IStatus) => void;
-type Resolve<T> = (value: T | PromiseLike<T>) => void;
-type Reject = (reason?: any) => void;
-type QLQuery = string;
-
-class PromiseCallbacks<T>{
-	constructor( public resolve:Resolve<T>, public reject:Reject )
-	{}
-}
+import { AuthStore } from 'jde-framework';
 
 @Injectable( {providedIn: 'root'} )
-export class AppService extends ProtoService<FromClient.Transmission,FromServer.IMessage> implements IGraphQL{
-	constructor( http: HttpClient, @Inject('IEnvironment') private environment: IEnvironment, @Inject('IErrorService') private cnsle: IErrorService ){
-		super( FromClient.Transmission, http, environment.get<ETransport>("httpTransport") );
+export class AppService extends ProtoService<FromClient.Transmission,FromServer.IMessage> implements IGraphQL, IAuth{
+	constructor( http: HttpClient, @Inject('IEnvironment') private environment: IEnvironment, @Inject("AuthStore") authStore:AuthStore ){
+		super( FromClient.Transmission, http, environment.get<ETransport>("httpTransport"), authStore, true );
 		let appServer = environment.get<Instance>( 'applicationServer' );
 		if( !appServer ){
 			console.log( "No Application Server set in environment" );
 			appServer = { port:1967, host:"localhost" };
 		}
+		console.log( `AppService: ${appServer.host}:${appServer.port}` );
 		super.instances = [appServer];
 	}
 	// ping():Promise<string>{
@@ -40,9 +30,10 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 	// }
 
 	async iotInstances():Promise<Instance[]>{
-		const y = await this.get( "IotWebSocket" );
+		const y = await this.get( "opcGateways" );
 		return y["servers"];
 	}
+
 
 /*	getApplications():Promise<FromServer.IApplication[]>{
 		return this.applications.length
@@ -124,39 +115,28 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 		return p;
 	}
 */
-	async googleLogin( token:string ):Promise<void>{
-//		return this.sendStringPromise<FromClient.ERequest,void>( FromClient.ERequest.GoogleLogin, token, null, FromClient.ERequest[FromClient.ERequest.GoogleLogin] );
+	async loginGoogle( user:LoggedInUser ):Promise<void>{
 		let self = this;
-		//if( this.log.restRequests )	console.log( `googleLogin( ${token} )` );
-		const sessionId = await this.post<string>( 'GoogleLogin', {value:token}, true );
-		self.setAuthorization( sessionId, "loginName:  TODO" );
-		if( this.log.restResults )	console.log( `authorization='${self.authorization}'` );
-
-		//let p = this.sendPromise<FromClient.IRequestValue,void>( "requestValue", {requestId: id, type: FromClient.ERequest.GoogleLogin, string: token } );
-
-		//return p;
+		//if( this.log.restRequests )	console.log( `googleLogin( ${user.credential} )` );
+		user.authorization = await this.post<string>( 'loginGoogle', {value:user.credential}, true );
+		self.authStore.append( user );
+		//if( this.log.restResults )	console.log( `authorization='${self.authorization}'` );
 	}
+	loginPassword( username:string, password:string, authenticator:string ):Promise<void>{
+		throw "noImpl";
+	}
+	async logout():Promise<void>{
+		let self = this;
+		if( this.log.restRequests )	console.log( `logout()` );
+		const sessionId = await this.post<string>( 'logout', {} );
+		self.authStore.logout();
+		if( this.log.restResults ) console.log( `authorization='null'` );
+	}
+
 	async googleAuthClientId():Promise<string>{
-//		try
-//		{
-			if( this.log.restRequests )	console.log( `googleAuthClientId()` );
-			//JSON.parse( "{'value': '445012155442-1v8ntaa22konm0boge6hj5mfs15o9lvd.apps.googleusercontent.com'}" );
-			let o = await firstValueFrom( this.http.get(`http://localhost:1999/GoogleAuthClientId`) );//TODO wrong url
-			return o["value"];
-//		}
-//		catch( e )
-//		{
-//			console.log( e );
-//			throw e;
-//		}
+		return await super.querySetting( "googleAuthClientId" );
 	}
-		//.);
-		// const id = this.getRequestId();
-		// if( this.log.requests )	console.log( `(${id})googleAuthClientId()` );
-		// let p = this.sendPromise<FromClient.IRequestValue,string>( "requestValue", {requestId: id, type: FromClient.ERequest.GoogleAuthClientId}, (x:FromServer.StringValue)=>x["stringResult"] );
-		// //this.stringValuePromises.set( id, p );
-		// return p;
-	//}
+
 	private logsSubscriptions:Map<RequestId,Subject<FromServer.ITrace>>= new Map<RequestId,Subject<FromServer.ITrace>>();
 	//private addMessage( msg ):void{}
 	override handleConnectionError( err ):void{
@@ -164,12 +144,12 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 		this.statusSubscriptions = [];
 	}
 	encode( t:FromClient.Transmission ){ return FromClient.Transmission.encode(t); }
-	public async validateSessionId():Promise<{domain:string,loginName:string}>{
-		console.log( `validateSessionId: ${this.authorization}` );
-		if( !this.authorization )
+	public async validateSessionId():Promise<LoggedInUser | null>{
+		console.log( `validateSessionId: ${this.user()?.authorization}` );
+		if( !this.user() )
 			return Promise.resolve( null );
-		const y = await this.query<{session:{domain:string,loginName:string}}>( `session( id:"${this.authorization}" ){ domain loginName }` );
-		return y.session;
+		const y = await this.query<{session:{domain:string,loginName:string}}>( `session( id:"${this.user().authorization}" ){ domain loginName }` );
+		return { domain:y.session.domain, id:y.session.loginName, authorization:this.user().authorization };
 	}
 	private complete():void{
 		console.log( 'complete' );
@@ -193,7 +173,7 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 				if( message.ack ){//first message after handshake
 					console.log( `[App.${requestId}]Connected to '${super.socketUrl}', socketId: ${message.ack}` );
 					let socketId = message.ack;
-					if( this.authorization )
+					if( !this.user() )
 						super.sendAuthorization( socketId );
 					else{
 						console.warn( `no authorization` );
