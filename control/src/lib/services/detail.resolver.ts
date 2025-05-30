@@ -9,20 +9,10 @@ export type DetailPageSettings = {
 	profile:Settings<UserSettings>;
 };
 
-export class DetailRoute implements DocItem{
+export class DetailRoute extends DocItem{
 	constructor( target:string, title:string, siblings:DocItem[], parent:ListRoute ){
-		this.path = target;
-		this.excludedColumns = [];
-		this.parent = parent;
-		this.siblings = siblings;
-		this.title = title;
+		super( {path:target, title:title, siblings:siblings, parent:parent} );
 	}
-	path: string; ///routerLink relative to parent ie groups
-	excludedColumns:string[] = [];
-	parent?:ListRoute;
-	siblings:DocItem[]; //includes this.
-	summary?: string;
-	title: string; //Groups
 }
 
 export type DetailResolverData<T>={

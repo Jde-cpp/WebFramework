@@ -10,7 +10,7 @@ export class RouteStore{
 	}
 
 	setSiblings( url:string, siblings:DocItem[] ){
-		this.#siblings.set( url, siblings.map(s=>{return {title:s.title, path:s.path}}) );
+		this.#siblings.set( url, siblings.map(s=>{return new DocItem({title:s.title, path:s.path})}) );
 		localStorage.setItem( url, JSON.stringify(this.#siblings.get(url)) );
 	}
 

@@ -6,8 +6,9 @@ import { DocItem } from 'jde-material';
 import { RouteStore } from './route.store';
 
 type CollectionItem = string | { path:string, title?:string, data?:{summary:string, collectionName:string, canPurge:boolean,showAdd:boolean} };
-export class ListRoute implements DocItem{
+export class ListRoute extends DocItem{
 	constructor( collection:string|CollectionItem ){
+		super();
 		if( typeof collection=='string' )
 			collection = {path:collection, title:StringUtils.capitalize(collection)};
 		this.path = collection.path;
@@ -23,15 +24,9 @@ export class ListRoute implements DocItem{
 		return new ListRoute( collection );
 	}
 
-	path: string; ///routerLink relative to parent ie groups
 	canPurge?: boolean; //if true, the user can purge deleted items.
 	collectionName: string;
-	excludedColumns?:string[];
-	parent?:DocItem;
-	siblings:ListRoute[]; //includes this.
 	showAdd?: boolean; //if true, the user can add new items.
-	summary?: string;
-	title: string; //Groups
 }
 
 export type QLListData = {
