@@ -1,6 +1,13 @@
 import { ActivatedRoute, ActivatedRouteSnapshot, Resolve, Router, RouterStateSnapshot } from '@angular/router';
 import { inject, Inject, Injectable } from '@angular/core';
-import { IErrorService, IGraphQL, IProfile, ListRoute, MetaObject, Settings, StringUtils, TableSchema, UserSettings } from 'jde-framework';
+import { IErrorService } from './error/IErrorService';
+import { IProfile } from './profile/IProfile';
+import { Settings } from '../utilities/settings';
+import { TableSchema } from '../model/ql/schema/TableSchema';
+import { IGraphQL } from '../services/IGraphQL';
+import { UserSettings } from '../services/ql-list.resolver';
+import { ListRoute } from './ql-list.resolver';
+import { MetaObject } from '../model/ql/schema/MetaObject';
 import { DocItem } from 'jde-material';
 import { RouteStore } from './route.store';
 

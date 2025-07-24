@@ -1,11 +1,16 @@
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { firstValueFrom } from 'rxjs';
 import { HttpClient, HttpResponse } from '@angular/common/http';
-import { FieldKind, fromIsoDuration, IEnum, IQueryResult, MutationSchema, TableSchema } from 'jde-framework';
+import { FieldKind } from '../model/ql/schema/Field';
+import { fromIsoDuration } from '../utilities/utils';
+import { TableSchema } from '../model/ql/schema/TableSchema';
+import { IEnum, IQueryResult } from '../services/IGraphQL';
+import { MutationSchema } from '../model/ql/schema/MutationSchema';
 import { Instance } from './app/app.service.types';
 import * as CommonProto from '../proto/Common'; import ELogLevel = CommonProto.Jde.Proto.ELogLevel; import IException = CommonProto.Jde.Proto.IException;
 import { AuthStore } from './auth.store';
-import { assert, Mutation } from 'jde-framework';
+import { assert } from '../utilities/utils';
+import { Mutation } from '../model/ql/Mutation';
 import { computed, Signal } from '@angular/core';
 import { EProvider, LoggedInUser } from 'jde-material';
 
@@ -125,11 +130,11 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 				let previousInstanceIndex = this.user()?.serverInstances?.findIndex( x=>x.url==this.url ) ?? -1;
 				let previousInstance = previousInstanceIndex>=0 ? this.user().serverInstances[previousInstanceIndex].instance : 0;
 				if( !active || timedout || (this.isAppServer && instance!=previousInstance) )
-					this.authStore.reset( {url:this.url, instance:instance} );
+					this.authStore.reset( {url:this.url, instance:instance}, this.user()?.credential );
 				else if( previousInstance!=instance )
 					this.authStore.setServerInstance( this.url, instance );
 				for( let callback of this.#loginCallbacks ){
-					let y = await this.authGet<any>( callback.target, this.user().authorization );
+					let y = await this.authGet<any>( callback.target, this.user().authorization ?? `Bearer ${this.user()?.credential}` );
 					callback.resolve( y );
 				}
 			}
@@ -152,9 +157,21 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		if( this.log.restRequests )	console.log( target.substring(0,this.log.maxLength) );
 		let url = this.urlWithTarget(target);
 		let y:Y;
-		if( authorization ){
+		let options = {};
+		if( authorization )
+			options["headers"] = { "Authorization": authorization };
+		if( !authorization || authorization.startsWith("Bearer ") ){
+			options["observe"] = "response";
+			options["transferCache"] = { includeHeaders: ["Authorization"] };
+			let response = <HttpResponse<Y>>await firstValueFrom( this.http.get<Y>(url, options) );
+			let newAuth = response.headers.get( "Authorization" );
+			if( newAuth )
+				this.authStore.append( {authorization:newAuth} );
+			y = response.body;
+		}
+		else{
 			try{
-				y = await firstValueFrom( this.http.get<Y>(url, {headers:{"Authorization":authorization}}) );
+				y = await firstValueFrom( this.http.get<Y>(url, options) );
 			}
 			catch( e ){
 				if( e["status"]==401 ){
@@ -165,14 +182,6 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 				else
 					throw e;
 			}
-		}
-		else{
-			let response:HttpResponse<Y> = await firstValueFrom( this.http.get<Y>(url,
-				{observe: "response", transferCache:{includeHeaders:["Authorization"]}}) );
-			let newAuth = response.headers.get( "Authorization" );
-			if( newAuth )
-				this.authStore.append( {authorization:newAuth} );
-			y = response.body;
 		}
 		if( this.log.restResults ) console.log( JSON.stringify(y) );
 		this.lastRestCall = new Date();
@@ -365,7 +374,7 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 	protected abstract encode( t:Transmission );
 
 	protected backlog:Transmission[] = [];
-	protected log = { sockRequests:true, sockResults:true, restRequests:false, restResults:false, subRequest:true, subResults:true, maxLength:255 };
+	protected log = { sockRequests:true, sockResults:true, restRequests:false, restResults:true, subRequest:true, subResults:true, maxLength:255 };
 	//Informational purposes only to match with server logs.
 	protected get socketId():number{ return this.#socketId; } #socketId:number;
 	get instances(){return this.#instances;} set instances(x){

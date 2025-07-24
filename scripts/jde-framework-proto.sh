@@ -26,8 +26,12 @@ moveToDir proto;
 # create $jdeBash/Public/src/web/proto commonFiles;
 # echo 'Created common proto files';
 
+declare -A webFiles;
+if [ ! -f Web.FromServer.d.ts ] || [ $clean == 1 ]; then webFiles[Web.FromServer]=web_from_server; fi;
+echo 'Creating web proto files';
+create $jdeBash/Public/libs/web/client/proto webFiles;
+echo 'Created web proto files';
 declare -A appFiles;
-if [ ! -f Web.FromServer.d.ts ] || [ $clean == 1 ]; then appFiles[Web.FromServer]=web_from_server; fi;
 if [ ! -f App.FromClient.d.ts ] || [ $clean == 1 ]; then appFiles[App.FromClient]=app_from_client; fi;
 if [ ! -f App.FromServer.d.ts ] || [ $clean == 1 ]; then appFiles[App.FromServer]=app_from_server; fi;
 if [ ! -f App.d.ts ] || [ $clean == 1 ]; then appFiles[App]=app; fi;

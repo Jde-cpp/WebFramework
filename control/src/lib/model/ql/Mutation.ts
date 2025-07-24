@@ -1,5 +1,6 @@
-import { assert, getEnumName, StringUtils, TypeName } from "jde-framework";
-
+import { assert, getEnumName } from '../../utilities/utils';
+import { TypeName } from '../../services/IGraphQL';
+import { StringUtils } from '../../utilities/StringUtils';
 
 export enum MutationType{
 		Create,

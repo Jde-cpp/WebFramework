@@ -1,4 +1,4 @@
-import { StringUtils } from "jde-framework";
+import { StringUtils } from '../../../utilities/StringUtils';
 
 export class MetaObject{
 	constructor( public type:string ){} //User

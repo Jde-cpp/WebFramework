@@ -1,6 +1,6 @@
 import { MetaObject } from "./MetaObject";
 import { Field, FieldKind } from "./Field";
-import { IEnum } from "jde-framework";
+import { IEnum } from '../../../services/IGraphQL';
 
 export class TableSchema extends MetaObject{
 	constructor( j ){

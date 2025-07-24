@@ -1,4 +1,6 @@
-import { Mutation, MutationSchema, TableSchema } from "jde-framework";
+import { Mutation } from '../model/ql/Mutation';
+import { MutationSchema } from '../model/ql/schema/MutationSchema';
+import { TableSchema } from '../model/ql/schema/TableSchema';
 
 export type TypeName = string;
 

@@ -11,7 +11,7 @@ import * as AppCommon from '../../proto/App'; import App = AppCommon.Jde.App.Pro
 import * as CommonProto from '../../proto/Common'; import ELogLevel = CommonProto.Jde.Proto.ELogLevel; import IException = CommonProto.Jde.Proto.IException;
 import { IAuth, IEnvironment, LoggedInUser } from 'jde-material';
 import { IGraphQL } from '../IGraphQL';
-import { AuthStore } from 'jde-framework';
+import { AuthStore } from '../auth.store';
 
 @Injectable( {providedIn: 'root'} )
 export class AppService extends ProtoService<FromClient.Transmission,FromServer.IMessage> implements IGraphQL, IAuth{
@@ -75,7 +75,7 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 	logsUnsubscribe( requestId:RequestId ){
 		if( this.log.subRequest ) console.log( `[${requestId}]UnSubscribe: logs()` );
 		this.logsSubscriptions.delete( requestId );
-		this.sendWithId( {requestIdType:FromClient.ERequestIdType.UnsubscribeLogs}, requestId, "UnSubscribe: logs" );
+		this.sendWithId( {requestIdType:FromClient.ERequestType.UnsubscribeLogs}, requestId, "UnSubscribe: logs" );
 	};
 
 	updateLogLevel( instanceId:number, defaultFileLevel:ELogLevel, defaultDBLevel:ELogLevel ):void{
@@ -115,10 +115,10 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 		return p;
 	}
 */
-	async loginGoogle( user:LoggedInUser ):Promise<void>{
+	async login( user:LoggedInUser ):Promise<void>{
 		let self = this;
 		//if( this.log.restRequests )	console.log( `googleLogin( ${user.credential} )` );
-		user.authorization = await this.post<string>( 'loginGoogle', {value:user.credential}, true );
+		user.authorization = await this.post<string>( 'login', {value:user.credential}, true );
 		self.authStore.append( user );
 		//if( this.log.restResults )	console.log( `authorization='${self.authorization}'` );
 	}

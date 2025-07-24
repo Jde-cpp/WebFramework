@@ -17,7 +17,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { MatTabsModule } from '@angular/material/tabs';
 import{ Properties } from '../properties/properties';
 import{ PageSettings } from '../model/PageSettings';
-import { clone } from 'jde-framework';
+import { clone } from '../../../utilities/utils';
 
 @Component( {
     selector: 'graph-ql-detail',

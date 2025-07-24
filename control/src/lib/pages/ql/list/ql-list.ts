@@ -5,7 +5,10 @@ import {Sort} from '@angular/material/sort';
 import { MatTable } from '@angular/material/table';
 import {IProfile} from '../../../services/profile/IProfile'
 import {IErrorService} from '../../../services/error/IErrorService'
-import {IGraphQL, Field, IEnum, TableSchema, MetaObject}  from 'jde-framework'
+import {IGraphQL, IEnum } from '../../../services/IGraphQL';
+import {Field} from '../../../model/ql/schema/Field';
+import {TableSchema}  from '../../../model/ql/schema/TableSchema';
+import {MetaObject}  from '../../../model/ql/schema/MetaObject';
 import {Settings} from '../../../utilities/settings'
 
 import { ComponentPageTitle, DocItem, IRouteService, RouteService } from 'jde-material';

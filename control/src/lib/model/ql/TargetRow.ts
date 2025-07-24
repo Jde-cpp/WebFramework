@@ -1,6 +1,6 @@
 import { Row } from './Row';
 import { Mutation, MutationType } from './Mutation';
-import { assert, clone } from 'jde-framework';
+import { assert, clone } from '../../utilities/utils';
 
 export type Target = string;
 export abstract class ITargetRow extends Row{

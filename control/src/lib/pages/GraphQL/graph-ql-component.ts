@@ -6,7 +6,9 @@ import {Sort} from '@angular/material/sort';
 import { MatTable } from '@angular/material/table';
 import {IProfile} from '../../services/profile/IProfile'
 import {IErrorService} from '../../services/error/IErrorService'
-import {IGraphQL, TableSchema, FieldKind, Field, IQueryResult}  from 'jde-framework'
+import {IGraphQL, IQueryResult}  from '../../services/IGraphQL';
+import {TableSchema}  from '../../model/ql/schema/TableSchema';
+import {Field, FieldKind} from '../../model/ql/schema/Field';
 import {Settings} from '../../utilities/settings'
 import {PageSettings} from './model/PageSettings';
 

@@ -7,11 +7,17 @@ const userStorageKey = 'user';
 @Injectable({ providedIn: 'root' })
 export class AuthStore{
 	constructor(){
-		const loggedInUser = localStorage.getItem(userStorageKey);
+		const loggedInUser = null;//localStorage.getItem(userStorageKey);
 		if( this.log ) console.log( `AuthService: ${loggedInUser}` );
 		if( loggedInUser ){
 			let user = JSON.parse(loggedInUser);
 			this.#userSignal.set( user );
+		}
+		else{
+			//localStorage.setItem("jwt", "ey...");
+			const jwt = localStorage.getItem("jwt");
+			if( jwt )
+				this.#userSignal.set({ credential: jwt });
 		}
 	}
 
@@ -27,13 +33,14 @@ export class AuthStore{
 		this.#userSignal.set( updated );
 	}
 
-	reset( serverInstance?:{url:string,instance:number} ):void{
-		let user = null;
+	reset( serverInstance?:{url:string,instance:number}, jwt?:string ):void{
+		let user:LoggedInUser = null;
 		if( serverInstance ){
-			user = { serverInstances: this.user()?.serverInstances ?? [] };
+			user = new LoggedInUser( jwt );
+			user.serverInstances = user.serverInstances || [];
 			AuthStore.upsertServerInstance( user, serverInstance.url, serverInstance.instance );
 		}
-		if( this.log ) console.log( `auth.reset( ${JSON.stringify(user)} )` );
+		if( this.log ) console.log( `auth.reset( ${user.toString()} )` );
 		if( user )
 			localStorage.setItem( userStorageKey, JSON.stringify(user) );
 		else

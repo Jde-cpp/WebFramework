@@ -4,7 +4,7 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { IErrorService } from '../../../services/error/IErrorService';
-import { Field, FieldKind } from 'jde-framework';
+import {Field, FieldKind} from '../../../model/ql/schema/Field';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatIcon } from '@angular/material/icon';
 import { StringUtils } from '../../../utilities/StringUtils';

@@ -16,7 +16,14 @@ if [ ! -d projects/$library ]; then
 	angularConfig=`jq .projects.\"$library\".root angular.json`;
 	if [ ! -z "$angularConfig" ]; then
 		echo removing from [angular][tsconfig].json;
-		cmd="del(.projects.\"$library\")"
+		if [ \"$(head -c 2 tsconfig.json)\" == \"/*\" ]; then
+			sed -i '1d' tsconfig.json;
+			echo removed comment;
+		fi;
+		if [ \"$(head -c 2 tsconfig.json)\" == \"/*\" ]; then
+			sed -i '1d' tsconfig.json;
+			echo removed comment;
+		fi;		cmd="del(.projects.\"$library\")"
 		jq $cmd angular.json > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq $cmd angular.json; exit 1; fi;
 		mv temp.json angular.json;
 		cmd="del($configPath)";
@@ -27,7 +34,6 @@ if [ ! -d projects/$library ]; then
 	ng analytics off;#should add to angular.json "cli": {"analytics": false},
 	ng g library $library --defaults; if [ $? -ne 0 ]; then echo `pwd`; echo ng g library $library --defaults; exit 1; fi;
 	configConent="[\"./projects/$library/src/public-api\", \"./dist/$library/$library\", \"./dist/$library\"]";
-	#seems to be failing because of comments:  if [ \"$(head -c 2 tsconfig.json)\" == \"/*\" ]; then sed -i '1d' tsconfig.json; fi; should take care of it
 	jq "$configPath = $configConent" tsconfig.json > temp.json; if [ $? -ne 0 ]; then echo `pwd`; echo jq \"$configPath = $configConent\" tsconfig.json; exit 1; fi;
 	mv temp.json tsconfig.json;
 fi;

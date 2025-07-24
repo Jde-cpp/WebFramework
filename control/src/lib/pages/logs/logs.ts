@@ -24,7 +24,7 @@ import { MatToolbar } from '@angular/material/toolbar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatOption, MatSelect } from '@angular/material/select';
 import { MatIcon } from '@angular/material/icon';
-import { Paginator } from 'jde-framework';
+import { Paginator } from '../../shared/paginator/paginator';
 
 // Move levels to combo.
 // Add dates.

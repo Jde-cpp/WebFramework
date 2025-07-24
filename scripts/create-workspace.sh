@@ -102,5 +102,4 @@ for libraryDir in "${libraries[@]}"; do
 	cd $startDir
 done;
 echo -------------------- End Libraries --------------------;
-mv temp.json tsconfig.json;
 echo create-workspace.sh success

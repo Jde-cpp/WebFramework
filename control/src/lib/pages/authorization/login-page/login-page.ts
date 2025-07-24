@@ -58,9 +58,9 @@ export class LoginPageComponent{
 		this.onGoogleLogin( credential );
 	}
 	async onGoogleLogin(credential: string){
-		let user = this.toLoginUser( credential );
+		let user = new LoggedInUser( credential );
 		try{
-			await this.authService.loginGoogle( user );
+			await this.authService.login( user );
 			localStorage.setItem( "googleLoginHint", user.email );
 			this.router.navigate( [''] );
 		}
@@ -87,7 +87,7 @@ export class LoginPageComponent{
 				document.getElementById("google-button"),
 				{ theme: "outline", size: "large" }
 			);
-			if( this.googleCredential && !this.user().pictureUrl )
+			if( this.googleCredential && !this.user().picture )
 				this.onGoogleLogin( this.googleCredential );
 		}
 		catch( e ){
@@ -98,32 +98,12 @@ export class LoginPageComponent{
 
 	async getGoogleAuthClientId():Promise<string>{
 		const y = await this.authService.googleAuthClientId();
+		if( !y )
+			throw new Error( "googleAuthClientId is not defined" );
 		return y;
 	}
 	hasUserPassword = computed(() => { return !this.providers.isLoading() && this.providers.value().includes( EProvider.OpcServer ); });
 	providers = resource<EProvider[], {}>( {loader: async () =>await this.authService.providers()} );
-
-	private decodeJwt(idToken: string):any{
-    const base64Url = idToken.split( "." )[1];
-    const base64 = base64Url.replace( /-/g, "+" ).replace( /_/g, "/" );
-    const jsonPayload = decodeURIComponent(
-      window.atob( base64 ).split("")
-        .map( (c)=>"%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2) )
-        .join("")
-    );
-    return JSON.parse( jsonPayload );
-  }
-
-	private toLoginUser(credential: string):LoggedInUser {
-		const jwt = this.decodeJwt( credential );
-		return {
-			credential: credential,
-			email: jwt.email,
-			name: jwt.name,
-			pictureUrl: jwt.picture,
-			provider: EProvider.Google
-		} as LoggedInUser;
-	}
 
 	fb = inject(FormBuilder);
 	private get googleCredential():string{return this.envService.get("googleCredential"); }

@@ -3,16 +3,14 @@ import { CommonModule } from '@angular/common';
 import {ActivatedRoute, Router} from '@angular/router';
 import {Sort} from '@angular/material/sort';
 import { MatTable } from '@angular/material/table';
-import {IProfile} from '../../../services/profile/IProfile'
 import {IErrorService} from '../../../services/error/IErrorService'
-import {IGraphQL, Field, IEnum, TableSchema, arraysEqual, MetaObject}  from 'jde-framework'
-import {Settings} from '../../../utilities/settings'
-import {PageSettings} from '../../GraphQL/model/PageSettings';
+import {IGraphQL } from '../../../services/IGraphQL';
+import {Field} from '../../../model/ql/schema/Field';
+import {TableSchema}  from '../../../model/ql/schema/TableSchema';
+import {MetaObject}  from '../../../model/ql/schema/MetaObject';
 
 import { ComponentPageTitle } from 'jde-material';
 import { GraphQLTable } from '../../GraphQL/table/table';
-import { StringUtils } from '../../../utilities/StringUtils';
-import { QLListData, UserSettings } from '../../../services/ql-list.resolver';
 import { SelectionModel } from '@angular/cdk/collections';
 
 @Component( {

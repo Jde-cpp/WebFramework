@@ -1,4 +1,4 @@
-import { OfType } from "jde-framework";
+import { OfType } from './Field';
 import { QLSchema } from "./Schema";
 
 export class Arg{
