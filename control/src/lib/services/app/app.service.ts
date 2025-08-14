@@ -1,4 +1,3 @@
-//get googleId on login.
 import { Subject,Observable, tap } from 'rxjs';
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -29,8 +28,8 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 	// 	return this.sendSingularRequest( FromClient.ERequest.Ping );
 	// }
 
-	async iotInstances():Promise<Instance[]>{
-		const y = await this.get( "opcGateways" );
+	async gatewayInstances():Promise<Instance[]>{
+		const y = await this.get( "opcGateways", (m)=>console.log(m) );
 		return y["servers"];
 	}
 
@@ -118,7 +117,7 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 	async login( user:LoggedInUser ):Promise<void>{
 		let self = this;
 		//if( this.log.restRequests )	console.log( `googleLogin( ${user.credential} )` );
-		user.authorization = await this.post<string>( 'login', {value:user.credential}, true );
+		user.authorization = await super.loginJwt( user.credential );
 		self.authStore.append( user );
 		//if( this.log.restResults )	console.log( `authorization='${self.authorization}'` );
 	}

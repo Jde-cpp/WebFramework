@@ -1,10 +1,10 @@
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { firstValueFrom } from 'rxjs';
-import { HttpClient, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpEvent, HttpResponse, HttpSentEvent } from '@angular/common/http';
 import { FieldKind } from '../model/ql/schema/Field';
 import { fromIsoDuration } from '../utilities/utils';
 import { TableSchema } from '../model/ql/schema/TableSchema';
-import { IEnum, IQueryResult } from '../services/IGraphQL';
+import { IEnum, Log, IQueryResult } from '../services/IGraphQL';
 import { MutationSchema } from '../model/ql/schema/MutationSchema';
 import { Instance } from './app/app.service.types';
 import * as CommonProto from '../proto/Common'; import ELogLevel = CommonProto.Jde.Proto.ELogLevel; import IException = CommonProto.Jde.Proto.IException;
@@ -111,18 +111,18 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		await p;
 	}
 
-	async loginWait<Y>( target:string ):Promise<Y>{
+	async loginWait<Y>( target:string, log:Log=console.log ):Promise<Y>{
 		let p = new Promise<Y>( (resolve,reject)=>{
 			this.#loginCallbacks.push( {target: target, resolve:resolve,reject:reject} );
 		});
 		if( this.#loginCallbacks.length==1 ){
 			let url = this.urlWithTarget( "serverSettings", true );
-			if( this.log.restRequests ) console.log( url );
+			if( this.log.restRequests ) log( url );
 			let settings;
 			try{
 				let args = this.user()?.authorization ? {headers:{"Authorization":this.user().authorization}} : {};
-				const settings = await firstValueFrom(  this.http.get<any>(url, args) );
-				if( this.log.restResults ) console.log( JSON.stringify(settings) );
+				const settings = await firstValueFrom( this.http.get<any>(url, args) );
+				if( this.log.restResults ) log( JSON.stringify(settings) );
 				this.timeoutSeconds = fromIsoDuration( settings["restSessionTimeout"] );
 				let instance = parseInt( settings["serverInstance"] );
 				let active = settings["active"];
@@ -134,7 +134,11 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 				else if( previousInstance!=instance )
 					this.authStore.setServerInstance( this.url, instance );
 				for( let callback of this.#loginCallbacks ){
-					let y = await this.authGet<any>( callback.target, this.user().authorization ?? `Bearer ${this.user()?.credential}` );
+					let y = await this.authGet<any>(
+						callback.target,
+						this.user().authorization ?? (this.user()?.credential ? `Bearer ${this.user()?.credential}` : null)
+						, log
+					);
 					callback.resolve( y );
 				}
 			}
@@ -153,8 +157,8 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 			: `${this.restUrl}/${suffix}`;
 	}
 
-	private async authGet<Y>( target:string, authorization?:string ):Promise<Y>{
-		if( this.log.restRequests )	console.log( target.substring(0,this.log.maxLength) );
+	private async authGet<Y>( target:string, authorization?:string, log:Log=console.log ):Promise<Y>{
+		if( this.log.restRequests )	log( target.substring(0,this.log.maxLength) );
 		let url = this.urlWithTarget(target);
 		let y:Y;
 		let options = {};
@@ -163,19 +167,16 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		if( !authorization || authorization.startsWith("Bearer ") ){
 			options["observe"] = "response";
 			options["transferCache"] = { includeHeaders: ["Authorization"] };
-			let response = <HttpResponse<Y>>await firstValueFrom( this.http.get<Y>(url, options) );
-			let newAuth = response.headers.get( "Authorization" );
-			if( newAuth )
-				this.authStore.append( {authorization:newAuth} );
-			y = response.body;
-		}
-		else{
 			try{
-				y = await firstValueFrom( this.http.get<Y>(url, options) );
+				let response = <HttpResponse<Y>>await firstValueFrom( this.http.get<Y>(url, options) );
+				let newAuth = response.headers.get( "Authorization" );
+				if( newAuth )
+					this.authStore.append( {authorization:newAuth} );
+				y = response.body;
 			}
 			catch( e ){
 				if( e["status"]==401 ){
-					console.log( `(${e["status"]})${e["error"]} - ${e["url"]}` );
+					log( `(${e["status"]})${e["error"]} - ${e["url"]}` );
 					this.authStore.logout();
 					y = await this.authGet<Y>( target );
 				}
@@ -183,46 +184,69 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 					throw e;
 			}
 		}
-		if( this.log.restResults ) console.log( JSON.stringify(y) );
+		else{
+			try{
+				y = await firstValueFrom( this.http.get<Y>(url, options) );
+			}
+			catch( e ){
+				if( e["status"]==401 ){
+					log( `(${e["status"]})${e["error"]} - ${e["url"]}` );
+					this.authStore.logout();
+					y = await this.authGet<Y>( target );
+				}
+				else
+					throw e;
+			}
+		}
+		if( this.log.restResults ) log( JSON.stringify(y) );
 		this.lastRestCall = new Date();
 		return y;
 	}
 
-	async get<Y>( target:string ):Promise<Y>{
+	async get<Y>( target:string, log?:Log ):Promise<Y>{
 		if( !this.#instances )
 			await this.initWait();
 		let isActive = this.lastRestCall && (this.lastRestCall.getTime() > Date.now() - this.timeoutSeconds*1000);
 		let y = !this.user()?.authorization || !isActive
-			? await this.loginWait<Y>( target )
-			: await this.authGet<Y>( target, this.user().authorization );
+			? await this.loginWait<Y>( target, log )
+			: await this.authGet<Y>( target, this.user().authorization, log );
 		return y;
 	}
 
-	async postRaw<Y>( target:string, body:any, preferSecure:boolean=false ):Promise<Y>{
-		if( !this.#instances )
-			await this.initWait();
-		const url = this.urlWithTarget( target, preferSecure );
-		let y:any;
-		if( this.user()?.authorization )
-			y =  await firstValueFrom( this.http.post(url, body) );
-		else{
-			let response:HttpResponse<Y> = await firstValueFrom( this.http.post<Y>(url, body, {observe: "response", transferCache:{includeHeaders:["Authorization"]}}) );
-			let authorization = response.headers.get( "Authorization" );
-			console.assert( authorization!=null, "no authorization" );
-			if( authorization )
-				this.authStore.append( {authorization:authorization} );
-			y = response.body;
-		}
-		return y;
+	async loginJwt( credential:string ):Promise<string>{
+		let options = {};
+		options["headers"] = { "Authorization": `Bearer ${credential}` };
+		options["observe"] = "response";
+		options["transferCache"] = { includeHeaders: ["Authorization"] };
+		return await this.postRaw<string>( 'login', null, true, options );
 	}
-	//TODO change to use postRaw
+
 	async post<Y>( target:string, body:any, preferSecure:boolean=false ):Promise<Y>{
 		return (await this.postRaw<Y>( target, body, preferSecure ))[ "value" ];
 	}
 
-	private async graphQL<Y>( query: string ):Promise<Y>{
+	async postRaw<Y>( target:string, body:any, preferSecure:boolean=false, options?:any ):Promise<Y>{
+		if( !this.#instances )
+			await this.initWait();
+		const url = this.urlWithTarget( target, preferSecure );
+		if( !this.user()?.authorization && !options )
+			options = {observe: "response", transferCache:{includeHeaders:["Authorization"]}};
+
+		let event:HttpEvent<Y> = await firstValueFrom( this.http.post<Y>(url, body, options) );
+		let response:HttpResponse<Y> = <HttpResponse<Y>>( event instanceof HttpResponse ? event : null );
+		console.assert( response!=null, "response==null" );
+		if( options?.transferCache?.includeHeaders.includes("Authorization") ){
+			let authorization = response.headers.get( "Authorization" );
+			console.assert( authorization!=null, "no authorization" );
+			if( authorization )
+				this.authStore.append( {authorization:authorization} );
+		}
+		return response?.body;
+	}
+
+	private async graphQL<Y>( query: string, log?:Log ):Promise<Y>{
 		var target = `graphql?query={${query}}`;
-		const y = await this.get( target );
+		const y = await this.get( target, log );
 		return y ? y["data"] : null;
 	}
 
@@ -231,8 +255,8 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		const data = await this.query( ql );
 		return data["__type"]["enumValues"].map( (x:IEnum)=>x.id );
 	}
-	async query<Y>( ql: string ):Promise<Y>{
-		return await this.graphQL( ql );
+	async query<Y>( ql: string, log?:Log ):Promise<Y>{
+		return await this.graphQL( ql, log );
 	}
 	async querySingle<Y>( ql: string ):Promise<Y>{
 		const y = await this.query<any>( ql );
@@ -242,9 +266,9 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		const result = await this.query<any>( ql );
 		return new cnstrctr( result[Object.keys(result)[0]] );
 	}
-	async queryArray<Y>( ql: string ):Promise<Y[]>{
+	async queryArray<Y>( ql: string, log?:Log ):Promise<Y[]>{
 		const member = ql.substring( 0, ql.indexOf('{') ).trim();
-		const y = await this.graphQL( ql );
+		const y = await this.graphQL( ql, log );
 		return y[member];
 	}
 
@@ -260,20 +284,20 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		return y;
 	}
 
-	async mutation<Y>( ql: string|Mutation|Mutation[] ):Promise<Y>{
+	async mutation<Y>( ql: string|Mutation|Mutation[], log?:Log ):Promise<Y>{
 		if( Array.isArray(ql) ){
 			let y = [];
 			for( let m of <Mutation[]>ql )
-				y.push( await this.mutation( m ) );
+				y.push( await this.mutation(m, log) );
 			return <Y>y;
 		}
 		let query = ql instanceof Mutation ? ql.toString() : ql;
 		assert( query );
-		return await this.graphQL<Y>( `mutation ${query}` );
+		return await this.graphQL<Y>( `mutation ${query}`, log );
 	}
 
-	async schemaWithEnums( type:string ):Promise<TableSchema>{
-		let schema = ( await this.schema([type]) )[0];
+	async schemaWithEnums( type:string, log:Log ):Promise<TableSchema>{
+		let schema = ( await this.schema([type], log) )[0];
 		if( !schema.enums ){
 			schema.enums = new Map<string, IEnum[]>();
 			for( const field of schema.fields.filter((x)=>x.type.underlyingKind==FieldKind.ENUM && !schema.enums.has(x.name)) ){
@@ -284,7 +308,7 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		}
 		return schema;
 	}
-	async schema( types:string[] ):Promise<TableSchema[]>{
+	async schema( types:string[], log?:Log ):Promise<TableSchema[]>{
 		let results = new Array<TableSchema>();
 		let queries =  new Array<string>();
 		for( let type of types ){
@@ -295,7 +319,7 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		};
 		for( let type of queries ){
 			const ql = `__type(name: "${type}") { fields { name type { name kind ofType{name kind} } } }`;
-			const data = await this.query( ql );
+			const data = await this.query( ql, log );
 			const schema = new TableSchema( data["__type"] );
 			this.#tables.set( type, schema );
 			results.push( schema );
@@ -374,7 +398,7 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 	protected abstract encode( t:Transmission );
 
 	protected backlog:Transmission[] = [];
-	protected log = { sockRequests:true, sockResults:true, restRequests:false, restResults:true, subRequest:true, subResults:true, maxLength:255 };
+	protected log = { sockRequests:true, sockResults:true, restRequests:true, restResults:true, subRequest:true, subResults:true, maxLength:255 };
 	//Informational purposes only to match with server logs.
 	protected get socketId():number{ return this.#socketId; } #socketId:number;
 	get instances(){return this.#instances;} set instances(x){

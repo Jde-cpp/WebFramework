@@ -85,7 +85,6 @@ export function subscribe( route: ActivatedRoute, who: string ){
 		console.log( `${who}.fragment: ${JSON.stringify(x)}` );
 	});
 	route.data.subscribe( (x)=>{
-		debugger;
 		console.log( `${who}.data: }` );
 	});
 	route.paramMap.subscribe( (x)=>{

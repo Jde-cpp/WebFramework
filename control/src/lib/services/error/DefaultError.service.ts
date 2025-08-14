@@ -12,12 +12,9 @@ export class DefaultErrorService implements IErrorService
 	private showUser( message:string, panelClass:string ){
 		this.snackbar.open( message, null, {panelClass: [panelClass], duration: 2000} );
 	}
-	private showUserError( message:string, log?:(string)=>void ){
+	private showUserError( message:string, log:(string)=>void=console.log ){
 		this.showUser( message, 'red-snackbar' );
-		if( log )
-			log( message );
-		else
-			console.log( message );
+		log( message );
 	}
 
 	assert( condition ):void{

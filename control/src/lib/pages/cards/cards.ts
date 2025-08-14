@@ -10,7 +10,7 @@ export class HomeRouteService extends RouteService{
 	}
 	override children():Promise<Routes>{
 		let y:Routes = [];
-		for( let config of this.router.config.filter(x=> x.title && x.path.length && x.path!="login") ){
+		for( let config of this.router.config.filter(x=> x.title && x.path.length && x.path!="login" && !x.path.includes('/')) ){
 			let pageSettings = config.data ? config.data["pageSettings"] : null;
 			y.push( {title: config.title, path: config.path, data:{ id: config.path, summary: pageSettings?.summary }} );
 		}

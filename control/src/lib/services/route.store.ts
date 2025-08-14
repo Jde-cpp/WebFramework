@@ -5,11 +5,15 @@ import { load } from "protobufjs";
 
 @Injectable({ providedIn: 'root' })
 export class RouteStore{
-	getSiblings( url:string ):DocItem[]{
+	getSiblings( url:string | UrlSegment[] ):DocItem[]{
+		if( Array.isArray(url) )
+			url = url.map( x=>x.path ).join("/");
 		return this.#siblings.get( url ) ?? this.loadSiblings( url );
 	}
 
-	setSiblings( url:string, siblings:DocItem[] ){
+	setSiblings( url:string | UrlSegment[], siblings:DocItem[] ){
+		if( Array.isArray(url) )
+			url = url.map( x=>x.path ).join("/");
 		this.#siblings.set( url, siblings.map(s=>{return new DocItem({title:s.title, path:s.path})}) );
 		localStorage.setItem( url, JSON.stringify(this.#siblings.get(url)) );
 	}
@@ -18,9 +22,8 @@ export class RouteStore{
 		let storage = localStorage.getItem( key );
 		let siblings:DocItem[] = [];
 		if( storage ){
-			siblings = JSON.parse(storage);
+			siblings = JSON.parse(storage).map( (s:any)=>new DocItem(s) );
 			this.#siblings.set( key, siblings );
-			//localStorage.removeItem( key );
 		}
 		return siblings;
 	}
@@ -34,5 +37,5 @@ export class RouteStore{
 		}
   }
 */
-	#siblings:Map<string,DocItem[]> = new Map<string,DocItem[]>();
+	#siblings:Map<string,DocItem[]> = new Map<string,DocItem[]>();//parent url, children relative to parent
 }

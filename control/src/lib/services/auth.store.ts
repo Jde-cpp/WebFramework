@@ -7,8 +7,8 @@ const userStorageKey = 'user';
 @Injectable({ providedIn: 'root' })
 export class AuthStore{
 	constructor(){
-		const loggedInUser = null;//localStorage.getItem(userStorageKey);
-		if( this.log ) console.log( `AuthService: ${loggedInUser}` );
+		const loggedInUser = localStorage.getItem(userStorageKey);
+		if( this.log ) console.log( `AuthService User: ${loggedInUser}` );
 		if( loggedInUser ){
 			let user = JSON.parse(loggedInUser);
 			this.#userSignal.set( user );

@@ -13,7 +13,7 @@ import { Sort } from '@angular/material/sort';
 import { DocItem } from 'jde-material';
 import { RouteStore } from './route.store';
 
-type CollectionItem = string | { path:string, title?:string, data?:{summary:string, collectionName:string, canPurge:boolean,showAdd:boolean} };
+type CollectionItem = string | { path:string, title?:string, data?:{summary:string, collectionName:string, canPurge?:boolean,showAdd?:boolean} };
 export class ListRoute extends DocItem{
 	constructor( collection:string|CollectionItem ){
 		super();
@@ -50,6 +50,7 @@ export class QLListResolver implements Resolve<QLListData> {
 	constructor( private route: ActivatedRoute, private router:Router, @Inject('IGraphQL') private ql: IGraphQL, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsl: IErrorService ){}
 
 	resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot):Promise<QLListData>{
+		debugger;
 		const collectionDisplay = route.paramMap.get( "collectionDisplay" );
 		//let parent = { path: route.parent.url.map(seg=>seg.path).join("/"), title: route.parent.title ?? StringUtils.capitalize(route.parent.url[route.parent.url.length-1].path) };
 		let routing:ListRoute;
@@ -60,6 +61,8 @@ export class QLListResolver implements Resolve<QLListData> {
 			if( sibling.path==collectionDisplay )
 				routing = sibling;
 		}
+		if( !routing )
+			routing = siblings[0];
 		routing.siblings = siblings;
 		//routing.parent = parent;
 		return this.load( routing );

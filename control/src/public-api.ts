@@ -20,6 +20,7 @@ export * from './lib/pages/logs/logs';
 export * from './lib/services/IGraphQL'
 export * from './lib/services/auth.store'
 export * from './lib/services/proto.service'
+export * from './lib/services/route.store';
 export * from './lib/services/app/app.service';
 export * from './lib/services/profile/IProfile';
 export * from './lib/services/profile/localStorageProfile.service';
@@ -42,3 +43,4 @@ export * from './lib/utilities/stl';
 export * from './lib/utilities/StringUtils';
 export * from './lib/utilities/utils';
 export * from './lib/jde-framework.module';
+export * from './lib/services/app/app.service.types';
