@@ -42,7 +42,7 @@ export class Applications implements OnInit, OnDestroy
 			this.subscription.subscribe( apps => {this.onStatus(apps);} );
 		}
 		catch( e ){
-			this.cnsl.error( "Could not load applications", e );
+			this.cnsl.exceptionInfo( e, "Could not load applications", (m)=>console.log(m) );
 		}
 	}
 

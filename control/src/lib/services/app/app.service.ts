@@ -8,8 +8,8 @@ import * as AppFromServer from '../../proto/App.FromServer'; import FromServer =
 import * as AppFromClient from '../../proto/App.FromClient'; import FromClient = AppFromClient.Jde.App.Proto.FromClient;
 import * as AppCommon from '../../proto/App'; import App = AppCommon.Jde.App.Proto;
 import * as CommonProto from '../../proto/Common'; import ELogLevel = CommonProto.Jde.Proto.ELogLevel; import IException = CommonProto.Jde.Proto.IException;
-import { IAuth, IEnvironment, LoggedInUser } from 'jde-material';
-import { IGraphQL } from '../IGraphQL';
+import { IAuth, IEnvironment, User } from 'jde-material';
+import { IGraphQL, Log } from '../IGraphQL';
 import { AuthStore } from '../auth.store';
 
 @Injectable( {providedIn: 'root'} )
@@ -114,26 +114,28 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 		return p;
 	}
 */
-	async login( user:LoggedInUser ):Promise<void>{
+	async login( user:User ):Promise<void>{
 		let self = this;
 		//if( this.log.restRequests )	console.log( `googleLogin( ${user.credential} )` );
-		user.authorization = await super.loginJwt( user.credential );
+		console.assert( !user.sessionId );
+		user.sessionId = await super.loginJwt( user.authorization );
 		self.authStore.append( user );
 		//if( this.log.restResults )	console.log( `authorization='${self.authorization}'` );
 	}
 	loginPassword( username:string, password:string, authenticator:string ):Promise<void>{
 		throw "noImpl";
 	}
-	async logout():Promise<void>{
+	async logout( log:Log ):Promise<void>{
 		let self = this;
-		if( this.log.restRequests )	console.log( `logout()` );
-		const sessionId = await this.post<string>( 'logout', {} );
+		if( this.log.restRequests )	log( `logout()` );
+		const options = { observe: "response", headers:{"Authorization":this.user()?.authorization} };
+		let result = await this.postRaw<string>( 'logout', {}, false, options );
 		self.authStore.logout();
-		if( this.log.restResults ) console.log( `authorization='null'` );
+		if( this.log.restResults ) log( `logout=>${result}` );
 	}
 
-	async googleAuthClientId():Promise<string>{
-		return await super.querySetting( "googleAuthClientId" );
+	async googleAuthClientId( log:Log ):Promise<string>{
+		return await super.querySetting( "googleAuthClientId", log );
 	}
 
 	private logsSubscriptions:Map<RequestId,Subject<FromServer.ITrace>>= new Map<RequestId,Subject<FromServer.ITrace>>();
@@ -143,12 +145,12 @@ export class AppService extends ProtoService<FromClient.Transmission,FromServer.
 		this.statusSubscriptions = [];
 	}
 	encode( t:FromClient.Transmission ){ return FromClient.Transmission.encode(t); }
-	public async validateSessionId():Promise<LoggedInUser | null>{
+	public async validateSessionId():Promise<User | null>{
 		console.log( `validateSessionId: ${this.user()?.authorization}` );
 		if( !this.user() )
 			return Promise.resolve( null );
-		const y = await this.query<{session:{domain:string,loginName:string}}>( `session( id:"${this.user().authorization}" ){ domain loginName }` );
-		return { domain:y.session.domain, id:y.session.loginName, authorization:this.user().authorization };
+		const y = await this.query<{session:{domain:string,loginName:string}}>( `session( id:"${this.user().sessionId}" ){ domain loginName }` );
+		return new User( { domain:y.session.domain, id:y.session.loginName, sessionId:this.user().sessionId } );
 	}
 	private complete():void{
 		console.log( 'complete' );

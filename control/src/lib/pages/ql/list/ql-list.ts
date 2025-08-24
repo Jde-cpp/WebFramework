@@ -116,7 +116,7 @@ export class QLList implements OnInit, OnDestroy{
 			try{
 				this.router.navigate([this.selection().target], {relativeTo: this.route} );
 			}catch( e ){
-				this.snackbar.error( "Could not navigate to properties", e );
+				this.snackbar.exceptionInfo( e, "Could not navigate to properties", (m)=>console.log(m) );
 			}
 		}
 	}
@@ -141,7 +141,7 @@ export class QLList implements OnInit, OnDestroy{
 			}
 		}
 		catch( e ){
-			this.snackbar.error(e["message"]);
+			this.snackbar.exception( e, (m)=>console.log(m) );
 		}
 	}
 	selection = computed<any>( ()=>{

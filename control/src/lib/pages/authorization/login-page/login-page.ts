@@ -3,7 +3,7 @@ import {Router, RouterLink} from "@angular/router";
 import { MatButtonModule } from '@angular/material/button'
 import { MatInputModule } from '@angular/material/input';
 import {MatFormFieldModule} from '@angular/material/form-field';
-import { EProvider, IAuth, IEnvironment, LoggedInUser } from 'jde-material';
+import { EProvider, IAuth, IEnvironment, User } from 'jde-material';
 import {FormBuilder, ReactiveFormsModule} from "@angular/forms";
 import {IErrorService} from '../../../services/error/IErrorService';
 
@@ -32,7 +32,7 @@ export class LoginPageComponent{
   async onLogin() {
 		let {username, password} = this.form.value;
 		if (!username || !password) {
-			this.snackbar.error("Enter an email and password.");
+			this.snackbar.error( "Enter an email and password.", (m)=>console.log(m) );
 			return;
 		}
 		let domain = null;
@@ -45,12 +45,13 @@ export class LoginPageComponent{
 			await this.authService.loginPassword(
 				domain,
 				username,
-				password
+				password,
+				console.log
 			);
 			this.router.navigate( [''] );
 		}
 		catch( e ){
-			this.snackbar.exception( e );
+			this.snackbar.exception( e, (m)=>console.log(m) );
 		}
   }
 	onGoogleLogin2(credential:string){
@@ -58,14 +59,14 @@ export class LoginPageComponent{
 		this.onGoogleLogin( credential );
 	}
 	async onGoogleLogin(credential: string){
-		let user = new LoggedInUser( credential );
+		let user = new User( credential );
 		try{
-			await this.authService.login( user );
+			await this.authService.login( user, console.log );
 			localStorage.setItem( "googleLoginHint", user.email );
 			this.router.navigate( [''] );
 		}
 		catch( e ){
-			this.snackbar.exception( e );
+			this.snackbar.exception( e, (m)=>console.log(m) );
 		};
 	}
 
@@ -92,25 +93,25 @@ export class LoginPageComponent{
 		}
 		catch( e ){
 			console.assert( !(e instanceof ReferenceError), "ReferenceError" );
-			this.snackbar.error( `could not render google login`, e );
+			this.snackbar.exceptionInfo( e, 'could not render google login', (m)=>console.log(m) );
 		}
 	}
 
 	async getGoogleAuthClientId():Promise<string>{
-		const y = await this.authService.googleAuthClientId();
+		const y = await this.authService.googleAuthClientId( console.log );
 		if( !y )
 			throw new Error( "googleAuthClientId is not defined" );
 		return y;
 	}
 	hasUserPassword = computed(() => { return !this.providers.isLoading() && this.providers.value().includes( EProvider.OpcServer ); });
-	providers = resource<EProvider[], {}>( {loader: async () =>await this.authService.providers()} );
+	providers = resource<EProvider[], {}>( {loader: async () =>await this.authService.providers( console.log )} );
 
 	fb = inject(FormBuilder);
 	private get googleCredential():string{return this.envService.get("googleCredential"); }
 	private showedGoogleLogin = false;
   form = this.fb.group({ username: [''], password: [''] });
 	router = inject(Router);
-	user = computed<LoggedInUser | null>( () => {
+	user = computed<User | null>( () => {
 		return this.authService.user();
 	});
 }

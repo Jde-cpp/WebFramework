@@ -12,7 +12,7 @@ import { AuthStore } from './auth.store';
 import { assert } from '../utilities/utils';
 import { Mutation } from '../model/ql/Mutation';
 import { computed, Signal } from '@angular/core';
-import { EProvider, LoggedInUser } from 'jde-material';
+import { EProvider, User } from 'jde-material';
 
 interface IStringResult{ id:number; value:string; }
 export interface IError{ requestId?:number; message: string; sc?:number; }
@@ -130,13 +130,13 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 				let previousInstanceIndex = this.user()?.serverInstances?.findIndex( x=>x.url==this.url ) ?? -1;
 				let previousInstance = previousInstanceIndex>=0 ? this.user().serverInstances[previousInstanceIndex].instance : 0;
 				if( !active || timedout || (this.isAppServer && instance!=previousInstance) )
-					this.authStore.reset( {url:this.url, instance:instance}, this.user()?.credential );
+					this.authStore.reset( {url:this.url, instance:instance}, this.user()?.jwt );
 				else if( previousInstance!=instance )
 					this.authStore.setServerInstance( this.url, instance );
 				for( let callback of this.#loginCallbacks ){
 					let y = await this.authGet<any>(
 						callback.target,
-						this.user().authorization ?? (this.user()?.credential ? `Bearer ${this.user()?.credential}` : null)
+						this.user().authorization
 						, log
 					);
 					callback.resolve( y );
@@ -171,7 +171,7 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 				let response = <HttpResponse<Y>>await firstValueFrom( this.http.get<Y>(url, options) );
 				let newAuth = response.headers.get( "Authorization" );
 				if( newAuth )
-					this.authStore.append( {authorization:newAuth} );
+					this.authStore.append( {sessionId:newAuth} );
 				y = response.body;
 			}
 			catch( e ){
@@ -215,13 +215,13 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 
 	async loginJwt( credential:string ):Promise<string>{
 		let options = {};
-		options["headers"] = { "Authorization": `Bearer ${credential}` };
+		options["headers"] = { "Authorization": `${credential}` };
 		options["observe"] = "response";
 		options["transferCache"] = { includeHeaders: ["Authorization"] };
 		return await this.postRaw<string>( 'login', null, true, options );
 	}
 
-	async post<Y>( target:string, body:any, preferSecure:boolean=false ):Promise<Y>{
+	async post<Y>( target:string, body:any, preferSecure:boolean=false, log:Log ):Promise<Y>{
 		return (await this.postRaw<Y>( target, body, preferSecure ))[ "value" ];
 	}
 
@@ -229,8 +229,17 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		if( !this.#instances )
 			await this.initWait();
 		const url = this.urlWithTarget( target, preferSecure );
-		if( !this.user()?.authorization && !options )
-			options = {observe: "response", transferCache:{includeHeaders:["Authorization"]}};
+		if( !options ){
+			if( !this.user()?.authorization )
+				options = {observe: "response", transferCache:{includeHeaders:["Authorization"]}};
+			else{
+				let authorization = this.user()?.authorization;
+				if( authorization ){
+					options = { headers:{"Authorization":authorization} };
+					this.lastRestCall = new Date();
+				}
+			}
+		}
 
 		let event:HttpEvent<Y> = await firstValueFrom( this.http.post<Y>(url, body, options) );
 		let response:HttpResponse<Y> = <HttpResponse<Y>>( event instanceof HttpResponse ? event : null );
@@ -239,7 +248,7 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 			let authorization = response.headers.get( "Authorization" );
 			console.assert( authorization!=null, "no authorization" );
 			if( authorization )
-				this.authStore.append( {authorization:authorization} );
+				this.authStore.append( {sessionId:authorization} );
 		}
 		return response?.body;
 	}
@@ -250,20 +259,20 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		return y ? y["data"] : null;
 	}
 
-	async providers():Promise<EProvider[]>{
+	async providers( log:Log ):Promise<EProvider[]>{
 		const ql = `__type(name: "Provider") { enumValues { id name } }`;
-		const data = await this.query( ql );
+		const data = await this.query( ql, log );
 		return data["__type"]["enumValues"].map( (x:IEnum)=>x.id );
 	}
 	async query<Y>( ql: string, log?:Log ):Promise<Y>{
 		return await this.graphQL( ql, log );
 	}
-	async querySingle<Y>( ql: string ):Promise<Y>{
-		const y = await this.query<any>( ql );
+	async querySingle<Y>( ql: string, log?:Log ):Promise<Y>{
+		const y = await this.query<any>( ql, log );
 		return y[Object.keys(y)[0]];
 	}
-	async queryObject<Y>( ql: string, cnstrctr: new(...args:any[]) => Y ):Promise<Y>{
-		const result = await this.query<any>( ql );
+	async queryObject<Y>( ql: string, cnstrctr: new(...args:any[]) => Y, log?:Log ):Promise<Y>{
+		const result = await this.query<any>( ql, log );
 		return new cnstrctr( result[Object.keys(result)[0]] );
 	}
 	async queryArray<Y>( ql: string, log?:Log ):Promise<Y[]>{
@@ -272,12 +281,12 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 		return y[member];
 	}
 
-	async querySetting(target:string):Promise<string>{
-		const queryResult = await this.querySingle<string>( `setting(target:\"${target}\"){value}` );
+	async querySetting( target:string, log:Log ):Promise<string>{
+		const queryResult = await this.querySingle<string>( `setting(target:\"${target}\"){value}`, log );
 		return queryResult["value"];
 	}
-	async querySettings(target:string[]):Promise<{[key:string]:string}>{
-		const queryResult = await this.query<string>( `settings(target:${JSON.stringify(target)}){target value}` );
+	async querySettings(target:string[], log:Log):Promise<{[key:string]:string}>{
+		const queryResult = await this.query<string>( `settings(target:${JSON.stringify(target)}){target value}`, log );
 		let y:{[key:string]:string} = {};
 		for( const setting of queryResult["settings"] )
 			y[setting.target] = setting.value;
@@ -427,7 +436,7 @@ export abstract class ProtoService<Transmission,ResultMessage>{
 	private get secureRestUrl(){return `https://${this.url}`;}
 
 	isLoggedIn = computed( () => this.user()!= null );
-	get user():Signal<LoggedInUser>{return this.authStore.user; }
+	get user():Signal<User>{return this.authStore.user; }
 	lastRestCall:Date = null;
 	timeoutSeconds:number;
 }

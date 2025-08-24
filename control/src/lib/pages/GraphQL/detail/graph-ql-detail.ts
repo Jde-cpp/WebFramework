@@ -72,7 +72,7 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 				this.viewPromise = Promise.resolve( true );
 		}
 		catch( e ){
-			this.cnsle.exception( e );
+			this.cnsle.exception( e, (m)=>console.log(m) );
 		}
 	}
 	onNavigationEnd =( val:NavigationEnd )=>{///settings
@@ -110,7 +110,7 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit{
 			}
 			catch( e ){
 				debugger;
-				this.cnsle.error( `${this.target} not found`, e );
+				this.cnsle.exceptionInfo( e, `${this.target} not found`, (m)=>console.log(m) );
 			}
 			this.viewPromise = Promise.resolve( true );
 		}

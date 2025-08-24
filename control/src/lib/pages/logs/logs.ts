@@ -237,7 +237,7 @@ export class LogsComponent implements OnInit, OnDestroy{
 			this.data.select( foundIndex );
 		}
 		else
-			this.errorService.warn( "No other instances found." );
+			this.errorService.warn( "No other instances found.", (m)=>console.log(m) );
 	}
 	applyFilter( value:string ){
 		this.filter = value;

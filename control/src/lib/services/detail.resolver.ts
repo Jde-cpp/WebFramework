@@ -53,7 +53,7 @@ export class DetailResolver<T> implements Resolve<DetailResolverData<T>> {
 			return DetailResolver.load<T>( this.ql, this.ql.toCollectionName(collectionDisplay), target, profile, routing );
 		}
 		catch( e ){
-			this.snackbar.error( `Target not found:  '${target}'` );
+			this.snackbar.error( `Target not found:  '${target}'`, (m)=>console.log(m) );
 			this.router.navigate( ['..'], { relativeTo: this.route } );
 			return null;
 		}

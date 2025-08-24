@@ -1,5 +1,5 @@
 import { Injectable, Signal, signal } from '@angular/core';
-import { LoggedInUser } from 'jde-material';
+import { User, UserJson } from 'jde-material';
 import { clone } from '../utilities/utils'
 
 const userStorageKey = 'user';
@@ -7,36 +7,33 @@ const userStorageKey = 'user';
 @Injectable({ providedIn: 'root' })
 export class AuthStore{
 	constructor(){
-		const loggedInUser = localStorage.getItem(userStorageKey);
-		if( this.log ) console.log( `AuthService User: ${loggedInUser}` );
-		if( loggedInUser ){
-			let user = JSON.parse(loggedInUser);
+		let userString = localStorage.getItem(userStorageKey);
+		if( this.log ) console.log( `AuthService User: ${userString}` );
+		if( userString ){
+			let juser = JSON.parse( userString );
+			let reinit = false;
+			if( reinit ){
+				juser.jwt = "ey...";
+				juser.sessionId = null;
+			}
+			let user = new User( juser );
 			this.#userSignal.set( user );
-		}
-		else{
-			//localStorage.setItem("jwt", "ey...");
-			const jwt = localStorage.getItem("jwt");
-			if( jwt )
-				this.#userSignal.set({ credential: jwt });
 		}
 	}
 
-	append( user:LoggedInUser ):void{
-		const current = this.user();
-		let updated = current ? clone( current ) : user;
-		if( current ){
-			for( let key in user )
-				updated[key] = user[key];
-		}
-		if( this.log ) console.log( `auth.append( ${JSON.stringify(updated)} )` );
-		localStorage.setItem( userStorageKey, JSON.stringify(updated) );
-		this.#userSignal.set( updated );
+	append( user:UserJson ):void{
+		let current = this.user() ? new User(this.user()) : new User();
+		current.append( user );
+		let stringify = JSON.stringify( current );
+		if( this.log ) console.log( `auth.append( ${stringify} )` );
+		localStorage.setItem( userStorageKey, stringify );
+		this.#userSignal.set( current );
 	}
 
 	reset( serverInstance?:{url:string,instance:number}, jwt?:string ):void{
-		let user:LoggedInUser = null;
+		let user:User = null;
 		if( serverInstance ){
-			user = new LoggedInUser( jwt );
+			user = new User( jwt );
 			user.serverInstances = user.serverInstances || [];
 			AuthStore.upsertServerInstance( user, serverInstance.url, serverInstance.instance );
 		}
@@ -49,13 +46,13 @@ export class AuthStore{
 	}
 
 	setServerInstance( url: string, instance: number ){
-		let user = this.user() ?? {};
+		let user = this.user() ?? null;
 		AuthStore.upsertServerInstance( user, url, instance );
 		if( this.log ) console.log( `setServerInstance( ${JSON.stringify(user)} )` );
 		this.#userSignal.set( user );
 	}
 
-	static upsertServerInstance( user: LoggedInUser, url: string, instance: number ){
+	static upsertServerInstance( user: User, url: string, instance: number ){
 		let index = user.serverInstances.findIndex( (x)=>x.url==url );
 		if( index>=0 )
 			user.serverInstances[index].instance = instance;
@@ -64,9 +61,10 @@ export class AuthStore{
 	}
 
 	logout(){
-		let newAuth = this.user()?.serverInstances ? {serverInstances:this.user().serverInstances} : null;
-		if( newAuth )
+		let newAuth = new User( {serverInstances:this.user()?.serverInstances} );
+		if( newAuth.serverInstances ){
 			localStorage.setItem( userStorageKey, JSON.stringify(newAuth) );
+		}
 		else
 			localStorage.removeItem( userStorageKey );
 		if( this.log ) console.log( `logout(${JSON.stringify(newAuth)})` );
@@ -74,6 +72,6 @@ export class AuthStore{
 	}
 
 	log:boolean = true;
-	#userSignal = signal<LoggedInUser | null>( null );
-	get user():Signal<LoggedInUser | null>{ return this.#userSignal.asReadonly(); }
+	#userSignal = signal<User | null>( null );
+	get user():Signal<User | null>{ return this.#userSignal.asReadonly(); }
 }
